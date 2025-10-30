@@ -2,7 +2,6 @@
 
 namespace Modules\Auth\Traits;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Auth\Exceptions\SocialiteException;
 use Modules\Auth\Models\SocialAccount;
@@ -58,13 +57,5 @@ trait useSocialite
             ->first();
 
         return $latestAccount ? $latestAccount->provider_avatar_url : null;
-    }
-
-    /**
-     * Update user's avatar URL
-     */
-    public function updateAvatar(string $avatarUrl): void
-    {
-        $this->update(['avatar_url' => $avatarUrl]);
     }
 }
