@@ -2,7 +2,9 @@
 
 namespace Modules\Auth\Providers;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
+use Inertia\Inertia;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -20,6 +22,7 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerTranslations();
         $this->registerConfig();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'database/migrations'));
+        $this->shareInertiaData();
     }
 
     /**
@@ -28,6 +31,14 @@ class AuthServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->register(RouteServiceProvider::class);
+    }
+
+    /**
+     * Share Inertia data globally.
+     */
+    protected function shareInertiaData(): void
+    {
+        Inertia::share('user', fn() => Auth::user());
     }
 
     /**
