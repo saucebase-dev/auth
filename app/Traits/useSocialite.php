@@ -65,6 +65,6 @@ trait useSocialite
      */
     public function updateAvatar(string $avatarUrl): void
     {
-        $this->update(['avatar_url' => $avatarUrl]);
+        $this->update(['avatar' => $avatarUrl]);
     }
 }

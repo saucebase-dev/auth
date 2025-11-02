@@ -107,7 +107,7 @@ class SocialiteService
             'email' => $socialiteUser->getEmail(),
             'email_verified_at' => now(),
             'password' => Hash::make(Str::random(32)), // Random password
-            'avatar_url' => $avatarUrl,
+            'avatar' => $avatarUrl,
         ]);
     }
 
@@ -128,7 +128,7 @@ class SocialiteService
     private function updateUserAvatar(User $user, ?string $avatarUrl): void
     {
         if ($avatarUrl) {
-            $user->update(['avatar_url' => $avatarUrl]);
+            $user->update(['avatar' => $avatarUrl]);
         }
     }
 
