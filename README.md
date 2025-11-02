@@ -43,12 +43,13 @@ use Modules\Auth\Traits\useSocialite;
 class User extends Authenticatable
 {
     use useSocialite;
-    
+
     // ... rest of your model
 }
 ```
 
 The trait provides:
+
 - `socialAccounts()` — HasMany relationship to SocialAccount model
 - `getConnectedProvidersAttribute()` — Get list of connected OAuth providers
 - `disconnectSocialProvider(string $provider)` — Disconnect a social account
