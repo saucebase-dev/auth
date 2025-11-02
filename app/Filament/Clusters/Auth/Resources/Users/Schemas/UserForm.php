@@ -14,7 +14,7 @@ class UserForm
     {
         return $schema
             ->components([
-                SpatieMediaLibraryFileUpload::make('avatar_url')
+                SpatieMediaLibraryFileUpload::make('avatar')
                     ->avatar()
                     ->directory('avatars')
                     ->collection('avatars')
@@ -34,7 +34,7 @@ class UserForm
                     ->preload()
                     ->searchable()
                     // Optional: default to "user" on create:
-                    ->default(fn () => [Role::where('name', 'user')->value('id')]),
+                    ->default(fn() => [Role::where('name', 'user')->value('id')]),
                 TextInput::make('password')
                     ->label(__('Password'))
                     ->password()
