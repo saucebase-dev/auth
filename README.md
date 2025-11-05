@@ -1,6 +1,6 @@
 # Auth Module
 
-Authentication module for Laravel with social login support.
+Authentication module for [Sauce Base](https://github.com/sauce-base/core) with social login support.
 
 ## Installation
 
@@ -9,6 +9,9 @@ Install via Composer:
 ```bash
 composer require saucebase/auth
 php artisan module:enable Auth
+php artisan module:migrate Auth
+npm run build
+
 ```
 
 ## Features
