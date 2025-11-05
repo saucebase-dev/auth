@@ -21,17 +21,21 @@ test.describe.parallel('Verify Email Basics', () => {
     }
 
     test('prevents unverified user from accessing dashboard after registration', async () => {
+        if (registerPage.userMustVerifyEmail === false) {
+            test.skip();
+        }
+
         const user = newUser();
 
         await registerPage.goto();
         await registerPage.expectToBeVisible();
         await registerPage.register(user.name, user.email, user.password);
 
-        await verifyEmailPage.expectRedirectTo('/auth/verify-email');
+        await verifyEmailPage.expectRedirectTo(registerPage.redirectEndpoint);
         await verifyEmailPage.expectToBeVisible();
 
         await verifyEmailPage.page.goto('/dashboard');
-        
-        await verifyEmailPage.expectRedirectTo('/auth/verify-email');
+
+        await verifyEmailPage.expectRedirectTo(registerPage.redirectEndpoint);
     });
 });
