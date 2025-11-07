@@ -2,9 +2,12 @@
 
 namespace Modules\Auth\Providers;
 
+use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
+use Modules\Auth\Listeners\UpdateUserLastLogin;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -17,12 +20,21 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->registerEventListeners();
         $this->registerCommands();
         $this->registerCommandSchedules();
         $this->registerTranslations();
         $this->registerConfig();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'database/migrations'));
         $this->shareInertiaData();
+    }
+
+    /**
+     * Register event listeners.
+     */
+    protected function registerEventListeners(): void
+    {
+        Event::listen(Login::class, UpdateUserLastLogin::class);
     }
 
     /**
@@ -38,7 +50,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected function shareInertiaData(): void
     {
-        Inertia::share('auth.user', fn () => Auth::user());
+        Inertia::share('auth.user', fn() => Auth::user());
         Inertia::share('canLogin', true);
         Inertia::share('canRegister', true);
     }

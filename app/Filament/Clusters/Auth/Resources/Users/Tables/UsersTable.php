@@ -27,15 +27,10 @@ class UsersTable
                 TextColumn::make('email')
                     ->label(__('Email address'))
                     ->searchable(),
-                TextColumn::make('roles.name')
-                    ->label(__('Role'))
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'admin' => 'danger',
-                        'user' => 'primary',
-                        default => 'secondary',
-                    })
-                    ->sortable(),
+                TextColumn::make('last_login_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->label(__('Last login at')),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
