@@ -41,7 +41,7 @@ class UserInfolist
                                         ->label(__('Last Login At')),
                                 ])
                                 ->columns(2),
-                        ])
+                        ]),
                 ]
             );
     }

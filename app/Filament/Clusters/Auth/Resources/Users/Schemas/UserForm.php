@@ -2,11 +2,9 @@
 
 namespace Modules\Auth\Filament\Clusters\Auth\Resources\Users\Schemas;
 
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
-use Spatie\Permission\Models\Role;
 
 class UserForm
 {

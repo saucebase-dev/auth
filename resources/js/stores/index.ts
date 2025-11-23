@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
 export const useAuthStore = defineStore(
-    'auth',
+    'modules/auth',
     () => {
         const user = ref<User | null>(null);
 

@@ -50,7 +50,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected function shareInertiaData(): void
     {
-        Inertia::share('auth.user', fn() => Auth::user());
+        Inertia::share('auth.user', fn () => Auth::user());
         Inertia::share('canLogin', true);
         Inertia::share('canRegister', true);
     }
