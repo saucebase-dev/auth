@@ -8,6 +8,9 @@ use Modules\Auth\Exceptions\SocialiteException;
 use Modules\Auth\Models\SocialAccount;
 use Modules\Auth\Services\SocialiteService;
 
+/**
+ * @phpstan-ignore trait.unused
+ */
 trait useSocialite
 {
     /**
