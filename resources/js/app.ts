@@ -16,22 +16,25 @@ export function setup() {
     setupAuthMiddleware();
 
     // Add Logout item to NavUser
-    useNavigationStore().addNavUserItem({
-        id: 'logout',
-        type: 'action',
-        title: 'Log out',
-        icon: LogOut,
-        priority: 0,
-        action: () => {
-            //TODO: i18n and better confirmation dialog
-            if (!confirm('Are you sure you want to log out?')) {
-                return;
-            }
+    useNavigationStore().addItem(
+        {
+            id: 'logout',
+            type: 'action',
+            title: 'Log out',
+            icon: LogOut,
+            priority: 0,
+            action: () => {
+                //TODO: i18n and better confirmation dialog
+                if (!confirm('Are you sure you want to log out?')) {
+                    return;
+                }
 
-            router.post(route('logout'));
-            useAuthStore().clearUser();
+                router.post(route('logout'));
+                useAuthStore().clearUser();
+            },
         },
-    });
+        { area: 'user' },
+    );
 }
 
 /**
