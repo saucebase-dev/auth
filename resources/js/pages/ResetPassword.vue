@@ -5,59 +5,64 @@ import InputField from '../components/InputField.vue';
 import AuthCardLayout from '../layouts/AuthCardLayout.vue';
 
 defineProps<{
-  email: string;
-  token: string;
+    email: string;
+    token: string;
 }>();
 </script>
 
 <template>
-  <AuthCardLayout
-    :title="$t('Reset Password')"
-    :description="$t('Enter your new password below')"
-  >
-    <Form
-      :action="route('password.store')"
-      method="post"
-      class="min-w-sm space-y-3"
-      data-testid="reset-password-form"
-      disable-while-processing
-      :reset-on-error="['password', 'password_confirmation']"
+    <AuthCardLayout
+        :title="$t('Reset Password')"
+        :description="$t('Enter your new password below')"
     >
-      <input type="hidden" name="token" :value="token" data-testid="token" />
+        <Form
+            :action="route('password.store')"
+            method="post"
+            class="min-w-sm space-y-3"
+            data-testid="reset-password-form"
+            disable-while-processing
+            :reset-on-error="['password', 'password_confirmation']"
+        >
+            <input
+                type="hidden"
+                name="token"
+                :value="token"
+                data-testid="token"
+            />
 
-      <!-- Email -->
-      <InputField
-        name="email"
-        type="email"
-        :label="$t('Email')"
-        :model-value="email"
-        required
-        readonly
-      />
+            <!-- Email -->
+            <InputField
+                name="email"
+                type="email"
+                :label="$t('Email')"
+                :model-value="email"
+                required
+                readonly
+            />
 
-      <!-- Password -->
-      <InputField
-        name="password"
-        type="password"
-        :label="$t('Password')"
-        :placeholder="$t('Enter your password')"
-        autocomplete="new-password"
-        required
-      />
+            <!-- Password -->
+            <InputField
+                name="password"
+                type="password"
+                :label="$t('Password')"
+                :placeholder="$t('Enter your password')"
+                autocomplete="new-password"
+                required
+            />
 
-      <!-- Password Confirmation -->
-      <InputField
-        name="password_confirmation"
-        type="password"
-        :label="$t('Confirm Password')"
-        :placeholder="$t('Confirm your new password')"
-        autocomplete="new-password"
-        required
-      />
+            <!-- Password Confirmation -->
+            <InputField
+                name="password_confirmation"
+                type="password"
+                :label="$t('Confirm Password')"
+                :placeholder="$t('Confirm your new password')"
+                autocomplete="new-password"
+                required
+            />
 
-      <Button type="submit" class="mt-3 w-full">
-        {{ $t('Reset Password') }}
-      </Button>
-    </Form>
-  </AuthCardLayout>
+            <Button type="submit" class="mt-3 w-full">
+                {{ $t('Reset Password') }}
+            </Button>
+        </Form>
+    </AuthCardLayout>
 </template>
