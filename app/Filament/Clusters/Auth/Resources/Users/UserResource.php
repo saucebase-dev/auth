@@ -8,7 +8,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Modules\Auth\Filament\Clusters\Auth\AuthCluster;
+use Modules\Auth\Filament\Clusters\Auth\Auth;
 use Modules\Auth\Filament\Clusters\Auth\Resources\Users\Pages\CreateUser;
 use Modules\Auth\Filament\Clusters\Auth\Resources\Users\Pages\EditUser;
 use Modules\Auth\Filament\Clusters\Auth\Resources\Users\Pages\ListUsers;
@@ -23,7 +23,7 @@ class UserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::UserGroup;
 
-    protected static ?string $cluster = AuthCluster::class;
+    protected static ?string $cluster = Auth::class;
 
     public static function form(Schema $schema): Schema
     {
