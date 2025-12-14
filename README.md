@@ -8,8 +8,8 @@ Install via Composer:
 
 ```bash
 composer require saucebase/auth
-php artisan module:enable Auth
-php artisan module:migrate Auth
+docker compose exec workspace php artisan module:enable Auth
+docker compose exec workspace php artisan module:migrate Auth
 npm run build
 
 ```
