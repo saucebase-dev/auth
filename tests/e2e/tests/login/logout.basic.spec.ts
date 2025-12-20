@@ -18,9 +18,10 @@ test.describe.parallel('Logout Basics', () => {
         await loginPage.login(user.email, user.password);
         await expect(page).toHaveURL('/dashboard');
 
-        // Open user menu by clicking the SidebarMenuTrigger button (contains user name)
-        // Use the user's name text to reliably find the trigger button
-        await page.getByRole('button', { name: user.name }).click();
+        // Open user menu using the test ID
+        const userMenuTrigger = page.getByTestId('user-menu-trigger');
+        await userMenuTrigger.click();
+        await page.waitForTimeout(300);
 
         // Click the 'Log out' menu item
         await page.getByRole('menuitem', { name: /log out/i }).click();

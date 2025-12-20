@@ -1,9 +1,6 @@
+import { router } from '@inertiajs/vue3';
+import { registerActionHandler } from '@modules/Navigation/resources/js/utils/actionHandlers';
 import { setupAuthMiddleware } from './middleware/auth';
-
-// import { router } from '@inertiajs/vue3';
-// import { useNavigationStore } from '@modules/Navigation/resources/js/stores';
-// import { LogOut } from 'lucide-vue-next';
-// import { useAuthStore } from './stores';
 
 import '../css/style.css';
 
@@ -15,27 +12,24 @@ export function setup() {
     console.debug('Auth module loaded');
 
     setupAuthMiddleware();
+    registerAuthActions();
+}
 
-    // Add Logout item to NavUser
-    // useNavigationStore().addItem(
-    //     {
-    //         id: 'logout',
-    //         type: 'action',
-    //         title: 'Log out',
-    //         icon: LogOut,
-    //         priority: 0,
-    //         action: () => {
-    //             //TODO: i18n and better confirmation dialog
-    //             if (!confirm('Are you sure you want to log out?')) {
-    //                 return;
-    //             }
+/**
+ * Register auth-related navigation actions
+ */
+function registerAuthActions() {
+    // Logout action
+    registerActionHandler('auth.logout', async (event: MouseEvent) => {
+        event.preventDefault();
 
-    //             router.post(route('logout'));
-    //             useAuthStore().clearUser();
-    //         },
-    //     },
-    //     { area: 'user' },
-    // );
+        // TODO: Use i18n for confirmation message
+        if (!confirm('Are you sure you want to log out?')) {
+            return;
+        }
+
+        router.post(route('logout'));
+    });
 }
 
 /**
