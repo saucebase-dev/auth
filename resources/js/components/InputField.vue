@@ -33,7 +33,9 @@ const isInvalid = computed(() => !!errorMessage.value);
 const id = computed(() => props.id || props.name);
 const labelId = computed(() => `${id.value}-label`);
 const errorId = computed(() => `${id.value}-error`);
-const describedBy = computed(() => (isInvalid.value ? errorId.value : undefined));
+const describedBy = computed(() =>
+    isInvalid.value ? errorId.value : undefined,
+);
 
 // Test IDs (fallback to name to avoid undefined attributes)
 const testIdComputed = computed(() => props.testId || props.name);
