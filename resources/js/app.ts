@@ -1,6 +1,5 @@
 import { router } from '@inertiajs/vue3';
 import { registerActionHandler } from '@modules/Navigation/resources/js/utils/actionHandlers';
-import { setupAuthMiddleware } from './middleware/auth';
 
 import '../css/style.css';
 
@@ -11,7 +10,6 @@ import '../css/style.css';
 export function setup() {
     console.debug('Auth module loaded');
 
-    setupAuthMiddleware();
     registerAuthActions();
 }
 
