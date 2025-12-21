@@ -4,10 +4,8 @@ import Field from '@/components/ui/field/Field.vue';
 import FieldError from '@/components/ui/field/FieldError.vue';
 import FieldLabel from '@/components/ui/field/FieldLabel.vue';
 import Input from '@/components/ui/input/Input.vue';
+import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { usePageErrors } from '../composables/usePageErrors';
-
-const { hasError, getError } = usePageErrors();
 
 const props = withDefaults(
     defineProps<{
@@ -25,21 +23,23 @@ const props = withDefaults(
 
 defineOptions({ inheritAttrs: false });
 
-const isInvalid = computed(() => hasError(props.name));
+// Error state
+const page = usePage();
+const errors = computed(() => page.props.errors || {});
+const errorMessage = computed(() => errors.value[props.name]);
+const isInvalid = computed(() => !!errorMessage.value);
 
-// canonical id used for the input/label/error. Prefer provided id, fallback to name.
+// IDs for accessibility (canonical id prefers provided id, falls back to name)
 const id = computed(() => props.id || props.name);
-
-// derived ids for label and error to keep ARIA references consistent
 const labelId = computed(() => `${id.value}-label`);
-const describedBy = computed(() =>
-    isInvalid.value ? `${id.value}-error` : undefined,
-);
+const errorId = computed(() => `${id.value}-error`);
+const describedBy = computed(() => (isInvalid.value ? errorId.value : undefined));
 
-// test id fallbacks to name so we never render `undefined` into attributes
+// Test IDs (fallback to name to avoid undefined attributes)
 const testIdComputed = computed(() => props.testId || props.name);
 const errorTestId = computed(() => `${testIdComputed.value}-error`);
 
+// Dynamic component selection
 const component = computed(() =>
     props.type === 'password' ? PasswordInput : Input,
 );
@@ -64,11 +64,11 @@ const component = computed(() =>
         />
         <FieldError
             v-if="isInvalid"
-            :id="describedBy"
+            :id="errorId"
             :data-testid="errorTestId"
             aria-live="polite"
         >
-            {{ getError(name) }}
+            {{ errorMessage }}
         </FieldError>
     </Field>
 </template>
