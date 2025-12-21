@@ -2,13 +2,13 @@
 
 namespace Modules\Auth\Providers;
 
+use App\Services\Navigation\NavigationRegistry;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
 use Modules\Auth\Listeners\UpdateUserLastLogin;
-use App\Services\Navigation\NavigationRegistry;
 use Spatie\Navigation\Section;
 
 class AuthServiceProvider extends ServiceProvider
