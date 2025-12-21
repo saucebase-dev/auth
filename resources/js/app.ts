@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/vue3';
-import { registerActionHandler } from '@modules/Navigation/resources/js/utils/actionHandlers';
+import { registerActionHandler } from '@/utils/actionHandlers';
 
 import '../css/style.css';
 
