@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
 use Modules\Auth\Listeners\UpdateUserLastLogin;
-use Modules\Navigation\Services\NavigationRegistry;
+use App\Services\Navigation\NavigationRegistry;
 use Spatie\Navigation\Section;
 
 class AuthServiceProvider extends ServiceProvider
