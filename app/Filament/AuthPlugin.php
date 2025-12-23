@@ -2,13 +2,13 @@
 
 namespace Modules\Auth\Filament;
 
-use Coolsam\Modules\Concerns\ModuleFilamentPlugin;
+use App\Filament\ModulePlugin;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 
 class AuthPlugin implements Plugin
 {
-    use ModuleFilamentPlugin;
+    use ModulePlugin;
 
     public function getModuleName(): string
     {

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 use Modules\Auth\Http\Controllers\EmailVerificationNotificationController;
 use Modules\Auth\Http\Controllers\EmailVerificationPromptController;
 use Modules\Auth\Http\Controllers\ForgotPasswordController;
@@ -46,7 +47,7 @@ Route::prefix('auth')->group(function () {
 
     Route::middleware('auth')->group(function () {
 
-        Route::post('logout', [LoginController::class, 'destroy'])
+        Route::any('logout', [LoginController::class, 'destroy'])
             ->name('logout');
 
         Route::get('verify-email', EmailVerificationPromptController::class)
@@ -64,5 +65,12 @@ Route::prefix('auth')->group(function () {
 
         Route::delete('socialite/{provider}', [SocialiteController::class, 'disconnect'])
             ->name('auth.social.disconnect');
+
+        Route::get('settings/profile', function () {
+            return Inertia::render('Auth::Profile', [
+                'title' => 'Profile',
+            ]);
+        })
+            ->name('auth.profile');
     });
 });
