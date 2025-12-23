@@ -12,7 +12,7 @@ test.describe.parallel('Register Basics', () => {
     });
 
     async function expectSuccessfulRegistration() {
-        await expect(registerPage.page).toHaveURL('/auth/verify-email');
+        await expect(registerPage.page).toHaveURL(registerPage.redirectEndpoint);
     }
 
     function newUser() {
@@ -22,6 +22,7 @@ test.describe.parallel('Register Basics', () => {
             password: faker.internet.password(),
         };
     }
+
 
     test('registers with valid details and redirects to dashboard', async () => {
         const user = newUser(); // Using the newUser function to generate user details

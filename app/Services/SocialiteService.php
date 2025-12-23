@@ -3,6 +3,7 @@
 namespace Modules\Auth\Services;
 
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -63,6 +64,10 @@ class SocialiteService
      */
     public function disconnectProvider(User $user, string $provider): void
     {
+        if (! property_exists($user, 'socialAccounts')) {
+            throw SocialiteException::missingSocialAccountsRelation();
+        }
+
         $socialAccounts = $user->socialAccounts;
 
         $providerAccount = $socialAccounts->where('provider', $provider)->first();
@@ -102,13 +107,17 @@ class SocialiteService
 
     private function createNewUser(SocialiteUser $socialiteUser, ?string $avatarUrl): User
     {
-        return User::create([
+        $user = User::create([
             'name' => $socialiteUser->getName() ?: $socialiteUser->getNickname(),
             'email' => $socialiteUser->getEmail(),
             'email_verified_at' => now(),
             'password' => Hash::make(Str::random(32)), // Random password
-            'avatar_url' => $avatarUrl,
+            'avatar' => $avatarUrl,
         ]);
+
+        event(new Registered($user));
+
+        return $user;
     }
 
     private function createSocialAccount(User $user, string $provider, SocialiteUser $socialiteUser, ?string $avatarUrl): SocialAccount
@@ -128,7 +137,7 @@ class SocialiteService
     private function updateUserAvatar(User $user, ?string $avatarUrl): void
     {
         if ($avatarUrl) {
-            $user->update(['avatar_url' => $avatarUrl]);
+            $user->update(['avatar' => $avatarUrl]);
         }
     }
 

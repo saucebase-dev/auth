@@ -25,4 +25,9 @@ class SocialiteException extends Exception
     {
         return new self(trans('socialite.not_connected', ['Provider' => $provider]));
     }
+
+    public static function missingSocialAccountsRelation(): self
+    {
+        return new self(trans('socialite.missing_social_accounts_relation'));
+    }
 }
