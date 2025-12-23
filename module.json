@@ -1,7 +1,7 @@
 {
     "name": "Auth",
     "alias": "auth",
-    "description": "Authentication module",
+    "description": "Authentication module for saucebase",
     "author": "Sauce Base",
     "version": "v1.0",
     "keywords": ["auth"],
