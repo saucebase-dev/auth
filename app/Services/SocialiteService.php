@@ -3,6 +3,7 @@
 namespace Modules\Auth\Services;
 
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -106,13 +107,17 @@ class SocialiteService
 
     private function createNewUser(SocialiteUser $socialiteUser, ?string $avatarUrl): User
     {
-        return User::create([
+        $user = User::create([
             'name' => $socialiteUser->getName() ?: $socialiteUser->getNickname(),
             'email' => $socialiteUser->getEmail(),
             'email_verified_at' => now(),
             'password' => Hash::make(Str::random(32)), // Random password
             'avatar' => $avatarUrl,
         ]);
+
+        event(new Registered($user));
+
+        return $user;
     }
 
     private function createSocialAccount(User $user, string $provider, SocialiteUser $socialiteUser, ?string $avatarUrl): SocialAccount

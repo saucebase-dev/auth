@@ -1,6 +1,6 @@
 # Auth Module
 
-Authentication module for [Sauce Base](https://github.com/sauce-base/core) with social login support.
+Authentication module for [Sauce Base](https://github.com/sauce-base/saucebase) with social login support.
 
 ## Installation
 
