@@ -3,12 +3,9 @@
 namespace Modules\Auth\Providers;
 
 use App\Services\Navigation\NavigationRegistry;
-use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
-use Modules\Auth\Listeners\UpdateUserLastLogin;
 use Spatie\Navigation\Section;
 
 class AuthServiceProvider extends ServiceProvider
@@ -22,7 +19,6 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->registerEventListeners();
         $this->registerCommands();
         $this->registerCommandSchedules();
         $this->registerTranslations();
@@ -64,14 +60,6 @@ class AuthServiceProvider extends ServiceProvider
                     'order' => 0,
                 ]);
             });
-    }
-
-    /**
-     * Register event listeners.
-     */
-    protected function registerEventListeners(): void
-    {
-        Event::listen(Login::class, UpdateUserLastLogin::class);
     }
 
     /**

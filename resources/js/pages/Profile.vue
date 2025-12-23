@@ -54,9 +54,9 @@ const formatDate = (date: string | null) => {
                         <h1 class="text-2xl font-bold">{{ $t(title) }}</h1>
                     </div>
 
-                    <div class="grid gap-6 md:grid-cols-2">
+                    <div class="grid gap-6">
                         <!-- Profile Overview Card -->
-                        <Card class="col-span-full md:col-span-2">
+                        <Card>
                             <CardHeader>
                                 <CardTitle>{{
                                     $t('Profile Information')
