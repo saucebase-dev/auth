@@ -38,10 +38,10 @@ Route::prefix('auth')->group(function () {
             ->name('password.store');
 
         Route::get('socialite/{provider}', [SocialiteController::class, 'redirect'])
-            ->name('socialite.redirect');
+            ->name('auth.socialite.redirect');
 
         Route::get('socialite/{provider}/callback', [SocialiteController::class, 'callback'])
-            ->name('socialite.callback');
+            ->name('auth.socialite.callback');
     });
 
     Route::middleware('auth')->group(function () {
