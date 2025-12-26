@@ -49,17 +49,6 @@ class AuthServiceProvider extends ServiceProvider
                     'order' => 100,
                 ]);
             });
-
-        // Settings menu - Profile
-        $registry->settings()
-            ->add('Profile', route('auth.profile'), function (Section $section) {
-                $section->attributes([
-                    'label' => 'Profile',
-                    'route' => 'auth.profile',
-                    'icon' => 'user-circle',
-                    'order' => 0,
-                ]);
-            });
     }
 
     /**
