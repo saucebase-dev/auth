@@ -21,7 +21,7 @@ const email = computed(() =>
         "
     >
         <Form
-            :action="route('auth.password.email')"
+            :action="route('password.email')"
             method="post"
             class="min-w-sm space-y-3"
             data-testid="forgot-password-form"
@@ -40,7 +40,7 @@ const email = computed(() =>
 
             <div class="flex items-center justify-between pt-1">
                 <Link
-                    :href="route('auth.login')"
+                    :href="route('login')"
                     class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
                     data-testid="back-to-login-link"
                 >

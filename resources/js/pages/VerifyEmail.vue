@@ -14,7 +14,7 @@ import AuthCardLayout from '../layouts/AuthCardLayout.vue';
         "
     >
         <Form
-            :action="route('auth.verification.send')"
+            :action="route('verification.send')"
             method="post"
             class="min-w-sm space-y-3"
             data-testid="verify-email-form"
@@ -28,7 +28,7 @@ import AuthCardLayout from '../layouts/AuthCardLayout.vue';
                 class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400"
             >
                 <Link
-                    :href="route('auth.logout')"
+                    :href="route('logout')"
                     method="post"
                     as="button"
                     class="cursor-pointer font-medium text-indigo-600 hover:text-indigo-500 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300"
