@@ -44,7 +44,7 @@ class AuthServiceProvider extends ServiceProvider
             ->add('Log out', '#', function (Section $section) {
                 $section->attributes([
                     'label' => 'Log out',
-                    'action' => 'auth.logout',
+                    'action' => 'logout',
                     'icon' => 'log-out',
                     'order' => 100,
                 ]);
