@@ -18,7 +18,7 @@ export function setup() {
  */
 function registerAuthActions() {
     // Logout action
-    registerActionHandler('auth.logout', async (event: MouseEvent) => {
+    registerActionHandler('logout', async (event: MouseEvent) => {
         event.preventDefault();
 
         // TODO: Use i18n for confirmation message
