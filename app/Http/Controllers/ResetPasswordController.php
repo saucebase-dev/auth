@@ -58,7 +58,7 @@ class ResetPasswordController extends Controller
         // the application's home authenticated view. If there is an error we can
         // redirect them back to where they came from with their error message.
         if ($status == Password::PASSWORD_RESET) {
-            return redirect()->route('login')->with('status', trans($status));
+            return redirect()->route('auth.login')->with('status', trans($status));
         }
 
         return back()->with('error', trans($status));

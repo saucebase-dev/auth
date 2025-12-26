@@ -16,7 +16,7 @@ defineProps<{
         :description="$t('Enter your new password below')"
     >
         <Form
-            :action="route('password.store')"
+            :action="route('auth.password.store')"
             method="post"
             class="min-w-sm space-y-3"
             data-testid="reset-password-form"

@@ -12,7 +12,7 @@ const emailRef = ref('');
 
 // compute forgot password url so the link updates as user types
 const forgotUrl = computed(() =>
-    route('password.request', { email: emailRef.value }),
+    route('auth.password.request', { email: emailRef.value }),
 );
 </script>
 
@@ -24,7 +24,7 @@ const forgotUrl = computed(() =>
         <SocialiteProviders />
 
         <Form
-            :action="route('login')"
+            :action="route('auth.login')"
             method="post"
             class="space-y-3"
             data-testid="login-form"
@@ -71,7 +71,7 @@ const forgotUrl = computed(() =>
 
                 <!-- Forgot password link -->
                 <Link
-                    v-if="route().has('password.request')"
+                    v-if="route().has('auth.password.request')"
                     :href="forgotUrl"
                     class="ml-auto inline-block text-sm underline-offset-4 hover:text-indigo-500 hover:underline dark:hover:text-indigo-300"
                     data-testid="forgot-password-link"
@@ -94,7 +94,7 @@ const forgotUrl = computed(() =>
             >
                 {{ $t("Don't have an account?") }}
                 <Link
-                    :href="route('register')"
+                    :href="route('auth.register')"
                     class="font-medium text-indigo-600 hover:text-indigo-500 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300"
                     data-testid="sign-up-link"
                 >

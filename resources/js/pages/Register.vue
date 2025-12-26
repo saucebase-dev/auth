@@ -14,7 +14,7 @@ import AuthCardLayout from '../layouts/AuthCardLayout.vue';
         <SocialiteProviders />
 
         <Form
-            :action="route('register')"
+            :action="route('auth.register')"
             method="post"
             class="space-y-3"
             data-testid="register-form"
@@ -62,7 +62,7 @@ import AuthCardLayout from '../layouts/AuthCardLayout.vue';
             >
                 {{ $t('Already registered?') }}
                 <Link
-                    :href="route('login')"
+                    :href="route('auth.login')"
                     class="font-medium text-indigo-600 hover:text-indigo-500 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300"
                     data-testid="login-link"
                 >

@@ -16,27 +16,27 @@ Route::prefix('auth')->group(function () {
     Route::middleware('guest')->group(function () {
 
         Route::get('login', [LoginController::class, 'create'])
-            ->name('login');
+            ->name('auth.login');
 
         Route::post('login', [LoginController::class, 'store']);
 
         Route::get('register', [RegisterController::class, 'create'])
-            ->name('register');
+            ->name('auth.register');
 
         Route::post('register', [RegisterController::class, 'store']);
 
         Route::get('forgot-password', [ForgotPasswordController::class, 'create'])
-            ->name('password.request');
+            ->name('auth.password.request');
 
         Route::post('forgot-password', [ForgotPasswordController::class, 'store'])
-            ->name('password.email');
+            ->name('auth.password.email');
 
         Route::get('reset-password/{token}', [ResetPasswordController::class, 'create'])
-            ->name('password.reset');
+            ->name('auth.password.reset');
 
         Route::post('reset-password', [ResetPasswordController::class, 'store'])
             ->middleware('throttle:6,1')
-            ->name('password.store');
+            ->name('auth.password.store');
 
         Route::get('socialite/{provider}', [SocialiteController::class, 'redirect'])
             ->name('auth.socialite.redirect');
@@ -48,20 +48,20 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth')->group(function () {
 
         Route::any('logout', [LoginController::class, 'destroy'])
-            ->name('logout');
+            ->name('auth.logout');
 
         Route::get('verify-email', EmailVerificationPromptController::class)
-            ->name('verification.notice');
+            ->name('auth.verification.notice');
 
         Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
             ->middleware(['signed', 'throttle:6,1'])
-            ->name('verification.verify');
+            ->name('auth.verification.verify');
 
         Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
             ->middleware('throttle:6,1')
-            ->name('verification.send');
+            ->name('auth.verification.send');
 
-        Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+        Route::put('password', [PasswordController::class, 'update'])->name('auth.password.update');
 
         Route::delete('socialite/{provider}', [SocialiteController::class, 'disconnect'])
             ->name('auth.social.disconnect');

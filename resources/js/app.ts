@@ -26,7 +26,7 @@ function registerAuthActions() {
             return;
         }
 
-        router.post(route('logout'));
+        router.post(route('auth.logout'));
     });
 }
 
