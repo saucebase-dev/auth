@@ -2,10 +2,10 @@
 
 namespace Modules\Auth\Providers;
 
-use App\Facades\Navigation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
+use Spatie\Navigation\Facades\Navigation;
 use Spatie\Navigation\Section;
 
 class AuthServiceProvider extends ServiceProvider
@@ -41,7 +41,6 @@ class AuthServiceProvider extends ServiceProvider
         Navigation::add('Log out', '#', function (Section $section) {
             $section->attributes([
                 'group' => 'user',
-                'label' => 'Log out',
                 'action' => 'logout',
                 'icon' => 'lucide:log-out',
                 'order' => 100,
