@@ -2,7 +2,7 @@
 
 namespace Modules\Auth\Providers;
 
-use App\Services\Navigation\NavigationRegistry;
+use App\Facades\Navigation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
@@ -37,18 +37,16 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected function registerNavigation(): void
     {
-        $registry = app(NavigationRegistry::class);
-
         // User menu - Logout
-        $registry->user()
-            ->add('Log out', '#', function (Section $section) {
-                $section->attributes([
-                    'label' => 'Log out',
-                    'action' => 'logout',
-                    'icon' => 'log-out',
-                    'order' => 100,
-                ]);
-            });
+        Navigation::add('Log out', '#', function (Section $section) {
+            $section->attributes([
+                'group' => 'user',
+                'label' => 'Log out',
+                'action' => 'logout',
+                'icon' => 'lucide:log-out',
+                'order' => 100,
+            ]);
+        });
     }
 
     /**
