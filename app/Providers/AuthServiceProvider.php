@@ -42,7 +42,7 @@ class AuthServiceProvider extends ServiceProvider
             $section->attributes([
                 'group' => 'user',
                 'action' => 'logout',
-                'icon' => 'lucide:log-out',
+                'slug' => 'logout',
                 'order' => 100,
             ]);
         });
