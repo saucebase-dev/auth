@@ -64,7 +64,7 @@ class SocialiteService
      */
     public function disconnectProvider(User $user, string $provider): void
     {
-        if (! property_exists($user, 'socialAccounts')) {
+        if (! method_exists($user, 'socialAccounts')) {
             throw SocialiteException::missingSocialAccountsRelation();
         }
 
