@@ -24,7 +24,10 @@ test.describe.parallel('Logout Basics', () => {
         await page.waitForTimeout(300);
 
         // Click the 'Log out' menu item
+        page.on('dialog', dialog => dialog.accept());
+
         await page.getByRole('menuitem', { name: /log out/i }).click();
+
 
         // After logout we expect to be redirected to the home page
         await expect(page).toHaveURL('/');
