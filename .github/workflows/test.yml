@@ -52,11 +52,30 @@ jobs:
 
             - name: Copy environment file
               working-directory: saucebase
-              run: cp .env.example .env
+              run: |
+                  cp .env.example .env
+                  echo "DB_CONNECTION=sqlite" >> .env
+                  echo "DB_DATABASE=database/database.sqlite" >> .env
+                  echo "LOG_CHANNEL=stderr" >> .env
+                  echo "TELESCOPE_ENABLED=false" >> .env
+
+            - name: Set permissions
+              working-directory: saucebase
+              run: chmod -R 777 storage bootstrap/cache
+
+            - name: Create SQLite database
+              working-directory: saucebase
+              run: |
+                  mkdir -p database
+                  touch database/database.sqlite
 
             - name: Generate app key
               working-directory: saucebase
               run: php artisan key:generate
+
+            - name: Run migrations
+              working-directory: saucebase
+              run: php artisan migrate --force --seed
 
             - name: Install npm dependencies
               working-directory: saucebase
