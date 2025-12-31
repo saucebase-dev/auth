@@ -58,6 +58,14 @@ jobs:
               working-directory: saucebase
               run: php artisan key:generate
 
+            - name: Install npm dependencies
+              working-directory: saucebase
+              run: npm ci
+
+            - name: Build frontend assets
+              working-directory: saucebase
+              run: npm run build
+
             - name: Run Auth module PHPUnit tests
               working-directory: saucebase
               run: php artisan test modules/Auth/tests
