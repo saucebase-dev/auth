@@ -39,7 +39,7 @@ jobs:
                   mv modules_statuses.json.tmp modules_statuses.json
 
             - name: Setup Laravel Application
-              uses: ./.github/actions/setup-laravel
+              uses: sauce-base/saucebase/.github/actions/setup-laravel@main
 
             - name: Run Auth module PHPUnit tests
               run: php artisan test modules/Auth/tests
