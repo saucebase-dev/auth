@@ -22,7 +22,7 @@ jobs:
 
             - name: Create fresh Saucebase project in current directory
               run: |
-                  composer create-project sauce-base/saucebase temp-saucebase --stability=dev --no-interaction
+                  composer create-project saucebase/saucebase temp-saucebase --stability=dev --no-interaction
                   # Move Saucebase files to root (except auth-module)
                   shopt -s dotglob
                   mv temp-saucebase/* .
