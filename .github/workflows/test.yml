@@ -109,7 +109,7 @@ jobs:
               working-directory: saucebase
               env:
                   APP_URL: http://localhost:8000
-              run: npx playwright test modules/Auth/tests/e2e
+              run: npx playwright test modules/Auth/tests/e2e --max-failures=2
 
             - name: Upload Playwright report
               if: failure()
