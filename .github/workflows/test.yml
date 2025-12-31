@@ -20,6 +20,18 @@ jobs:
               with:
                   path: auth-module
 
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: pdo, pdo_sqlite, mbstring, zip, pcntl, intl, exif
+                  coverage: none
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+
             - name: Create fresh Saucebase project
               run: composer create-project saucebase/saucebase saucebase --no-interaction
 
