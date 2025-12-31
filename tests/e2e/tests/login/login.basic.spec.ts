@@ -16,7 +16,7 @@ test.describe.parallel('Login Basics', () => {
     }
 
     test('logs in with valid credentials and redirects to dashboard', async () => {
-        const user = testUsers.valid;
+        const user = testUsers.admin;
         await loginPage.login(user.email, user.password);
         await expectSuccessfulLogin();
     });

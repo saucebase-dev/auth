@@ -5,8 +5,6 @@ namespace Modules\Auth\Providers;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
-use Spatie\Navigation\Facades\Navigation;
-use Spatie\Navigation\Section;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -25,27 +23,6 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'database/migrations'));
         $this->shareInertiaData();
-
-        // Register navigation after routes are loaded
-        $this->app->booted(function () {
-            $this->registerNavigation();
-        });
-    }
-
-    /**
-     * Register navigation items.
-     */
-    protected function registerNavigation(): void
-    {
-        // User menu - Logout
-        Navigation::add('Log out', '#', function (Section $section) {
-            $section->attributes([
-                'group' => 'user',
-                'action' => 'logout',
-                'icon' => 'lucide:log-out',
-                'order' => 100,
-            ]);
-        });
     }
 
     /**

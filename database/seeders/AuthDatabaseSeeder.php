@@ -23,7 +23,7 @@ class AuthDatabaseSeeder extends Seeder
         $adminUser->assignRole('admin');
 
         // Create test users for E2E tests
-        \App\Models\User::firstOrCreate(
+        $user = \App\Models\User::firstOrCreate(
             ['email' => 'test@example.com'],
             [
                 'name' => 'Test User',
@@ -31,5 +31,7 @@ class AuthDatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        $user->assignRole('user');
     }
 }

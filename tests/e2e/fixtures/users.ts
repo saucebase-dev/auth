@@ -10,7 +10,7 @@ export const testUsers = {
     },
     admin: {
         name: 'Chef Saucier',
-        email: 'admin@saucebase.dev',
+        email: 'chef@saucebase.dev',
         password: 'secretsauce',
     },
     user: {
