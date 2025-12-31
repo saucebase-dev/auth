@@ -1,0 +1,76 @@
+name: Auth Module Tests
+
+on:
+    pull_request:
+        branches: [main]
+    push:
+        branches: [main]
+
+permissions:
+    contents: read
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+
+        steps:
+            - name: Checkout Auth module
+              uses: actions/checkout@v4
+              with:
+                  path: auth-module
+
+            - name: Create fresh Saucebase project in current directory
+              run: |
+                  composer create-project sauce-base/saucebase temp-saucebase --stability=dev --no-interaction
+                  # Move Saucebase files to root (except auth-module)
+                  shopt -s dotglob
+                  mv temp-saucebase/* .
+                  rmdir temp-saucebase
+
+            - name: Install Auth module from local checkout
+              run: |
+                  # Remove any existing Auth module
+                  rm -rf modules/Auth
+                  # Copy the checked out Auth module
+                  cp -r auth-module modules/Auth
+                  # Enable the Auth module
+                  jq '. + {"Auth": true}' modules_statuses.json > modules_statuses.json.tmp
+                  mv modules_statuses.json.tmp modules_statuses.json
+
+            - name: Setup Laravel Application
+              uses: ./.github/actions/setup-laravel
+
+            - name: Run Auth module PHPUnit tests
+              working-directory: saucebase
+              run: php artisan test modules/Auth/tests
+
+            - name: Install Playwright
+              working-directory: saucebase
+              run: npx playwright install chromium --with-deps
+
+            - name: Start Laravel server
+              working-directory: saucebase
+              run: php artisan serve --host=0.0.0.0 --port=8000 &
+
+            - name: Wait for server
+              run: |
+                  timeout 30 bash -c 'until curl -f http://localhost:8000 > /dev/null 2>&1; do
+                    echo "Waiting for server..."
+                    sleep 2
+                  done'
+                  echo "✅ Server is ready!"
+
+            - name: Run Auth module E2E tests
+              working-directory: saucebase
+              env:
+                  APP_URL: http://localhost:8000
+              run: npx playwright test modules/Auth/tests/e2e
+
+            - name: Upload Playwright report
+              if: failure()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: playwright-report
+                  path: saucebase/playwright-report/
+                  retention-days: 7
