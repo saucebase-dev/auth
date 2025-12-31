@@ -47,12 +47,15 @@ jobs:
                   mv modules_statuses.json.tmp modules_statuses.json
 
             - name: Install Composer dependencies
+              working-directory: saucebase
               run: composer install --prefer-dist --no-interaction --no-progress
 
             - name: Copy environment file
+              working-directory: saucebase
               run: cp .env.example .env
 
             - name: Generate app key
+              working-directory: saucebase
               run: php artisan key:generate
 
             - name: Run Auth module PHPUnit tests
