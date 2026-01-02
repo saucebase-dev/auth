@@ -2,6 +2,7 @@
 
 namespace Modules\Auth\Http\Controllers;
 
+use App\Helpers\Toast;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Socialite\Facades\Socialite;
@@ -36,6 +37,14 @@ class SocialiteController extends Controller
         $user = $this->socialiteService->handleCallback($provider);
 
         Auth::login($user);
+
+        request()->session()->regenerate();
+
+        Toast::default(
+            __($user->wasRecentlyCreated ? 'auth.welcome' : 'auth.welcome-back', [
+                'name' => $user->name,
+            ]),
+        );
 
         return redirect()->intended(route('dashboard'));
     }

@@ -12,10 +12,10 @@ return [
     | these language lines according to your application's requirements.
     |
     */
-    'welcome' => '👋 Welcome aboard, :name!',
-    'welcome-back' => '👋 Welcome back, :name!',
-    'failed' => 'These credentials do not match our records.',
-    'password' => 'The provided password is incorrect.',
-    'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
-    'verification-link-sent' => 'A fresh verification link has been sent to your email address.',
+    'welcome' => '👋 Bem-vindo(a), :name!',
+    'welcome-back' => '👋 Bem-vindo(a) de volta, :name!',
+    'failed' => 'Estas credenciais não correspondem aos nossos registros.',
+    'password' => 'A senha fornecida está incorreta.',
+    'throttle' => 'Muitas tentativas de login. Tente novamente em :seconds segundos.',
+    'verification-link-sent' => 'Um novo link de verificação foi enviado para seu endereço de email.',
 ];
