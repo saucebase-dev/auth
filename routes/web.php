@@ -36,12 +36,6 @@ Route::prefix('auth')->group(function () {
         Route::post('reset-password', [ResetPasswordController::class, 'store'])
             ->middleware('throttle:6,1')
             ->name('password.store');
-
-        Route::get('socialite/{provider}', [SocialiteController::class, 'redirect'])
-            ->name('auth.socialite.redirect');
-
-        Route::get('socialite/{provider}/callback', [SocialiteController::class, 'callback'])
-            ->name('auth.socialite.callback');
     });
 
     Route::middleware('auth')->group(function () {
@@ -65,4 +59,17 @@ Route::prefix('auth')->group(function () {
         Route::delete('socialite/{provider}', [SocialiteController::class, 'disconnect'])
             ->name('auth.socialite.disconnect');
     });
+
+    /**
+     * Socialite Routes
+     *
+     * These routes are placed outside the auth/guest middleware groups because:
+     * - Guests can use them for social login/registration
+     * - Authenticated users can use them to connect additional social providers
+     */
+    Route::get('socialite/{provider}', [SocialiteController::class, 'redirect'])
+        ->name('auth.socialite.redirect');
+
+    Route::get('socialite/{provider}/callback', [SocialiteController::class, 'callback'])
+        ->name('auth.socialite.callback');
 });

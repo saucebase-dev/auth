@@ -26,5 +26,14 @@ return [
         'redirect' => env('GITHUB_CLIENT_REDIRECT_URI', '/auth/socialite/github/callback'),
     ],
 
-    // Add more social providers here as needed
+    'socialite_providers' => [
+        [
+            'name' => 'google',
+            'label' => 'Google',
+        ],
+        [
+            'name' => 'github',
+            'label' => 'GitHub',
+        ],
+    ],
 ];

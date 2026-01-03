@@ -15,12 +15,32 @@ use Modules\Auth\Models\SocialAccount;
 class SocialiteService
 {
     /**
+     * Get the list of available social providers.
+     */
+    public static function providers(): array
+    {
+        return config('services.socialite_providers', []);
+    }
+
+    protected function validateProvider(string $provider): void
+    {
+        $availableProviders = array_map(fn ($p) => $p['name'], self::providers());
+
+        if (! in_array($provider, $availableProviders, true)) {
+            throw SocialiteException::unsupportedProvider($provider);
+        }
+    }
+
+    /**
      * Find or create a user from a Socialite user object.
      *
      * @throws SocialiteException
      */
     public function handleCallback(string $provider): User
     {
+
+        $this->validateProvider($provider);
+
         /** @var SocialiteUser $socialiteUser */
         $socialiteUser = Socialite::driver($provider)->user();
 
@@ -58,6 +78,38 @@ class SocialiteService
     }
 
     /**
+     * Link a social account to an authenticated user.
+     *
+     * @throws SocialiteException
+     */
+    public function linkAccountToUser(User $user, string $provider, SocialiteUser $socialiteUser): SocialAccount
+    {
+        $this->validateSocialUser($socialiteUser);
+
+        $avatarUrl = $this->validateAvatarUrl($socialiteUser->getAvatar());
+
+        return DB::transaction(function () use ($user, $provider, $socialiteUser, $avatarUrl) {
+            // Check if this social account already exists (by provider_id)
+            $existingAccount = SocialAccount::where('provider', $provider)
+                ->where('provider_id', $socialiteUser->getId())
+                ->first();
+
+            if ($existingAccount) {
+                // If it belongs to another user, prevent account takeover
+                if ($existingAccount->user_id !== $user->id) {
+                    throw SocialiteException::accountAlreadyLinked($provider);
+                }
+
+                // Update the existing account
+                return $this->updateSocialAccountTokens($existingAccount, $socialiteUser, $avatarUrl);
+            }
+
+            // Create new social account
+            return $this->createSocialAccount($user, $provider, $socialiteUser, $avatarUrl);
+        });
+    }
+
+    /**
      * Disconnect a provider from the given user.
      *
      * @throws \Modules\Auth\Exceptions\SocialiteException
@@ -85,14 +137,7 @@ class SocialiteService
 
     private function updateExistingAccount(SocialAccount $socialAccount, SocialiteUser $socialiteUser, ?string $avatarUrl): User
     {
-
-        // Update existing social account
-        $socialAccount->update([
-            'provider_token' => $socialiteUser->token,
-            'provider_refresh_token' => $socialiteUser->refreshToken,
-            'provider_avatar_url' => $avatarUrl,
-            'last_login_at' => now(),
-        ]);
+        $this->updateSocialAccountTokens($socialAccount, $socialiteUser, $avatarUrl);
 
         $user = $socialAccount->user;
 
@@ -103,6 +148,18 @@ class SocialiteService
         $this->updateUserAvatar($user, $avatarUrl);
 
         return $user;
+    }
+
+    private function updateSocialAccountTokens(SocialAccount $socialAccount, SocialiteUser $socialiteUser, ?string $avatarUrl): SocialAccount
+    {
+        $socialAccount->update([
+            'provider_token' => $socialiteUser->token,
+            'provider_refresh_token' => $socialiteUser->refreshToken,
+            'provider_avatar_url' => $avatarUrl,
+            'last_login_at' => now(),
+        ]);
+
+        return $socialAccount;
     }
 
     private function createNewUser(SocialiteUser $socialiteUser, ?string $avatarUrl): User

@@ -34,6 +34,23 @@ class SocialiteController extends Controller
             return back()->with('error', trans('socialite.error'));
         }
 
+        // Check if user is already authenticated (account linking flow)
+        if (Auth::check()) {
+            try {
+                $socialUser = Socialite::driver($provider)->user();
+                $this->socialiteService->linkAccountToUser(Auth::user(), $provider, $socialUser);
+                Toast::success(trans('socialite.account_connected', ['provider' => ucfirst($provider)]));
+            } catch (SocialiteException $e) {
+                Toast::error($e->getMessage());
+            } catch (\Exception $e) {
+                Toast::error(trans('socialite.error'));
+                report($e);
+            } finally {
+                return redirect()->route('settings.profile');
+            }
+        }
+
+        // Guest user - login/registration flow
         $user = $this->socialiteService->handleCallback($provider);
 
         Auth::login($user);
@@ -59,9 +76,11 @@ class SocialiteController extends Controller
         try {
             $this->socialiteService->disconnectProvider($user, $provider);
 
-            return back()->with('status', trans('socialite.account_disconnected'));
+            Toast::success(trans('socialite.account_disconnected', ['provider' => $provider]));
         } catch (SocialiteException $e) {
-            return back()->with(['error' => $e->getMessage()]);
+            Toast::error($e->getMessage());
         }
+
+        return back();
     }
 }
