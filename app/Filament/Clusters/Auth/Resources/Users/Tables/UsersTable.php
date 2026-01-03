@@ -2,6 +2,7 @@
 
 namespace Modules\Auth\Filament\Clusters\Auth\Resources\Users\Tables;
 
+use App\Enums\Role;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -27,6 +28,14 @@ class UsersTable
                 TextColumn::make('email')
                     ->label(__('Email address'))
                     ->searchable(),
+                TextColumn::make('roles.name')
+                    ->label(__('Role'))
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        Role::ADMIN => 'danger',
+                        Role::USER => 'primary',
+                        default => 'secondary',
+                    }),
                 TextColumn::make('last_login_at')
                     ->dateTime()
                     ->sortable()

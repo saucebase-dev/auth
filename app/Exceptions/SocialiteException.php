@@ -30,4 +30,14 @@ class SocialiteException extends Exception
     {
         return new self(trans('socialite.missing_social_accounts_relation'));
     }
+
+    public static function accountAlreadyLinked(string $provider): self
+    {
+        return new self(trans('socialite.account_already_linked', ['provider' => ucfirst($provider)]));
+    }
+
+    public static function unsupportedProvider(string $provider): self
+    {
+        return new self(trans('socialite.unsupported_provider', ['provider' => ucfirst($provider)]));
+    }
 }

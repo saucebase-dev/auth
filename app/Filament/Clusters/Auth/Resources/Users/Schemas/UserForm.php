@@ -2,9 +2,12 @@
 
 namespace Modules\Auth\Filament\Clusters\Auth\Resources\Users\Schemas;
 
+use App\Enums\Role as RoleEnum;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Spatie\Permission\Models\Role;
 
 class UserForm
 {
@@ -24,6 +27,15 @@ class UserForm
                     ->label(__('Email address'))
                     ->email()
                     ->required(),
+                Select::make('roles')
+                    ->label(__('Role'))
+                    ->relationship('roles', 'name')
+                    ->multiple()
+                    ->minItems(1)
+                    ->maxItems(1)
+                    ->preload()
+                    // Optional: default to "user" on create:
+                    ->default(fn () => [Role::where('name', RoleEnum::USER)->value('id')]),
                 TextInput::make('password')
                     ->label(__('Password'))
                     ->password()

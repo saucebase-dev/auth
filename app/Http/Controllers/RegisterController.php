@@ -2,6 +2,7 @@
 
 namespace Modules\Auth\Http\Controllers;
 
+use App\Helpers\Toast;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -34,6 +35,10 @@ class RegisterController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        Toast::default(
+            __('auth.welcome', ['name' => $user->name]),
+        );
+
+        return redirect()->intended(route('dashboard'));
     }
 }
