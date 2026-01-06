@@ -2,36 +2,19 @@
 
 namespace Modules\Auth\Providers;
 
+use App\Providers\ModuleServiceProvider;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
 
-class AuthServiceProvider extends ServiceProvider
+class AuthServiceProvider extends ModuleServiceProvider
 {
-    protected string $moduleName = 'Auth';
+    protected string $name = 'Auth';
 
-    protected string $moduleNameLower = 'auth';
+    protected string $nameLower = 'auth';
 
-    /**
-     * Boot the application events.
-     */
-    public function boot(): void
-    {
-        $this->registerCommands();
-        $this->registerCommandSchedules();
-        $this->registerTranslations();
-        $this->registerConfig();
-        $this->loadMigrationsFrom(module_path($this->moduleName, 'database/migrations'));
-        $this->shareInertiaData();
-    }
-
-    /**
-     * Register the service provider.
-     */
-    public function register(): void
-    {
-        $this->app->register(RouteServiceProvider::class);
-    }
+    protected array $providers = [
+        RouteServiceProvider::class,
+    ];
 
     /**
      * Share Inertia data globally.
@@ -44,39 +27,13 @@ class AuthServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register commands in the format of Command::class
-     */
-    protected function registerCommands(): void
-    {
-        // $this->commands([]);
-    }
-
-    /**
-     * Register command Schedules.
-     */
-    protected function registerCommandSchedules(): void
-    {
-        // $this->app->booted(function () {
-        //     $schedule = $this->app->make(Schedule::class);
-        //     $schedule->command('inspire')->hourly();
-        // });
-    }
-
-    /**
-     * Register translations.
-     */
-    public function registerTranslations(): void
-    {
-        $this->loadTranslationsFrom(module_path($this->moduleName, 'lang'));
-        $this->loadJsonTranslationsFrom(module_path($this->moduleName, 'lang'));
-    }
-
-    /**
      * Register config.
      */
     protected function registerConfig(): void
     {
-        $this->mergeConfigFrom(module_path($this->moduleName, 'config/services.php'), 'services');
+        parent::registerConfig();
+
+        $this->mergeConfigFrom(module_path($this->name, 'config/services.php'), 'services');
     }
 
     /**
