@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/card';
 
 import AlertMessage from '@/components/AlertMessage.vue';
-import ApplicationLogo from '@/components/ApplicationLogo.vue';
+import AppLogo from '@/components/AppLogo.vue';
 import Footer from '@/components/Footer.vue';
 import PageTransition from '@/components/PageTransition.vue';
 import { Head, Link } from '@inertiajs/vue3';
@@ -25,7 +25,7 @@ defineProps<{
         <div class="mt-6">
             <Head :title="title" />
             <Link :href="route('index')" class="mt-6 font-medium">
-                <ApplicationLogo size="md" :showText="true" />
+                <AppLogo size="md" :showText="true" />
             </Link>
         </div>
 
