@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Form, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import InputField from '../components/InputField.vue';
+import InputField from '@/components/ui/input/InputField.vue';
 import AuthCardLayout from '../layouts/AuthCardLayout.vue';
 
 const page = usePage();
