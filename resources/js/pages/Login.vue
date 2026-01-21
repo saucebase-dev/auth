@@ -4,7 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Form, Link } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import InputField from '../../../../../resources/js/components/ui/input/InputField.vue';
+import InputField from '@/components/ui/input/InputField.vue';
 import SocialiteProviders from '../components/SocialiteProviders.vue';
 import AuthCardLayout from '../layouts/AuthCardLayout.vue';
 
