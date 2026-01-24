@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import IconGithub from '~icons/mdi/github';
-import IconGoogle from '~icons/mdi/google';
+import IconGithub from '~icons/simple-icons/github';
+import IconGoogle from '~icons/simple-icons/google';
 
 type Provider = { name: string; icon: any };
 
 const providers: Provider[] = [
     { name: 'google', icon: IconGoogle },
     { name: 'github', icon: IconGithub },
-    // Add more providers as needed
 ];
 </script>
 
@@ -35,7 +34,7 @@ const providers: Provider[] = [
             class="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t"
         >
             <span class="bg-card text-muted-foreground relative z-10 px-2">
-                Or continue with
+                {{ $t('Or continue with email') }}
             </span>
         </div>
     </div>
