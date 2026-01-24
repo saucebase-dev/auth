@@ -2,6 +2,8 @@
 
 namespace Modules\Auth\Http\Controllers;
 
+use App\Helpers\Toast;
+use App\Notifications\PasswordChangedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,9 +22,15 @@ class PasswordController extends Controller
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
-        Auth::user()->update([
+        $user = Auth::user();
+
+        $user->update([
             'password' => Hash::make($validated['password']),
         ]);
+
+        $user->notify(new PasswordChangedNotification);
+
+        Toast::success('Password changed successfully.');
 
         return back();
     }
