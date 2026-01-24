@@ -18,15 +18,6 @@ class AuthServiceProvider extends ModuleServiceProvider
     ];
 
     /**
-     * Boot the application events.
-     */
-    public function boot(): void
-    {
-        $this->registerConfig();
-        $this->shareInertiaData();
-    }
-
-    /**
      * Share Inertia data globally.
      */
     protected function shareInertiaData(): void
