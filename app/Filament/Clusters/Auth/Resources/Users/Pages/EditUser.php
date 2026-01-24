@@ -6,6 +6,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 use Modules\Auth\Filament\Clusters\Auth\Resources\Users\UserResource;
+use STS\FilamentImpersonate\Actions\Impersonate;
 
 class EditUser extends EditRecord
 {
@@ -16,6 +17,7 @@ class EditUser extends EditRecord
         return [
             ViewAction::make(),
             DeleteAction::make(),
+            Impersonate::make()->record($this->getRecord()),
         ];
     }
 }

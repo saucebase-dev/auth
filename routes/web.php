@@ -7,6 +7,7 @@ use Modules\Auth\Http\Controllers\ForgotPasswordController;
 use Modules\Auth\Http\Controllers\LoginController;
 use Modules\Auth\Http\Controllers\PasswordController;
 use Modules\Auth\Http\Controllers\RegisterController;
+use Modules\Auth\Http\Controllers\ReimpersonateController;
 use Modules\Auth\Http\Controllers\ResetPasswordController;
 use Modules\Auth\Http\Controllers\SocialiteController;
 use Modules\Auth\Http\Controllers\VerifyEmailController;
@@ -58,6 +59,9 @@ Route::prefix('auth')->group(function () {
 
         Route::delete('socialite/{provider}', [SocialiteController::class, 'disconnect'])
             ->name('auth.socialite.disconnect');
+
+        Route::post('impersonate/{userId}', ReimpersonateController::class)
+            ->name('auth.impersonate.reimpersonate');
     });
 
     /**

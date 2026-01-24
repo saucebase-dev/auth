@@ -1,0 +1,42 @@
+<?php
+
+namespace Modules\Auth\Http\Controllers;
+
+use App\Models\User;
+use Filament\Facades\Filament;
+use Illuminate\Http\RedirectResponse;
+use Lab404\Impersonate\Services\ImpersonateManager;
+
+class ReimpersonateController extends Controller
+{
+    /**
+     * Re-impersonate a user from recent history.
+     */
+    public function __invoke(int $userId): RedirectResponse
+    {
+        $impersonate = app(ImpersonateManager::class);
+        $guard = Filament::getCurrentOrDefaultPanel()->getAuthGuard();
+
+        // If already impersonating, leave first to get back to the impersonator
+        if ($impersonate->isImpersonating()) {
+            $impersonate->leave();
+        }
+
+        $impersonator = Filament::auth()->user();
+        $target = User::findOrFail($userId);
+
+        // Security check: cannot impersonate yourself
+        abort_if($userId === $impersonator->id, 403, 'Cannot impersonate yourself');
+
+        // Store session data (like the Filament Impersonate package does)
+        session()->put([
+            'impersonate.back_to' => request()->header('referer') ?? Filament::getCurrentOrDefaultPanel()->getUrl(),
+            'impersonate.guard' => $guard,
+        ]);
+
+        // Perform impersonation with guard (triggers TakeImpersonation event automatically)
+        $impersonate->take($impersonator, $target, $guard);
+
+        return redirect(config('filament-impersonate.redirect_to'));
+    }
+}
