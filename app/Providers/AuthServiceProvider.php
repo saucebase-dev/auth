@@ -2,35 +2,28 @@
 
 namespace Modules\Auth\Providers;
 
+use App\Models\User;
+use App\Providers\ModuleServiceProvider;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
 
-class AuthServiceProvider extends ServiceProvider
+class AuthServiceProvider extends ModuleServiceProvider
 {
-    protected string $moduleName = 'Auth';
+    protected string $name = 'Auth';
 
-    protected string $moduleNameLower = 'auth';
+    protected string $nameLower = 'auth';
+
+    protected array $providers = [
+        RouteServiceProvider::class,
+    ];
 
     /**
      * Boot the application events.
      */
     public function boot(): void
     {
-        $this->registerCommands();
-        $this->registerCommandSchedules();
-        $this->registerTranslations();
         $this->registerConfig();
-        $this->loadMigrationsFrom(module_path($this->moduleName, 'database/migrations'));
         $this->shareInertiaData();
-    }
-
-    /**
-     * Register the service provider.
-     */
-    public function register(): void
-    {
-        $this->app->register(RouteServiceProvider::class);
     }
 
     /**
@@ -41,34 +34,77 @@ class AuthServiceProvider extends ServiceProvider
         Inertia::share('auth.user', fn () => Auth::user());
         Inertia::share('canLogin', true);
         Inertia::share('canRegister', true);
+
+        Inertia::share('impersonation', fn () => $this->isUserImpersonated() ? [
+            'user' => [
+                ...Auth::user()->only(['id', 'name', 'email', 'avatar']),
+                'role' => Auth::user()->roles->first()?->name,
+            ],
+            'route' => route('filament-impersonate.leave'),
+            'label' => __('Stop Impersonation'),
+            'recent' => $this->getRecentImpersonationHistory(),
+        ] : null);
+    }
+
+    protected function isUserImpersonated(): bool
+    {
+        if (! Auth::user()) {
+            return false;
+        }
+
+        $impersonate = app('impersonate');
+        $impersonatorGuard = $impersonate->getImpersonatorGuardUsingName();
+        $currentPanelGuard = \Filament\Facades\Filament::getAuthGuard();
+        $isImpersonating = $impersonate->isImpersonating();
+
+        return $isImpersonating
+            && $currentPanelGuard
+            && $impersonatorGuard === $currentPanelGuard;
     }
 
     /**
-     * Register commands in the format of Command::class
+     * Get recent impersonation history with user data.
+     *
+     * @return array<int, array<string, mixed>>
      */
-    protected function registerCommands(): void
+    protected function getRecentImpersonationHistory(): array
     {
-        // $this->commands([]);
-    }
+        $historyIds = session()->get('impersonation.recent_history', []);
 
-    /**
-     * Register command Schedules.
-     */
-    protected function registerCommandSchedules(): void
-    {
-        // $this->app->booted(function () {
-        //     $schedule = $this->app->make(Schedule::class);
-        //     $schedule->command('inspire')->hourly();
-        // });
-    }
+        if (empty($historyIds)) {
+            return [];
+        }
 
-    /**
-     * Register translations.
-     */
-    public function registerTranslations(): void
-    {
-        $this->loadTranslationsFrom(module_path($this->moduleName, 'lang'));
-        $this->loadJsonTranslationsFrom(module_path($this->moduleName, 'lang'));
+        $currentUserId = Auth::user()->id;
+
+        // Fetch users (filters deleted users automatically)
+        $users = User::with('roles:name')
+            ->whereIn('id', $historyIds)
+            ->where('id', '!=', $currentUserId)
+            ->get(['id', 'name', 'email', 'avatar'])
+            ->keyBy('id');
+
+        // Maintain original chronological order
+        $orderedUsers = [];
+        foreach ($historyIds as $id) {
+            if ($users->has($id) && $id !== $currentUserId) {
+                $user = $users->get($id);
+                $orderedUsers[] = [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar,
+                    'role' => $user->roles->first()?->name,
+                ];
+
+                // Limit to 3 users
+                if (count($orderedUsers) >= 3) {
+                    break;
+                }
+            }
+        }
+
+        return $orderedUsers;
     }
 
     /**
@@ -76,14 +112,8 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected function registerConfig(): void
     {
-        $this->mergeConfigFrom(module_path($this->moduleName, 'config/services.php'), 'services');
-    }
+        parent::registerConfig();
 
-    /**
-     * Get the services provided by the provider.
-     */
-    public function provides(): array
-    {
-        return [];
+        $this->mergeConfigFrom(module_path($this->name, 'config/services.php'), 'services');
     }
 }

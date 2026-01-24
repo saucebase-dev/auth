@@ -3,6 +3,7 @@
 namespace Modules\Auth\Filament\Clusters\Auth\Resources\Users\Tables;
 
 use App\Enums\Role;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -10,6 +11,7 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use STS\FilamentImpersonate\Actions\Impersonate;
 
 class UsersTable
 {
@@ -51,10 +53,13 @@ class UsersTable
                     ->label(__('Updated at'))
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->recordActions([
-                ViewAction::make()->requiresConfirmation(),
-                EditAction::make(),
-            ])
+            ->recordActions(
+                ActionGroup::make([
+                    ViewAction::make()->requiresConfirmation(),
+                    EditAction::make(),
+                    Impersonate::make(),
+                ])
+            )
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

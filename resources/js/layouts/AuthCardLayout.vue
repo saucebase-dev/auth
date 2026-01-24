@@ -29,7 +29,7 @@ defineProps<{
             </Link>
         </div>
 
-        <div class="flex-grow">
+        <div class="grow">
             <Card>
                 <CardHeader class="px-8 text-center">
                     <CardTitle class="text-2xl">
