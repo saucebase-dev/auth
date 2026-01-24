@@ -53,12 +53,12 @@ class UsersTable
                     ->label(__('Updated at'))
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->recordActions(
+            ->recordActions([
                 ActionGroup::make([
                     ViewAction::make()->requiresConfirmation(),
                     EditAction::make(),
                     Impersonate::make(),
-                ])
+                ])]
             )
             ->toolbarActions([
                 BulkActionGroup::make([
