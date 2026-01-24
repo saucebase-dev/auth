@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Providers\ModuleServiceProvider;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Lab404\Impersonate\Services\ImpersonateManager;
 
 class AuthServiceProvider extends ModuleServiceProvider
 {
@@ -43,7 +44,7 @@ class AuthServiceProvider extends ModuleServiceProvider
             return false;
         }
 
-        $impersonate = app('impersonate');
+        $impersonate = app(ImpersonateManager::class);
         $impersonatorGuard = $impersonate->getImpersonatorGuardUsingName();
         $currentPanelGuard = \Filament\Facades\Filament::getAuthGuard();
         $isImpersonating = $impersonate->isImpersonating();
