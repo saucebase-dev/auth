@@ -19,6 +19,7 @@ npm run build
 - **User Authentication** — Standard login, registration, and password reset flows
 - **Social Login** — OAuth integration via Laravel Socialite (Google, GitHub, etc.)
 - **Social Account Linking** — Connects multiple OAuth providers to a single user account
+- **User Impersonation** — Admins can impersonate users with recent history tracking
 - **Filament Integration** — Admin panel components for user management
 - **Vue 3 Frontend** — Pre-built authentication pages with Inertia.js
 
@@ -90,3 +91,16 @@ Get connected providers:
 $providers = $user->connected_providers;
 // Returns: [['provider' => 'google', 'last_login_at' => '...', 'provider_avatar_url' => '...']]
 ```
+
+## User Impersonation
+
+Impersonate users from the Filament admin panel with session-based authentication. Recent history tracking allows quick switching between the last 3 impersonated users.
+
+See the [Impersonation Guide](https://github.com/sauce-base/saucebase/blob/main/docs/fundamentals/impersonation.md) for complete usage documentation.
+
+**Quick Start:**
+- Navigate to Users in admin panel (`/admin`)
+- Click "Impersonate" action on any user
+- Use the floating alert to switch between recent users or stop impersonation
+
+**Configuration:** `modules/Auth/config/filament-impersonate.php`
