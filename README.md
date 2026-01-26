@@ -96,7 +96,7 @@ $providers = $user->connected_providers;
 
 Impersonate users from the Filament admin panel with session-based authentication. Recent history tracking allows quick switching between the last 3 impersonated users.
 
-See the [Impersonation Guide](https://github.com/sauce-base/saucebase/blob/main/docs/fundamentals/impersonation.md) for complete usage documentation.
+See the [Impersonation Guide](https://sauce-base.github.io/docs/fundamentals/impersonation) for complete usage documentation.
 
 **Quick Start:**
 - Navigate to Users in admin panel (`/admin`)
