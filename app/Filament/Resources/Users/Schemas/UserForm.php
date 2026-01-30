@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Auth\Filament\Clusters\Auth\Resources\Users\Schemas;
+namespace Modules\Auth\Filament\Resources\Users\Schemas;
 
 use App\Enums\Role as RoleEnum;
 use Filament\Forms\Components\Select;

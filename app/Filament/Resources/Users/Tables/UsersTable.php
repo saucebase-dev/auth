@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Auth\Filament\Clusters\Auth\Resources\Users\Tables;
+namespace Modules\Auth\Filament\Resources\Users\Tables;
 
 use App\Enums\Role;
 use Filament\Actions\ActionGroup;
