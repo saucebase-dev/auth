@@ -1,29 +1,41 @@
 <?php
 
-namespace Modules\Auth\Filament\Clusters\Auth\Resources\Users;
+namespace Modules\Auth\Filament\Resources\Users;
 
 use App\Models\User;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Modules\Auth\Filament\Clusters\Auth\Auth;
-use Modules\Auth\Filament\Clusters\Auth\Resources\Users\Pages\CreateUser;
-use Modules\Auth\Filament\Clusters\Auth\Resources\Users\Pages\EditUser;
-use Modules\Auth\Filament\Clusters\Auth\Resources\Users\Pages\ListUsers;
-use Modules\Auth\Filament\Clusters\Auth\Resources\Users\Pages\ViewUser;
-use Modules\Auth\Filament\Clusters\Auth\Resources\Users\Schemas\UserForm;
-use Modules\Auth\Filament\Clusters\Auth\Resources\Users\Schemas\UserInfolist;
-use Modules\Auth\Filament\Clusters\Auth\Resources\Users\Tables\UsersTable;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Model;
+use Modules\Auth\Filament\Resources\Users\Pages\CreateUser;
+use Modules\Auth\Filament\Resources\Users\Pages\EditUser;
+use Modules\Auth\Filament\Resources\Users\Pages\ListUsers;
+use Modules\Auth\Filament\Resources\Users\Pages\ViewUser;
+use Modules\Auth\Filament\Resources\Users\Schemas\UserForm;
+use Modules\Auth\Filament\Resources\Users\Schemas\UserInfolist;
+use Modules\Auth\Filament\Resources\Users\Tables\UsersTable;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::UserGroup;
+    protected static ?int $navigationSort = 1;
 
-    protected static ?string $cluster = Auth::class;
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Authentication');
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'email'];
+    }
+
+    public static function getGlobalSearchResultTitle(Model $record): string|Htmlable
+    {
+        return $record->name;
+    }
 
     public static function form(Schema $schema): Schema
     {
