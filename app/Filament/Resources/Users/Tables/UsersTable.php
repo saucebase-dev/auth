@@ -55,7 +55,7 @@ class UsersTable
             ])
             ->recordActions([
                 ActionGroup::make([
-                    ViewAction::make()->requiresConfirmation(),
+                    ViewAction::make(),
                     EditAction::make(),
                     Impersonate::make(),
                 ])]

@@ -6,6 +6,8 @@ use App\Models\User;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Model;
 use Modules\Auth\Filament\Resources\Users\Pages\CreateUser;
 use Modules\Auth\Filament\Resources\Users\Pages\EditUser;
 use Modules\Auth\Filament\Resources\Users\Pages\ListUsers;
@@ -23,6 +25,16 @@ class UserResource extends Resource
     public static function getNavigationGroup(): ?string
     {
         return __('Authentication');
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'email'];
+    }
+
+    public static function getGlobalSearchResultTitle(Model $record): string|Htmlable
+    {
+        return $record->name;
     }
 
     public static function form(Schema $schema): Schema
