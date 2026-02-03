@@ -31,8 +31,9 @@ class ReimpersonateController extends Controller
         abort_if($userId === $impersonator->id, 403, 'Cannot impersonate yourself');
 
         // Store session data (like the Filament Impersonate package does)
+        // Preserve existing back_to value when re-impersonating from history
         session()->put([
-            'impersonate.back_to' => request()->header('referer') ?? Filament::getCurrentOrDefaultPanel()->getUrl(),
+            'impersonate.back_to' => session('impersonate.back_to') ?? Filament::getCurrentOrDefaultPanel()->getUrl(),
             'impersonate.guard' => $guard,
         ]);
 

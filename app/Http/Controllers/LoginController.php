@@ -44,6 +44,10 @@ class LoginController extends Controller
             __('auth.welcome-back', ['name' => $user->name]),
         );
 
+        if ($request->session()->has('url.intended')) {
+            return Inertia::location(session('url.intended'));
+        }
+
         return redirect()->intended(route('dashboard'));
     }
 

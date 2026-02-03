@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
+import InputField from '@/components/ui/input/InputField.vue';
 import { Form, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import InputField from '@/components/ui/input/InputField.vue';
 import AuthCardLayout from '../layouts/AuthCardLayout.vue';
 
 const page = usePage();
