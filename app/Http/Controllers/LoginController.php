@@ -28,7 +28,7 @@ class LoginController extends Controller
      * Handle an incoming authentication request.
      * Login
      */
-    public function store(LoginRequest $request): RedirectResponse|Response
+    public function store(LoginRequest $request)
     {
         try {
             $user = $request->validateCredentials();
