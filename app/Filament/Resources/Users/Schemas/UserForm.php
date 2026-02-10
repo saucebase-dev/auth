@@ -32,7 +32,6 @@ class UserForm
                     ->relationship('roles', 'name')
                     ->multiple()
                     ->minItems(1)
-                    ->maxItems(1)
                     ->preload()
                     // Optional: default to "user" on create:
                     ->default(fn () => [Role::where('name', RoleEnum::USER)->value('id')]),
