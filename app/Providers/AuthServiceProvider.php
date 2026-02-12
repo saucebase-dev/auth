@@ -7,6 +7,7 @@ use App\Providers\ModuleServiceProvider;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Lab404\Impersonate\Services\ImpersonateManager;
+use Modules\Auth\Models\SocialAccount;
 
 class AuthServiceProvider extends ModuleServiceProvider
 {
@@ -17,6 +18,31 @@ class AuthServiceProvider extends ModuleServiceProvider
     protected array $providers = [
         RouteServiceProvider::class,
     ];
+
+    public function boot(): void
+    {
+        parent::boot();
+
+        /**
+         * Establishes a dynamic relationship mapping between the User model and the SocialAccount model
+         * specifically for social authentication operations within the Auth module.
+         *
+         * This relationship is defined here to maintain separation of concerns and keep
+         * authentication-related logic contained within the Auth service provider. However,
+         * if you prefer a more traditional approach or need the relationship to be
+         * available globally throughout your application, consider moving this
+         * relationship definition directly to the User model class or using the
+         * UseSocialite trait (modules/Auth/app/Traits/UseSocialite.php) in your User model
+         * for a more modular approach.
+         *
+         * @see User - The source model in the relationship
+         * @see SocialAccount - The target model containing social authentication information
+         * @see \Modules\Auth\Traits\UseSocialite - Trait providing social authentication relationships
+         */
+        User::resolveRelationUsing('socialAccounts', function (User $user) {
+            return $user->hasMany(SocialAccount::class);
+        });
+    }
 
     /**
      * Share Inertia data globally.
