@@ -8,7 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
+ * @property int $id
+ * @property int $user_id
+ * @property string $provider
+ * @property string $provider_id
+ * @property string $provider_token
+ * @property string $provider_refresh_token
+ * @property \Carbon\Carbon|null $provider_token_expires_at
  * @property string|null $provider_avatar_url
+ * @property \Carbon\Carbon|null $last_login_at
+ * @property \Carbon\Carbon|null $created_at
+ * @property \Carbon\Carbon|null $updated_at
  */
 class SocialAccount extends Model
 {

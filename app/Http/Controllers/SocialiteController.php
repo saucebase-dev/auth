@@ -37,6 +37,7 @@ class SocialiteController extends Controller
         // Check if user is already authenticated (account linking flow)
         if (Auth::check()) {
             try {
+                /** @var \Laravel\Socialite\Two\User $socialUser */
                 $socialUser = Socialite::driver($provider)->user();
                 $this->socialiteService->linkAccountToUser(Auth::user(), $provider, $socialUser);
                 Toast::success(trans('socialite.account_connected', ['provider' => ucfirst($provider)]));

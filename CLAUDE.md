@@ -12,7 +12,7 @@ Authentication, registration, password reset, email verification, OAuth (Sociali
 | Requests | `LoginRequest` (credential validation + rate limiting), `RegisterRequest` (password hashing in `passedValidation`) |
 | Exceptions | `AuthException` (credentials, throttle), `SocialiteException` (disconnect, account linking, provider validation) |
 | Listeners | `AssignUserRole` (Registered), `UpdateUserLastLogin` (Login), `Impersonation` (TakeImpersonation — session history) |
-| Trait | `useSocialite` — added to User model (socialAccounts relation, connected_providers, disconnect) |
+| Trait | `Sociable` — added to User model (socialAccounts relation, connected_providers, disconnect) |
 | Filament | `AuthPlugin`, `UserResource` (list, create, view, edit), `UserForm`, `UsersTable` |
 | Pages | `Login`, `Register`, `ForgotPassword`, `ResetPassword`, `VerifyEmail` |
 | Layout | `AuthCardLayout` — card with logo, status alerts, page transitions |

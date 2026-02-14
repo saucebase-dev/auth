@@ -7,7 +7,6 @@ use App\Providers\ModuleServiceProvider;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Lab404\Impersonate\Services\ImpersonateManager;
-use Modules\Auth\Models\SocialAccount;
 
 class AuthServiceProvider extends ModuleServiceProvider
 {
@@ -22,26 +21,6 @@ class AuthServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
-
-        /**
-         * Establishes a dynamic relationship mapping between the User model and the SocialAccount model
-         * specifically for social authentication operations within the Auth module.
-         *
-         * This relationship is defined here to maintain separation of concerns and keep
-         * authentication-related logic contained within the Auth service provider. However,
-         * if you prefer a more traditional approach or need the relationship to be
-         * available globally throughout your application, consider moving this
-         * relationship definition directly to the User model class or using the
-         * UseSocialite trait (modules/Auth/app/Traits/UseSocialite.php) in your User model
-         * for a more modular approach.
-         *
-         * @see User - The source model in the relationship
-         * @see SocialAccount - The target model containing social authentication information
-         * @see \Modules\Auth\Traits\UseSocialite - Trait providing social authentication relationships
-         */
-        User::resolveRelationUsing('socialAccounts', function (User $user) {
-            return $user->hasMany(SocialAccount::class);
-        });
     }
 
     /**
@@ -51,15 +30,27 @@ class AuthServiceProvider extends ModuleServiceProvider
     {
         Inertia::share('auth.user', fn () => Auth::user());
 
-        Inertia::share('impersonation', fn () => $this->isUserImpersonated() ? [
-            'user' => [
-                ...Auth::user()->only(['id', 'name', 'email', 'avatar']),
-                'role' => Auth::user()->roles->first()?->name,
-            ],
-            'route' => route('filament-impersonate.leave'),
-            'label' => __('Stop Impersonation'),
-            'recent' => $this->getRecentImpersonationHistory(),
-        ] : null);
+        Inertia::share('impersonation', function () {
+            if (! $this->isUserImpersonated()) {
+                return null;
+            }
+
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+
+            /** @var \Spatie\Permission\Models\Role|null $role */
+            $role = $user->roles->first();
+
+            return [
+                'user' => [
+                    ...$user->only(['id', 'name', 'email', 'avatar']),
+                    'role' => $role?->name,
+                ],
+                'route' => route('filament-impersonate.leave'),
+                'label' => __('Stop Impersonation'),
+                'recent' => $this->getRecentImpersonationHistory(),
+            ];
+        });
     }
 
     protected function isUserImpersonated(): bool
@@ -91,7 +82,9 @@ class AuthServiceProvider extends ModuleServiceProvider
             return [];
         }
 
-        $currentUserId = Auth::user()->id;
+        /** @var \App\Models\User $currentUser */
+        $currentUser = Auth::user();
+        $currentUserId = $currentUser->id;
 
         // Fetch users (filters deleted users automatically)
         $users = User::with('roles:name')
@@ -104,13 +97,16 @@ class AuthServiceProvider extends ModuleServiceProvider
         $orderedUsers = [];
         foreach ($historyIds as $id) {
             if ($users->has($id) && $id !== $currentUserId) {
+                /** @var \App\Models\User $user */
                 $user = $users->get($id);
+                /** @var \Spatie\Permission\Models\Role|null $userRole */
+                $userRole = $user->roles->first();
                 $orderedUsers[] = [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
                     'avatar' => $user->avatar,
-                    'role' => $user->roles->first()?->name,
+                    'role' => $userRole?->name,
                 ];
 
                 // Limit to 3 users

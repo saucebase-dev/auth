@@ -2,6 +2,7 @@
 
 namespace Modules\Auth\Traits;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Auth\Exceptions\SocialiteException;
 use Modules\Auth\Models\SocialAccount;
 use Modules\Auth\Services\SocialiteService;
@@ -9,8 +10,16 @@ use Modules\Auth\Services\SocialiteService;
 /**
  * @phpstan-ignore trait.unused
  */
-trait useSocialite
+trait Sociable
 {
+    /**
+     * Get the social accounts associated with the user.
+     */
+    public function socialAccounts(): HasMany
+    {
+        return $this->hasMany(SocialAccount::class);
+    }
+
     /**
      * Get connected providers for profile display
      */

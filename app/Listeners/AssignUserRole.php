@@ -12,9 +12,10 @@ class AssignUserRole
      */
     public function handle(Registered $event): void
     {
+        /** @var \App\Models\User $user */
         $user = $event->user;
 
-        if ($user->roles?->isEmpty()) {
+        if ($user->roles->isEmpty()) {
             $user->syncRoles([Role::USER->value]);
         }
     }

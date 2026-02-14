@@ -39,14 +39,14 @@ GITHUB_CLIENT_SECRET=your-client-secret
 GITHUB_CLIENT_REDIRECT_URI=/auth/socialite/github/callback
 ```
 
-2. Add the `useSocialite` trait to your User model:
+2. Add the `Sociable` trait to your User model:
 
 ```php
-use Modules\Auth\Traits\useSocialite;
+use Modules\Auth\Traits\Sociable;
 
 class User extends Authenticatable
 {
-    use useSocialite;
+    use Sociable;
 
     // ... rest of your model
 }
