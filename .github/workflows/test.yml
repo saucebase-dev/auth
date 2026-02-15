@@ -46,6 +46,12 @@ jobs:
                   jq '. + {"Auth": true}' modules_statuses.json > modules_statuses.json.tmp
                   mv modules_statuses.json.tmp modules_statuses.json
 
+            - name: Patch User model with required traits
+              working-directory: saucebase
+              run: |
+                  php modules/Auth/.github/scripts/patch-user-model.php app/Models/User.php \
+                      'Modules\Auth\Traits\Sociable:Sociable'
+
             - name: Install Composer dependencies
               working-directory: saucebase
               run: composer install --prefer-dist --no-interaction --no-progress
