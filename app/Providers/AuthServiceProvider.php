@@ -18,24 +18,39 @@ class AuthServiceProvider extends ModuleServiceProvider
         RouteServiceProvider::class,
     ];
 
+    public function boot(): void
+    {
+        parent::boot();
+    }
+
     /**
      * Share Inertia data globally.
      */
     protected function shareInertiaData(): void
     {
         Inertia::share('auth.user', fn () => Auth::user());
-        Inertia::share('canLogin', true);
-        Inertia::share('canRegister', true);
 
-        Inertia::share('impersonation', fn () => $this->isUserImpersonated() ? [
-            'user' => [
-                ...Auth::user()->only(['id', 'name', 'email', 'avatar']),
-                'role' => Auth::user()->roles->first()?->name,
-            ],
-            'route' => route('filament-impersonate.leave'),
-            'label' => __('Stop Impersonation'),
-            'recent' => $this->getRecentImpersonationHistory(),
-        ] : null);
+        Inertia::share('impersonation', function () {
+            if (! $this->isUserImpersonated()) {
+                return null;
+            }
+
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+
+            /** @var \Spatie\Permission\Models\Role|null $role */
+            $role = $user->roles->first();
+
+            return [
+                'user' => [
+                    ...$user->only(['id', 'name', 'email', 'avatar']),
+                    'role' => $role?->name,
+                ],
+                'route' => route('filament-impersonate.leave'),
+                'label' => __('Stop Impersonation'),
+                'recent' => $this->getRecentImpersonationHistory(),
+            ];
+        });
     }
 
     protected function isUserImpersonated(): bool
@@ -67,7 +82,9 @@ class AuthServiceProvider extends ModuleServiceProvider
             return [];
         }
 
-        $currentUserId = Auth::user()->id;
+        /** @var \App\Models\User $currentUser */
+        $currentUser = Auth::user();
+        $currentUserId = $currentUser->id;
 
         // Fetch users (filters deleted users automatically)
         $users = User::with('roles:name')
@@ -80,13 +97,16 @@ class AuthServiceProvider extends ModuleServiceProvider
         $orderedUsers = [];
         foreach ($historyIds as $id) {
             if ($users->has($id) && $id !== $currentUserId) {
+                /** @var \App\Models\User $user */
                 $user = $users->get($id);
+                /** @var \Spatie\Permission\Models\Role|null $userRole */
+                $userRole = $user->roles->first();
                 $orderedUsers[] = [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
                     'avatar' => $user->avatar,
-                    'role' => $user->roles->first()?->name,
+                    'role' => $userRole?->name,
                 ];
 
                 // Limit to 3 users

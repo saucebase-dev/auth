@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import { Form, Link } from '@inertiajs/vue3';
 import InputField from '@/components/ui/input/InputField.vue';
+import { Form, Link } from '@inertiajs/vue3';
 import SocialiteProviders from '../components/SocialiteProviders.vue';
 import AuthCardLayout from '../layouts/AuthCardLayout.vue';
 </script>

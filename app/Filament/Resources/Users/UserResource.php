@@ -34,6 +34,7 @@ class UserResource extends Resource
 
     public static function getGlobalSearchResultTitle(Model $record): string|Htmlable
     {
+        /** @var \App\Models\User $record */
         return $record->name;
     }
 

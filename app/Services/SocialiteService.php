@@ -116,6 +116,7 @@ class SocialiteService
      */
     public function disconnectProvider(User $user, string $provider): void
     {
+        /* @phpstan-ignore function.alreadyNarrowedType */
         if (! method_exists($user, 'socialAccounts')) {
             throw SocialiteException::missingSocialAccountsRelation();
         }

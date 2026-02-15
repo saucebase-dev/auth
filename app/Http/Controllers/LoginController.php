@@ -28,7 +28,7 @@ class LoginController extends Controller
      * Handle an incoming authentication request.
      * Login
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request)
     {
         try {
             $user = $request->validateCredentials();
@@ -43,6 +43,10 @@ class LoginController extends Controller
         Toast::default(
             __('auth.welcome-back', ['name' => $user->name]),
         );
+
+        if ($request->session()->has('url.intended')) {
+            return Inertia::location(session('url.intended'));
+        }
 
         return redirect()->intended(route('dashboard'));
     }

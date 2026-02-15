@@ -2,10 +2,10 @@
 
 namespace Modules\Auth\Listeners;
 
-use App\Enums\Role;
 use Illuminate\Auth\Events\Registered;
+use Modules\Auth\Notifications\WelcomeNotification;
 
-class AssignUserRole
+class SendWelcomeNotification
 {
     /**
      * Handle the event.
@@ -15,8 +15,6 @@ class AssignUserRole
         /** @var \App\Models\User $user */
         $user = $event->user;
 
-        if ($user->roles->isEmpty()) {
-            $user->syncRoles([Role::USER->value]);
-        }
+        $user->notify(new WelcomeNotification);
     }
 }

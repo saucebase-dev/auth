@@ -10,7 +10,7 @@ use Modules\Auth\Services\SocialiteService;
 /**
  * @phpstan-ignore trait.unused
  */
-trait useSocialite
+trait Sociable
 {
     /**
      * Get the social accounts associated with the user.
