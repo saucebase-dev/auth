@@ -1,5 +1,4 @@
-import { expect, test } from '@playwright/test';
-import { testUsers } from '../../fixtures/users';
+import { test, expect } from '../../fixtures';
 import { LoginPage } from '../../pages/LoginPage';
 
 test.describe.parallel('Login Error Handling', () => {
@@ -11,7 +10,7 @@ test.describe.parallel('Login Error Handling', () => {
     });
 
     test('shows error for invalid credentials', async () => {
-        const user = testUsers.invalid;
+        const user = { email: 'invalid@example.com', password: 'wrongpassword' };
 
         await loginPage.login(user.email, user.password);
 
@@ -20,8 +19,8 @@ test.describe.parallel('Login Error Handling', () => {
         await loginPage.expectAlertToBeVisible();
     });
 
-    test('handles network failure gracefully', async () => {
-        const user = testUsers.valid;
+    test('handles network failure gracefully', async ({ credentials }) => {
+        const user = credentials.user;
 
         await loginPage.mockNetworkFailure();
         const failedRequestPromise = loginPage.waitForFailedLoginRequest();
@@ -34,8 +33,8 @@ test.describe.parallel('Login Error Handling', () => {
         expect(failedRequest.url()).toContain(loginPage.loginEndpoint);
     });
 
-    test('handles server 500 error gracefully', async () => {
-        const user = testUsers.valid;
+    test('handles server 500 error gracefully', async ({ credentials }) => {
+        const user = credentials.user;
 
         await loginPage.mockServerResponse(500, {
             message: 'Internal server error',
@@ -50,8 +49,8 @@ test.describe.parallel('Login Error Handling', () => {
         expect(response.status()).toBe(500);
     });
 
-    test('handles request timeout', async () => {
-        const user = testUsers.valid;
+    test('handles request timeout', async ({ credentials }) => {
+        const user = credentials.user;
 
         await loginPage.page.route(loginPage.loginEndpoint, async (route) => {
             // Simulate a timeout by delaying beyond Playwright's default

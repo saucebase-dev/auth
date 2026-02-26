@@ -1,5 +1,4 @@
-import { expect, test } from '@playwright/test';
-import { testUsers } from '../../fixtures/users';
+import { test, expect } from '../../fixtures';
 import { RegisterPage } from '../../pages/RegisterPage';
 
 test.describe.parallel('Register Error Handling', () => {
@@ -10,10 +9,10 @@ test.describe.parallel('Register Error Handling', () => {
         await registerPage.goto();
     });
 
-    test('shows error for duplicate email', async ({ page }) => {
-        const user = testUsers.valid;
+    test('shows error for duplicate email', async ({ page, credentials }) => {
+        const user = credentials.user;
 
-        await registerPage.register(user.name, user.email, user.password);
+        await registerPage.register('Test User', user.email, user.password);
 
         await expect(registerPage.page).toHaveURL(registerPage.signupEndpoint);
 
@@ -21,13 +20,13 @@ test.describe.parallel('Register Error Handling', () => {
         await expect(errorAlert).toBeVisible();
     });
 
-    test('handles network failure gracefully', async () => {
-        const user = testUsers.valid;
+    test('handles network failure gracefully', async ({ credentials }) => {
+        const user = credentials.user;
 
         await registerPage.mockNetworkFailure();
         const failedRequestPromise = registerPage.waitForFailedLoginRequest();
 
-        await registerPage.register(user.name, user.email, user.password);
+        await registerPage.register('Test User', user.email, user.password);
 
         await expect(registerPage.page).toHaveURL(registerPage.signupEndpoint);
 
@@ -35,15 +34,15 @@ test.describe.parallel('Register Error Handling', () => {
         expect(failedRequest.url()).toContain(registerPage.signupEndpoint);
     });
 
-    test('handles server 500 error gracefully', async () => {
-        const user = testUsers.valid;
+    test('handles server 500 error gracefully', async ({ credentials }) => {
+        const user = credentials.user;
 
         await registerPage.mockServerResponse(500, {
             message: 'Internal server error',
         });
         const responsePromise = registerPage.waitForLoginResponse();
 
-        await registerPage.register(user.name, user.email, user.password);
+        await registerPage.register('Test User', user.email, user.password);
 
         await expect(registerPage.page).toHaveURL(registerPage.signupEndpoint);
 
@@ -51,8 +50,8 @@ test.describe.parallel('Register Error Handling', () => {
         expect(response.status()).toBe(500);
     });
 
-    test('handles request timeout', async () => {
-        const user = testUsers.valid;
+    test('handles request timeout', async ({ credentials }) => {
+        const user = credentials.user;
 
         await registerPage.page.route(registerPage.signupEndpoint, async (route) => {
             // Simulate a timeout by delaying beyond Playwright's default
@@ -60,7 +59,7 @@ test.describe.parallel('Register Error Handling', () => {
             await route.abort('timedout');
         });
 
-        await registerPage.register(user.name, user.email, user.password);
+        await registerPage.register('Test User', user.email, user.password);
 
         // After timeout, form should still be on register page
         await expect(registerPage.page).toHaveURL(registerPage.signupEndpoint);

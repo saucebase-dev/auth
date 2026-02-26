@@ -1,5 +1,4 @@
-import { expect, test } from '@playwright/test';
-import { testUsers } from '../../fixtures/users';
+import { test, expect } from '../../fixtures';
 import { LoginPage } from '../../pages/LoginPage';
 
 test.describe.parallel('Login Basics', () => {
@@ -15,14 +14,14 @@ test.describe.parallel('Login Basics', () => {
         await expect(loginPage.page).toHaveURL('/dashboard');
     }
 
-    test('logs in with valid credentials and redirects to dashboard', async () => {
-        const user = testUsers.admin;
+    test('logs in with valid credentials and redirects to dashboard', async ({ credentials }) => {
+        const user = credentials.admin;
         await loginPage.login(user.email, user.password);
         await expectSuccessfulLogin();
     });
 
-    test('logs in with remember me option', async () => {
-        const user = testUsers.valid;
+    test('logs in with remember me option', async ({ credentials }) => {
+        const user = credentials.user;
         await loginPage.login(user.email, user.password, true);
 
         await expect(loginPage.rememberCheckbox).toBeChecked();
@@ -31,8 +30,9 @@ test.describe.parallel('Login Basics', () => {
 
     test('redirects authenticated users away from login page', async ({
         page,
+        credentials,
     }) => {
-        const user = testUsers.valid;
+        const user = credentials.user;
         await loginPage.login(user.email, user.password);
         await expectSuccessfulLogin();
 
@@ -41,8 +41,8 @@ test.describe.parallel('Login Basics', () => {
         await expect(page).toHaveURL('/dashboard');
     });
 
-    test('toggles password visibility', async () => {
-        const user = testUsers.valid;
+    test('toggles password visibility', async ({ credentials }) => {
+        const user = credentials.user;
         await loginPage.passwordInput.fill(user.password);
 
         await loginPage.expectPasswordHidden();
@@ -54,8 +54,8 @@ test.describe.parallel('Login Basics', () => {
         await loginPage.expectPasswordHidden();
     });
 
-    test('submits form on Enter key press', async () => {
-        const user = testUsers.valid;
+    test('submits form on Enter key press', async ({ credentials }) => {
+        const user = credentials.user;
         await loginPage.emailInput.fill(user.email);
         await loginPage.passwordInput.fill(user.password);
 

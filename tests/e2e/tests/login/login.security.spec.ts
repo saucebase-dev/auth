@@ -1,5 +1,4 @@
-import { expect, test } from '@playwright/test';
-import { testUsers } from '../../fixtures/users';
+import { test, expect } from '../../fixtures';
 import { LoginPage } from '../../pages/LoginPage';
 
 test.describe('Login Security', () => {
@@ -14,7 +13,7 @@ test.describe('Login Security', () => {
         test.describe.configure({ mode: 'serial' });
 
         test('blocks login after too many failed attempts', async () => {
-            const invalidUser = testUsers.invalid;
+            const invalidUser = { email: 'invalid@example.com', password: 'wrongpassword' };
 
             for (let i = 0; i <= 5; i++) {
                 await loginPage.login(invalidUser.email, invalidUser.password);
@@ -38,7 +37,7 @@ test.describe('Login Security', () => {
         test('handles rate limit response', async () => {
             // This test verifies that the form can display rate limit errors
             // Since rate limiting is implemented on the backend, we test the UI's ability to show the error
-            const invalidUser = testUsers.invalid;
+            const invalidUser = { email: 'invalid@example.com', password: 'wrongpassword' };
 
             // Make multiple failed login attempts - backend should handle rate limiting
             await loginPage.login(invalidUser.email, invalidUser.password);
@@ -51,8 +50,8 @@ test.describe('Login Security', () => {
     });
 
     test.describe('CSRF Protection', () => {
-        test('rejects submission with invalid CSRF token', async () => {
-            const user = testUsers.valid;
+        test('rejects submission with invalid CSRF token', async ({ credentials }) => {
+            const user = credentials.user;
 
             await loginPage.mockServerResponse(419, {
                 message: 'CSRF token mismatch',
