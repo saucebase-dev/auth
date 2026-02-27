@@ -1,5 +1,4 @@
-import { expect, test } from '@playwright/test';
-import { testUsers } from '../../fixtures/users';
+import { test, expect } from '@e2e/fixtures';
 import { LoginPage } from '../../pages/LoginPage';
 
 test.describe.parallel('Logout Basics', () => {
@@ -11,8 +10,8 @@ test.describe.parallel('Logout Basics', () => {
         await loginPage.expectToBeVisible();
     });
 
-    test('logs out from user menu and redirects to login', async ({ page }) => {
-        const user = testUsers.valid;
+    test('logs out from user menu and redirects to login', async ({ page, credentials }) => {
+        const user = credentials.user;
 
         // Login first
         await loginPage.login(user.email, user.password);

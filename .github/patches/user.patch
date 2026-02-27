@@ -1,0 +1,18 @@
+--- a/app/Models/User.php
++++ b/app/Models/User.php
+@@ -9,6 +9,7 @@
+ use Spatie\MediaLibrary\HasMedia;
+ use Spatie\MediaLibrary\InteractsWithMedia;
+ use Spatie\Permission\Traits\HasRoles;
++use Modules\Auth\Traits\Sociable;
+
+ // use Modules\Auth\Traits\Sociable;
+ // use Modules\Billing\Traits\Billable;
+@@ -21,6 +22,7 @@
+         HasRoles,
+         InteractsWithMedia,
+         Notifiable;
++    use Sociable;
+
+     // use Billable;
+     // use Sociable;
