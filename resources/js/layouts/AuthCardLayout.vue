@@ -30,7 +30,7 @@ defineProps<{
         </div>
 
         <div class="grow">
-            <Card>
+            <Card class="mx-4">
                 <CardHeader class="px-8 text-center">
                     <CardTitle class="text-2xl">
                         {{ title }}
