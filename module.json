@@ -3,7 +3,7 @@
   "alias": "auth",
   "description": "Authentication module for Saucebase",
   "author": "Saucebase",
-  "version": "v0.0.10",
+  "version": "v0.0.15",
   "keywords": [
     "auth"
   ],
