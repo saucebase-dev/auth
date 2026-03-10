@@ -47,9 +47,7 @@ class ImpersonationTest extends TestCase
         $response = $this->actingAs($user)
             ->post(route('auth.impersonate.reimpersonate', ['userId' => $target->id]));
 
-        // The controller will 403 because Filament::auth()->user() resolves to the web guard user
-        // and target user ID != impersonator ID, so only a 403 from missing impersonator auth
-        // or a redirect occurs — at minimum it must not be a 200
-        $this->assertNotEquals(200, $response->getStatusCode());
+        // Non-admin users must receive a 403 Forbidden response when accessing this route
+        $response->assertStatus(403);
     }
 }
