@@ -63,7 +63,7 @@ Redirect URIs default to `/auth/socialite/{provider}/callback`. Providers config
 ## Testing
 
 ```bash
-php artisan test --testsuite=Modules --filter=Auth  # PHPUnit
+php artisan test --testsuite=Modules --filter='^Modules\\Auth\\Tests'  # PHPUnit
 npx playwright test --project="@Auth*"                 # E2E
 ```
 

@@ -24,9 +24,12 @@ class ReimpersonateController extends Controller
 
         $impersonator = Filament::auth()->user();
 
-        abort_if(! $impersonator, 403, 'Impersonator not authenticated');
+        abort_if(! $impersonator, 403, __('Impersonator not authenticated'));
+
+        abort_if(! $impersonator->isAdmin(), 403, __('Impersonator is not an administrador'));
+
         // Security check: cannot impersonate yourself
-        abort_if($userId === $impersonator->id, 403, 'Cannot impersonate yourself');
+        abort_if($userId === $impersonator->id, 403, __('Cannot impersonate yourself'));
 
         $target = User::findOrFail($userId);
         // Store session data (like the Filament Impersonate package does)
