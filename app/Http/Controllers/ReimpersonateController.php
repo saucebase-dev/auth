@@ -5,7 +5,7 @@ namespace Modules\Auth\Http\Controllers;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Http\RedirectResponse;
-use Lab404\Impersonate\Services\ImpersonateManager;
+use STS\FilamentImpersonate\ImpersonateManager;
 
 class ReimpersonateController extends Controller
 {
@@ -39,8 +39,8 @@ class ReimpersonateController extends Controller
             'impersonate.guard' => $guard,
         ]);
 
-        // Perform impersonation with guard (triggers TakeImpersonation event automatically)
-        $impersonate->take($impersonator, $target, $guard);
+        // Perform impersonation with guard (triggers EnterImpersonation event automatically)
+        $impersonate->enter($impersonator, $target, $guard);
 
         return redirect(config('filament-impersonate.redirect_to'));
     }
