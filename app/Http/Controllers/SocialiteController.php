@@ -48,7 +48,7 @@ class SocialiteController extends Controller
                 Toast::error(trans('socialite.error'));
                 report($e);
             } finally {
-                return redirect()->route('settings.profile');
+                return back();
             }
         }
 
