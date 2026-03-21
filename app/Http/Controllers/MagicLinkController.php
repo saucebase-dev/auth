@@ -49,13 +49,15 @@ class MagicLinkController extends Controller implements HasMiddleware
         if ($user) {
             $plainToken = Str::random(64);
 
-            MagicLinkToken::updateOrCreate(
-                ['user_id' => $user->id],
-                [
+            MagicLinkToken::upsert(
+                [[
+                    'user_id' => $user->id,
                     'token' => hash('sha256', $plainToken),
                     'expires_at' => now()->addMinutes(config('auth.magic_link.expiry', 15)),
                     'used_at' => null,
-                ]
+                ]],
+                ['user_id'],
+                ['token', 'expires_at', 'used_at']
             );
 
             $url = route('magic-link.authenticate', ['token' => $plainToken]);
@@ -77,10 +79,12 @@ class MagicLinkController extends Controller implements HasMiddleware
     {
         $hashed = hash('sha256', $token);
 
+        $now = now();
+
         $consumed = MagicLinkToken::where('token', $hashed)
             ->whereNull('used_at')
-            ->where('expires_at', '>', now())
-            ->update(['used_at' => now()]);
+            ->where('expires_at', '>', $now)
+            ->update(['used_at' => $now]);
 
         if (! $consumed) {
             return redirect()->route('login')->with('error', __('auth.magic-link-expired'));
