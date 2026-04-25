@@ -12,19 +12,6 @@ use STS\FilamentImpersonate\ImpersonateManager;
 
 class AuthServiceProvider extends ModuleServiceProvider
 {
-    protected string $name = 'Auth';
-
-    protected string $nameLower = 'auth';
-
-    protected array $providers = [
-        RouteServiceProvider::class,
-    ];
-
-    public function boot(): void
-    {
-        parent::boot();
-    }
-
     /**
      * Share Inertia data globally.
      */
@@ -130,6 +117,6 @@ class AuthServiceProvider extends ModuleServiceProvider
     {
         parent::registerConfig();
 
-        $this->mergeConfigFrom(module_path($this->name, 'config/services.php'), 'services');
+        $this->mergeConfigFrom(module_path($this->moduleName(), 'config/services.php'), 'services');
     }
 }
