@@ -30,7 +30,7 @@ class AuthException extends Exception
      */
     public static function invalidCredentials(): self
     {
-        return new self(trans('auth.failed'));
+        return new self(trans('auth::auth.failed'));
     }
 
     /**
@@ -41,7 +41,7 @@ class AuthException extends Exception
      */
     public static function throttle(int $seconds = 60): self
     {
-        $message = trans('auth.throttle', [
+        $message = trans('auth::auth.throttle', [
             'seconds' => $seconds,
             'minutes' => ceil($seconds / 60),
         ]);

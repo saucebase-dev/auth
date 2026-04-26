@@ -67,7 +67,7 @@ class MagicLinkController extends Controller implements HasMiddleware
             $user->notify(new MagicLinkNotification($url));
         }
 
-        return back()->with('status', __('auth.magic-link-sent'));
+        return back()->with('status', __('auth::auth.magic-link-sent'));
     }
 
     /**
@@ -85,21 +85,21 @@ class MagicLinkController extends Controller implements HasMiddleware
             ->update(['used_at' => $now]);
 
         if (! $consumed) {
-            return redirect()->route('login')->with('error', __('auth.magic-link-expired'));
+            return redirect()->route('login')->with('error', __('auth::auth.magic-link-expired'));
         }
 
         $record = MagicLinkToken::where('token', $hashed)->with('user')->first();
         $user = $record?->user;
 
         if ($user === null) {
-            return redirect()->route('login')->with('error', __('auth.magic-link-expired'));
+            return redirect()->route('login')->with('error', __('auth::auth.magic-link-expired'));
         }
 
         Auth::login($user);
 
         $request->session()->regenerate();
 
-        Toast::default(__('auth.welcome-back', ['name' => $user->name]));
+        Toast::default(__('auth::auth.welcome-back', ['name' => $user->name]));
 
         $intended = $request->query('intended');
 

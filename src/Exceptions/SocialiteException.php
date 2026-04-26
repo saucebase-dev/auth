@@ -8,36 +8,36 @@ class SocialiteException extends Exception
 {
     public static function invalidSocialUser(): self
     {
-        return new self(trans('socialite.invalid_user'));
+        return new self(trans('auth::socialite.invalid_user'));
     }
 
     public static function cannotDisconnectOnlyMethod(): self
     {
-        return new self(trans('socialite.cannot_disconnect_only_method'));
+        return new self(trans('auth::socialite.cannot_disconnect_only_method'));
     }
 
     public static function authenticationFailed(): self
     {
-        return new self(trans('socialite.error'));
+        return new self(trans('auth::socialite.error'));
     }
 
     public static function providerNotConnected(string $provider): self
     {
-        return new self(trans('socialite.not_connected', ['Provider' => $provider]));
+        return new self(trans('auth::socialite.not_connected', ['Provider' => $provider]));
     }
 
     public static function missingSocialAccountsRelation(): self
     {
-        return new self(trans('socialite.missing_social_accounts_relation'));
+        return new self(trans('auth::socialite.missing_social_accounts_relation'));
     }
 
     public static function accountAlreadyLinked(string $provider): self
     {
-        return new self(trans('socialite.account_already_linked', ['provider' => ucfirst($provider)]));
+        return new self(trans('auth::socialite.account_already_linked', ['provider' => ucfirst($provider)]));
     }
 
     public static function unsupportedProvider(string $provider): self
     {
-        return new self(trans('socialite.unsupported_provider', ['provider' => ucfirst($provider)]));
+        return new self(trans('auth::socialite.unsupported_provider', ['provider' => ucfirst($provider)]));
     }
 }

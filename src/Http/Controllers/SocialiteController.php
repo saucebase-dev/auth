@@ -32,7 +32,7 @@ class SocialiteController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return back()->with('error', trans('socialite.error'));
+            return back()->with('error', trans('auth::socialite.error'));
         }
 
         // Check if user is already authenticated (account linking flow)
@@ -41,11 +41,11 @@ class SocialiteController extends Controller
                 /** @var User $socialUser */
                 $socialUser = Socialite::driver($provider)->user();
                 $this->socialiteService->linkAccountToUser(Auth::user(), $provider, $socialUser);
-                Toast::success(trans('socialite.account_connected', ['provider' => ucfirst($provider)]));
+                Toast::success(trans('auth::socialite.account_connected', ['provider' => ucfirst($provider)]));
             } catch (SocialiteException $e) {
                 Toast::error($e->getMessage());
             } catch (\Exception $e) {
-                Toast::error(trans('socialite.error'));
+                Toast::error(trans('auth::socialite.error'));
                 report($e);
             } finally {
                 return back();
@@ -60,7 +60,7 @@ class SocialiteController extends Controller
         request()->session()->regenerate();
 
         Toast::default(
-            __($user->wasRecentlyCreated ? 'auth.welcome' : 'auth.welcome-back', [
+            __($user->wasRecentlyCreated ? 'auth::auth.welcome' : 'auth::auth.welcome-back', [
                 'name' => $user->name,
             ]),
         );
@@ -79,7 +79,7 @@ class SocialiteController extends Controller
         try {
             $this->socialiteService->disconnectProvider($user, $provider);
 
-            Toast::success(trans('socialite.account_disconnected', ['provider' => $provider]));
+            Toast::success(trans('auth::socialite.account_disconnected', ['provider' => $provider]));
         } catch (SocialiteException $e) {
             Toast::error($e->getMessage());
         }

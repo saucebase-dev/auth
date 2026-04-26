@@ -37,7 +37,7 @@ class RegisterController extends Controller
         Auth::login($user);
 
         Toast::default(
-            __('auth.welcome', ['name' => $user->name]),
+            __('auth::auth.welcome', ['name' => $user->name]),
         );
 
         return redirect()->intended(route('dashboard'));

@@ -37,6 +37,6 @@ class ForgotPasswordController extends Controller
             $request->only('email')
         );
 
-        return back()->with('status', trans('passwords.sent'));
+        return back()->with('status', trans('auth::passwords.sent'));
     }
 }

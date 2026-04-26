@@ -41,7 +41,7 @@ class LoginController extends Controller
         request()->session()->regenerate();
 
         Toast::default(
-            __('auth.welcome-back', ['name' => $user->name]),
+            __('auth::auth.welcome-back', ['name' => $user->name]),
         );
 
         if ($request->session()->has('url.intended')) {
