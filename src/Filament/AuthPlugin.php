@@ -23,6 +23,11 @@ class AuthPlugin implements Plugin
         return 'auth';
     }
 
+    public static function getNavigationGroupSort(): int
+    {
+        return 2;
+    }
+
     public function boot(Panel $panel): void
     {
         $panel->navigationGroups([
