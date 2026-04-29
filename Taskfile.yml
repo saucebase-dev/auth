@@ -12,6 +12,12 @@ tasks:
         cmd: npx playwright test --project="@auth*" {{.CLI_ARGS}}
         interactive: true
 
+    # ── Database ──────────────────────────────────────────────────
+
+    db:seed:
+        desc: Seed the Auth module database
+        cmd: php artisan modules:seed --module=auth
+
     # ── Code Generation ────────────────────────────────────────────
 
     types:generate:
