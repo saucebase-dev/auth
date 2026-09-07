@@ -3,6 +3,7 @@
 namespace Modules\Auth\Http\Controllers;
 
 use App\Helpers\Toast;
+use App\Settings\SettingsSection;
 use Illuminate\Http\RedirectResponse;
 use Modules\Auth\Http\Requests\UpdateProfileAvatarRequest;
 use Modules\Auth\Http\Requests\UpdateProfileInfoRequest;
@@ -19,7 +20,7 @@ class ProfileController extends Controller
      */
     public function show(): RedirectResponse
     {
-        return redirect()->to(route('dashboard').'#settings/profile');
+        return redirect()->to(SettingsSection::url('profile'));
     }
 
     /**
