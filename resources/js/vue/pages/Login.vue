@@ -1,118 +1,51 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Field, FieldLabel } from '@/components/ui/field';
-import InputField from '@/components/ui/input/InputField.vue';
-import { Form, Link } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
-import SocialiteProviders from '../components/SocialiteProviders.vue';
+import AlertMessage from '@/components/AlertMessage.vue';
+import { Modal } from '@inertiaui/modal-vue';
+import LoginForm from '../components/LoginForm.vue';
 import AuthCardLayout from '../layouts/AuthCardLayout.vue';
 
-const emailRef = ref('');
-
-// compute forgot password url so the link updates as user types
-const forgotUrl = computed(() =>
-    route('password.request', { email: emailRef.value }),
-);
+/**
+ * Signing in, as a page or as a modal over whatever the visitor was reading.
+ *
+ * One component for both: the frame differs, the form does not. The controller
+ * decides which frame by passing `modal`, and only does so when the site has
+ * modal sign-in switched on and the caller explicitly asked for one — a typed or
+ * bookmarked URL always lands on the page.
+ */
+defineProps<{
+    status?: string;
+    error?: string;
+    modal?: boolean;
+}>();
 </script>
 
 <template>
+    <Modal v-if="modal" max-width="md">
+        <div class="space-y-4" data-testid="login-modal">
+            <div class="space-y-1.5 text-center">
+                <h2 class="text-2xl font-semibold">{{ $t('Welcome back') }}</h2>
+                <p class="text-muted-foreground text-sm">
+                    {{ $t('Login to your Saucebase account to continue') }}
+                </p>
+            </div>
+
+            <!-- The page frame shows these from the shared props; inside the
+                 modal they arrive as the modal's own props. -->
+            <AlertMessage
+                :message="status || error"
+                :variant="status ? 'success' : 'error'"
+                data-testid="alert"
+            />
+
+            <LoginForm modal />
+        </div>
+    </Modal>
+
     <AuthCardLayout
+        v-else
         :title="$t('Welcome back')"
         :description="$t('Login to your Saucebase account to continue')"
     >
-        <SocialiteProviders />
-
-        <Form
-            :action="route('login')"
-            method="post"
-            class="space-y-3"
-            data-testid="login-form"
-            disable-while-processing
-            :reset-on-error="['password']"
-        >
-            <!-- Email -->
-            <InputField
-                name="email"
-                type="email"
-                :label="$t('Email')"
-                :placeholder="$t('Enter your email')"
-                autocomplete="email"
-                required
-                v-model="emailRef"
-            />
-
-            <!-- Password -->
-            <InputField
-                name="password"
-                type="password"
-                :label="$t('Password')"
-                :placeholder="$t('Enter your password')"
-                autocomplete="current-password"
-                required
-            />
-
-            <div class="flex items-center justify-between">
-                <!-- Remember-me -->
-                <div>
-                    <Field>
-                        <Field orientation="horizontal">
-                            <Checkbox
-                                id="remember"
-                                name="remember"
-                                data-testid="remember-me"
-                            />
-                            <FieldLabel for="remember" class="font-normal">
-                                {{ $t('Remember-me') }}
-                            </FieldLabel>
-                        </Field>
-                    </Field>
-                </div>
-
-                <!-- Forgot password link -->
-                <Link
-                    v-if="route().has('password.request')"
-                    :href="forgotUrl"
-                    class="text-primary ml-auto inline-block text-sm font-medium whitespace-nowrap underline-offset-4 hover:underline"
-                    data-testid="forgot-password-link"
-                    :data-invalid="false"
-                >
-                    {{ $t('Forgot your password?') }}
-                </Link>
-            </div>
-
-            <Button
-                type="submit"
-                class="mt-3 w-full"
-                data-testid="login-button"
-            >
-                {{ $t('Log in') }}
-            </Button>
-
-            <p class="mt-2 text-center text-sm">
-                <Link
-                    v-if="$page.props.auth.magic_link_enabled"
-                    :href="route('magic-link.create')"
-                    class="text-primary font-medium underline-offset-4 hover:underline"
-                    data-testid="magic-link-login-link"
-                >
-                    {{ $t('Login with magic link') }}
-                </Link>
-            </p>
-
-            <p
-                v-if="$page.props.auth.registration_enabled"
-                class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400"
-            >
-                {{ $t("Don't have an account?") }}
-                <Link
-                    :href="route('register')"
-                    class="text-primary font-medium underline-offset-4 hover:underline"
-                    data-testid="sign-up-link"
-                >
-                    {{ $t('Sign up') }}
-                </Link>
-            </p>
-        </Form>
+        <LoginForm />
     </AuthCardLayout>
 </template>

@@ -43,6 +43,10 @@ class AuthenticationSettings extends SettingsPage
                         ->label(__('auth::auth.registration.enabled'))
                         ->helperText(__('auth::auth.registration.help'))
                         ->extraAttributes(['data-testid' => 'admin-registration-enabled']),
+                    Toggle::make('modal_enabled')
+                        ->label(__('auth::auth.modal.enabled'))
+                        ->helperText(__('auth::auth.modal.help'))
+                        ->extraAttributes(['data-testid' => 'admin-modal-enabled']),
                 ])
                 ->columns(1),
             Section::make(__('Social Login'))
