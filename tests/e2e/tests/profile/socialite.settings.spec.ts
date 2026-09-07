@@ -31,7 +31,10 @@ test.describe('Profile Socialite Settings', () => {
             );
 
             await loginAs(credentials.user);
-            await page.goto('/settings/profile');
+            await page.goto('/dashboard#settings/profile');
+            await expect(
+                page.getByTestId('settings-profile-panel'),
+            ).toBeVisible();
 
             await expect(
                 page.getByTestId('socialite-account-google'),
@@ -41,7 +44,8 @@ test.describe('Profile Socialite Settings', () => {
             ).not.toBeVisible();
 
             await page.getByTestId('disconnect-socialite-google').click();
-            await page.getByTestId('confirm-socialite-disconnect').click();
+            // Disconnect confirms through the app-level dialog now.
+            await page.getByTestId('confirm-dialog-confirm').click();
 
             await expect(
                 page.getByTestId('socialite-account-google'),

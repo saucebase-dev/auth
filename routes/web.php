@@ -117,14 +117,15 @@ Route::middleware('web')->group(function (): void {
         'role:admin|user',
     ]], function (): void {
         Route::prefix('settings')->group(function (): void {
-            Route::redirect('/', '/settings/profile')
-                ->name('settings.index');
-
+            /*
+             * Profile is a section of the settings modal, which lives behind the
+             * `#settings/profile` fragment. This route stays so the links that
+             * resolve `settings.profile` by name — the user menu and
+             * PasswordChangedNotification — keep working: it drops the visitor on
+             * the dashboard with that section already open.
+             */
             Route::get('profile', [ProfileController::class, 'show'])
                 ->name('settings.profile');
-
-            Route::get('profile/edit', [ProfileController::class, 'edit'])
-                ->name('settings.profile.edit');
 
             Route::patch('profile/info', [ProfileController::class, 'updateInfo'])
                 ->name('settings.profile.update-info');
@@ -134,9 +135,6 @@ Route::middleware('web')->group(function (): void {
 
             Route::delete('profile/avatar', [ProfileController::class, 'deleteAvatar'])
                 ->name('settings.profile.delete-avatar');
-
-            Route::get('profile/password', [PasswordController::class, 'edit'])
-                ->name('settings.profile.password.edit');
 
             Route::put('profile/password', [PasswordController::class, 'update'])
                 ->name('settings.profile.password.update');

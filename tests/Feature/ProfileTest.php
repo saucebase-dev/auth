@@ -10,22 +10,13 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_profile_page_renders_for_authenticated_user(): void
+    public function test_profile_route_sends_the_user_to_the_settings_fragment(): void
     {
         $user = $this->createUser();
 
         $this->actingAs($user)
             ->get(route('settings.profile'))
-            ->assertOk();
-    }
-
-    public function test_profile_edit_page_renders_for_authenticated_user(): void
-    {
-        $user = $this->createUser();
-
-        $this->actingAs($user)
-            ->get(route('settings.profile.edit'))
-            ->assertOk();
+            ->assertRedirect(route('dashboard').'#settings/profile');
     }
 
     public function test_guest_cannot_view_profile(): void

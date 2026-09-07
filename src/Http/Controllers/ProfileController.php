@@ -4,50 +4,22 @@ namespace Modules\Auth\Http\Controllers;
 
 use App\Helpers\Toast;
 use Illuminate\Http\RedirectResponse;
-use Inertia\Inertia;
-use Inertia\Response;
 use Modules\Auth\Http\Requests\UpdateProfileAvatarRequest;
 use Modules\Auth\Http\Requests\UpdateProfileInfoRequest;
 
 class ProfileController extends Controller
 {
     /**
-     * Show the read-only profile view.
+     * Send visitors to the profile section of the settings modal.
+     *
+     * The section itself lives behind the `#settings/profile` fragment, which
+     * never reaches the server. Links that resolve this route by name — the user
+     * menu and PasswordChangedNotification — land on the dashboard with the
+     * section already open.
      */
-    public function show(): Response
+    public function show(): RedirectResponse
     {
-        $user = auth()->user();
-
-        return Inertia::render('Auth::Profile', [
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'avatar' => $user->avatar,
-                'last_login_at' => $user->last_login_at,
-                'social_accounts' => $user->connected_providers,
-            ],
-            'available_providers' => config('services.socialite_providers', []),
-        ]);
-    }
-
-    /**
-     * Show the profile edit form.
-     */
-    public function edit(): Response
-    {
-        $user = auth()->user();
-
-        return Inertia::render('Auth::Profile/Edit', [
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'avatar' => $user->avatar,
-                'has_uploaded_avatar' => $user->hasMedia('avatars'),
-                'has_password' => ! empty($user->password),
-            ],
-        ]);
+        return redirect()->to(route('dashboard').'#settings/profile');
     }
 
     /**

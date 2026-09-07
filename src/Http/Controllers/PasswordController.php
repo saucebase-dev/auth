@@ -7,20 +7,10 @@ use App\Notifications\PasswordChangedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Inertia\Inertia;
-use Inertia\Response;
 use Modules\Auth\Http\Requests\UpdatePasswordRequest;
 
 class PasswordController extends Controller
 {
-    /**
-     * Show the password change form.
-     */
-    public function edit(): Response
-    {
-        return Inertia::render('Auth::Profile/ChangePassword');
-    }
-
     /**
      * Update the user's password.
      */
@@ -36,6 +26,6 @@ class PasswordController extends Controller
 
         Toast::success('Password changed successfully.');
 
-        return redirect()->route('settings.profile');
+        return back();
     }
 }

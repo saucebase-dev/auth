@@ -13,25 +13,18 @@ use App\Navigation\Section;
 |
 */
 
-// User menu - Settings
-Navigation::add('Settings', fn () => route('settings.profile'), function (Section $section) {
+// User menu - Settings (opens the settings modal over the current page)
+Navigation::add('Settings', '#settings', function (Section $section) {
     $section->attributes([
         'group' => 'user',
         'slug' => 'settings',
         'icon' => 'settings',
         'order' => 10,
+        // Renders a plain anchor: a fragment must not trigger an Inertia visit.
+        'external' => true,
     ]);
 });
 
-// Settings sidebar - Profile
-Navigation::add('Profile', fn () => route('settings.profile'), function (Section $section) {
-    $section->attributes([
-        'group' => 'settings',
-        'slug' => 'profile',
-        'icon' => 'profile',
-        'order' => 10,
-    ]);
-});
 
 // User menu - Logout
 Navigation::add('Log out', '#', function (Section $section) {

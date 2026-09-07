@@ -16,7 +16,7 @@ Authentication, registration, magic link (passwordless), password reset, email v
 | Settings | `AuthSettings` (`registration_enabled`, `magic_link_enabled`, `magic_link_expiry`, `login_notification_enabled`, `enabled_socialite_providers`) |
 | Trait | `Sociable` — added to User model (socialAccounts relation, connected_providers, disconnect) |
 | Filament | `AuthPlugin`, `AuthenticationSettings`, `UserResource` (list, create, view, edit), `UserForm`, `UsersTable` |
-| Pages | `Login`, `Register`, `ForgotPassword`, `ResetPassword`, `VerifyEmail`, `MagicLink`, `Profile`, `Profile/Edit`, `Profile/ChangePassword` |
+| Pages | `Login`, `Register`, `ForgotPassword`, `ResetPassword`, `VerifyEmail`, `MagicLink`, `SettingsProfile` (settings modal panel) |
 | Layout | `AuthCardLayout` — card with logo, status alerts, page transitions |
 | Component | `SocialiteProviders` — Google/GitHub buttons with divider, `PageHeader` — title with optional back link |
 
@@ -38,7 +38,7 @@ Follows the dual-framework pattern (see root `CLAUDE.md` → Architecture > Fron
 
 **Magic Link** (outside guest/auth groups): `magic-link.authenticate` — `/auth/magic-link/{token}` (GET) — must be accessible from email clients
 
-**Account settings** (`/settings/*`, middleware `auth`, `verified`, `role:admin|user`): `settings.index` (redirect to profile), `settings.profile`, `settings.profile.edit`, `settings.profile.update-info` (PATCH), `settings.profile.update-avatar` (POST), `settings.profile.delete-avatar` (DELETE), `settings.profile.password.edit`, `settings.profile.password.update` (PUT)
+**Account settings** (`/settings/*`, middleware `auth`, `verified`, `role:admin|user`): `settings.profile` (redirects to the `#settings/profile` fragment), `settings.profile.update-info` (PATCH), `settings.profile.update-avatar` (POST), `settings.profile.delete-avatar` (DELETE), `settings.profile.password.update` (PUT)
 
 **Impersonation**: `/auth/impersonate/{userId}` (POST, auth)
 
