@@ -3,6 +3,7 @@
 namespace Modules\Auth\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Auth\Settings\ProfileSection;
 use Tests\TestCase;
 
 class SettingsNavigationTest extends TestCase
@@ -48,5 +49,38 @@ class SettingsNavigationTest extends TestCase
 
         $this->assertNotNull($profile);
         $this->assertSame('Auth::SettingsProfile', $profile['component']);
+    }
+
+    /**
+     * Credentials moved out of Profile into a section of their own, so the two
+     * are discovered separately and Security follows immediately after.
+     */
+    public function test_the_security_section_is_discovered_and_follows_profile(): void
+    {
+        $user = $this->createUser();
+
+        $response = $this->actingAs($user)->get(route('index'));
+        $sections = collect($response->inertiaProps('settings.sections'));
+
+        $security = $sections->firstWhere('slug', 'security');
+
+        $this->assertNotNull($security);
+        $this->assertSame('Auth::SettingsSecurity', $security['component']);
+        $this->assertSame(
+            ['profile', 'security'],
+            $sections->pluck('slug')->take(2)->all(),
+        );
+    }
+
+    /** Profile describes a person; it must stop carrying credentials. */
+    public function test_the_profile_section_no_longer_carries_credentials(): void
+    {
+        $this->actingAs($this->createUser());
+
+        $props = app(ProfileSection::class)->props();
+
+        $this->assertArrayNotHasKey('available_providers', $props);
+        $this->assertArrayNotHasKey('has_password', $props['user']);
+        $this->assertArrayNotHasKey('social_accounts', $props['user']);
     }
 }

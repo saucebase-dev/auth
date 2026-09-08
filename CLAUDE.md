@@ -13,10 +13,11 @@ Authentication, registration, magic link (passwordless), password reset, email v
 | Exceptions | `AuthException` (credentials, throttle), `SocialiteException` (disconnect, account linking, provider validation, registration disabled) |
 | Listeners | `AssignUserRole` (Registered), `UpdateUserLastLogin` (Login), `Impersonation` (TakeImpersonation — session history) |
 | Notifications | `WelcomeNotification` (Registered), `MagicLinkNotification` (passwordless login link with configured expiry) |
-| Settings | `AuthSettings` (`registration_enabled`, `magic_link_enabled`, `magic_link_expiry`, `login_notification_enabled`, `enabled_socialite_providers`) |
+| Settings | `AuthSettings` (`registration_enabled`, `modal_enabled`, `magic_link_enabled`, `magic_link_expiry`, `login_notification_enabled`, `enabled_socialite_providers`) |
+| Settings sections | `ProfileSection` (order 10, `Auth::SettingsProfile`), `SecuritySection` (order 15, `Auth::SettingsSecurity`) — panels in core's settings modal |
 | Trait | `Sociable` — added to User model (socialAccounts relation, connected_providers, disconnect) |
 | Filament | `AuthPlugin`, `AuthenticationSettings`, `UserResource` (list, create, view, edit), `UserForm`, `UsersTable` |
-| Pages | `Login`, `Register`, `ForgotPassword`, `ResetPassword`, `VerifyEmail`, `MagicLink`, `SettingsProfile` (settings modal panel) |
+| Pages | `Login`, `Register`, `ForgotPassword`, `ResetPassword`, `VerifyEmail`, `MagicLink`, `SettingsProfile` + `SettingsSecurity` (settings modal panels) |
 | Layout | `AuthCardLayout` — card with logo, status alerts, page transitions |
 | Component | `SocialiteProviders` — Google/GitHub buttons with divider, `PageHeader` — title with optional back link |
 
@@ -39,6 +40,9 @@ Follows the dual-framework pattern (see root `CLAUDE.md` → Architecture > Fron
 **Magic Link** (outside guest/auth groups): `magic-link.authenticate` — `/auth/magic-link/{token}` (GET) — must be accessible from email clients
 
 **Account settings** (`/settings/*`, middleware `auth`, `verified`, `role:admin|user`): `settings.profile` (redirects to the `#settings/profile` fragment), `settings.profile.update-info` (PATCH), `settings.profile.update-avatar` (POST), `settings.profile.delete-avatar` (DELETE), `settings.profile.password.update` (PUT)
+
+The routes are grouped under `settings.profile.*` for history; password and
+socialite disconnect are rendered by the **Security** panel, not Profile.
 
 **Impersonation**: `/auth/impersonate/{userId}` (POST, auth)
 
@@ -76,10 +80,35 @@ Filament page under the Settings navigation group.
 
 ### Account Settings Routes Keep the `settings.*` Names
 Profile management moved here from the retired `settings` module. The routes deliberately
-keep the `/settings/*` URLs and `settings.*` names, because app core resolves them by name:
-`NavUser` (Vue + React) guards on `route().has('settings.profile')`, and
-`PasswordChangedNotification` links to `route('settings.profile')`. The settings *shell*
-(`SettingsLayout`, `SettingsSidebar`, `SettingsMobileMenu`) lives in app core, not here.
+keep the `/settings/*` URLs and `settings.*` names, because app core resolves them by name,
+and `PasswordChangedNotification` links to `route('settings.profile')`. That route now
+redirects into the `#settings/profile` fragment rather than rendering a page.
+
+The settings *shell* is core's modal (`pages/Settings`, `useSettingsModal`); this module
+only contributes `ProfileSection` and `SecuritySection`. Core discovers them from
+`src/Settings`, so `NavUser` no longer guards on `route().has('settings.profile')` — it
+guards on whether any section was contributed at all.
+
+### Profile Is Identity, Security Is Credentials
+`SettingsProfile` holds name, email, and avatar. `SettingsSecurity` holds the password form
+and connected social accounts. The split is by the question being asked, not by ownership:
+both sections live here, and `SecuritySection` sits at order 15 so it follows Profile (10)
+ahead of anything another module contributes.
+
+### Login and Register Open in a Modal Only When Asked
+Both URLs stay canonical pages. `LoginController::create()` and `RegisterController::create()`
+return `Inertia::render()` unless **both** `AuthSettings::$modal_enabled` is on and the request
+carries `Modal::HEADER_MODAL`; only then do they return `Inertia::modal()` with a `modal: true`
+prop. There are no modal-only components — the page components branch on that prop, and the
+form closes the modal through `useModal()` on success.
+
+Branching on the header explicitly matters: `Modal::toResponse()` falls back to the **referer**
+when the header is absent, which would turn any ordinary in-app link to `/auth/login` into a
+modal over the previous page.
+
+`AuthServiceProvider` shares the setting as `auth.modal_enabled`, and core's `Header`
+(Vue + React) reads it to swap `Link` for `ModalLink` on the navbar Sign In and Get Started
+entries — `ModalLink` is what sends the header. Every other link to those URLs stays a page.
 
 `PasswordController::update()` is shared by two routes: `password.update` (`PUT /auth/password`)
 and `settings.profile.password.update`. It redirects to `settings.profile` on success.
@@ -103,7 +132,7 @@ php artisan test --testsuite=Modules --filter='^Modules\\Auth\\Tests'  # PHPUnit
 npx playwright test --project="@auth*"                 # E2E
 ```
 
-**E2E coverage**: login (basic, errors, security/rate-limiting, social, logout), register (basic, errors), forgot-password (basic, errors), verify-email. Page objects in `tests/e2e/pages/`, fixtures in `tests/e2e/fixtures/users.ts`.
+**E2E coverage**: login (basic, errors, security/rate-limiting, social, modal, logout), register (basic, errors), forgot-password (basic, errors), verify-email, profile (avatar, socialite settings under the Security panel). Page objects in `tests/e2e/pages/`, fixtures in `tests/e2e/fixtures/users.ts`.
 
 ## Gotchas
 
@@ -114,4 +143,5 @@ npx playwright test --project="@auth*"                 # E2E
 - Filament UserResource enforces single role (maxItems: 1) despite multi-select UI
 - Magic link authenticate route is outside both guest and auth middleware groups (link is clicked from email client)
 - `MagicLinkToken::isValid()` checks both `expires_at->isFuture()` and `used_at === null`
+- `modal_enabled` is presentation only. Turning it off does not change what the routes do, only how they are reached — the canonical URLs work either way, which is why there is no separate modal route.
 - `registration_enabled` closes both signup paths: `EnsureRegistrationEnabled` 404s the register routes, and `SocialiteService::handleCallback()` throws `registrationDisabled()` rather than creating a new user (existing users still sign in). Login is deliberately not toggleable — disabling it would lock out admins.

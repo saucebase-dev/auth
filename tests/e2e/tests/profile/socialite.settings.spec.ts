@@ -1,6 +1,6 @@
 import { expect, test } from '@e2e/fixtures';
 
-test.describe('Profile Socialite Settings', () => {
+test.describe('Security Socialite Settings', () => {
     test.describe.configure({ mode: 'serial' });
 
     test('keeps a disabled connected provider available for disconnect', async ({
@@ -31,9 +31,9 @@ test.describe('Profile Socialite Settings', () => {
             );
 
             await loginAs(credentials.user);
-            await page.goto('/dashboard#settings/profile');
+            await page.goto('/dashboard#settings/security');
             await expect(
-                page.getByTestId('settings-profile-panel'),
+                page.getByTestId('settings-security-panel'),
             ).toBeVisible();
 
             await expect(

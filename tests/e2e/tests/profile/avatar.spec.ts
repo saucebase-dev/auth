@@ -26,7 +26,11 @@ test.describe('Profile Avatar', () => {
         await expect(page).toHaveURL('/auth/login');
     });
 
-    test('spinner clears after avatar upload', async ({ page, loginAs, credentials }) => {
+    test('spinner clears after avatar upload', async ({
+        page,
+        loginAs,
+        credentials,
+    }) => {
         await loginAs(credentials.user);
         await openProfileSettings(page);
 
@@ -41,7 +45,11 @@ test.describe('Profile Avatar', () => {
         await expect(loadingOverlay).not.toBeVisible({ timeout: 10000 });
     });
 
-    test('delete avatar dialog opens and closes', async ({ page, loginAs, credentials }) => {
+    test('delete avatar dialog opens and closes', async ({
+        page,
+        loginAs,
+        credentials,
+    }) => {
         await loginAs(credentials.user);
         await openProfileSettings(page);
 

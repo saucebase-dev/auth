@@ -1,13 +1,16 @@
-import { test, expect } from '@e2e/fixtures';
+import { expect, test } from '@e2e/fixtures';
 import { expectAuthenticated } from '@e2e/helpers/auth';
-
 
 test.describe.parallel('Sidebar layout', () => {
     // The sidebar header is a `sidebar-brand` slot: core's own AppBrand fills it until a
     // module claims it, and tenancy puts the workspace switcher there. Which one shows
     // depends on what is installed alongside this module, so what is assertable here is
     // that the slot is filled at all.
-    test('renders a brand in the sidebar header', async ({ page, credentials, loginAs }) => {
+    test('renders a brand in the sidebar header', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         await loginAs(credentials.user);
         await page.goto('/dashboard');
         await expectAuthenticated(page);
@@ -15,39 +18,61 @@ test.describe.parallel('Sidebar layout', () => {
         await expect(page.getByTestId('sidebar-header')).not.toBeEmpty();
     });
 
-    test('user dropdown contains language and theme selectors', async ({ page, credentials, loginAs }) => {
+    test('user dropdown contains language and theme selectors', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         await loginAs(credentials.user);
         await page.goto('/dashboard');
 
         await page.getByTestId('user-menu-trigger').click();
 
-        await expect(page.getByTestId('language-selector-trigger')).toBeVisible();
+        await expect(
+            page.getByTestId('language-selector-trigger'),
+        ).toBeVisible();
         await expect(page.getByTestId('theme-selector-trigger')).toBeVisible();
     });
 
-    test('language selector submenu opens', async ({ page, credentials, loginAs }) => {
+    test('language selector submenu opens', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         await loginAs(credentials.user);
         await page.goto('/dashboard');
 
         await page.getByTestId('user-menu-trigger').click();
         await page.getByTestId('language-selector-trigger').click();
 
-        await expect(page.locator('[data-slot="dropdown-menu-sub-content"]')).toBeVisible();
+        await expect(
+            page.locator('[data-slot="dropdown-menu-sub-content"]'),
+        ).toBeVisible();
     });
 
-    test('theme selector submenu opens', async ({ page, credentials, loginAs }) => {
+    test('theme selector submenu opens', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         await loginAs(credentials.user);
         await page.goto('/dashboard');
 
         await page.getByTestId('user-menu-trigger').click();
         await page.getByTestId('theme-selector-trigger').click();
 
-        await expect(page.locator('[data-slot="dropdown-menu-sub-content"]')).toBeVisible();
+        await expect(
+            page.locator('[data-slot="dropdown-menu-sub-content"]'),
+        ).toBeVisible();
     });
 });
 
 test.describe('Theme persistence', () => {
-    test('dark theme persists across navigation via cookie', async ({ page, credentials, loginAs }) => {
+    test('dark theme persists across navigation via cookie', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         await loginAs(credentials.user);
         await page.goto('/dashboard');
         await expectAuthenticated(page);
@@ -65,7 +90,11 @@ test.describe('Theme persistence', () => {
         await expect(page.locator('html')).toHaveClass(/dark/);
     });
 
-    test('light theme does not add dark class after navigation', async ({ page, credentials, loginAs }) => {
+    test('light theme does not add dark class after navigation', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         await loginAs(credentials.user);
         await page.goto('/dashboard');
         await expectAuthenticated(page);
@@ -82,7 +111,11 @@ test.describe('Theme persistence', () => {
         await expect(page.locator('html')).not.toHaveClass(/dark/);
     });
 
-    test('system preference dark mode applied before hydration', async ({ page, credentials, loginAs }) => {
+    test('system preference dark mode applied before hydration', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         await page.emulateMedia({ colorScheme: 'dark' });
         await loginAs(credentials.user);
         await page.goto('/dashboard');
@@ -90,30 +123,46 @@ test.describe('Theme persistence', () => {
         await expect(page.locator('html')).toHaveClass(/dark/);
     });
 
-    test('dark mode toggle writes to appearance localStorage key, not vueuse-dark', async ({ page, credentials, loginAs }) => {
+    test('dark mode toggle writes to appearance localStorage key, not vueuse-dark', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         await loginAs(credentials.user);
         await page.goto('/dashboard');
 
         await page.getByTestId('user-menu-trigger').click();
         await page.getByTestId('theme-selector-trigger').click();
         await page.getByTestId('color-mode-dark').click();
-        await page.waitForFunction(() => localStorage.getItem('appearance') === 'dark');
+        await page.waitForFunction(
+            () => localStorage.getItem('appearance') === 'dark',
+        );
 
-        const stored = await page.evaluate(() => localStorage.getItem('appearance'));
+        const stored = await page.evaluate(() =>
+            localStorage.getItem('appearance'),
+        );
         expect(stored).toBe('dark');
 
-        const wrongKey = await page.evaluate(() => localStorage.getItem('vueuse-dark'));
+        const wrongKey = await page.evaluate(() =>
+            localStorage.getItem('vueuse-dark'),
+        );
         expect(wrongKey).toBeNull();
     });
 
-    test('dark mode toggle writes appearance cookie for server-side persistence', async ({ page, credentials, loginAs }) => {
+    test('dark mode toggle writes appearance cookie for server-side persistence', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         await loginAs(credentials.user);
         await page.goto('/dashboard');
 
         await page.getByTestId('user-menu-trigger').click();
         await page.getByTestId('theme-selector-trigger').click();
         await page.getByTestId('color-mode-dark').click();
-        await page.waitForFunction(() => document.cookie.includes('appearance=dark'));
+        await page.waitForFunction(() =>
+            document.cookie.includes('appearance=dark'),
+        );
 
         const cookies = await page.context().cookies();
         const appearanceCookie = cookies.find((c) => c.name === 'appearance');

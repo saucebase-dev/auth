@@ -5,7 +5,9 @@ namespace Modules\Auth\Settings;
 use App\Settings\SettingsSection;
 
 /**
- * The signed-in user's own account: name, email, avatar, password, connected logins.
+ * The signed-in user's own account: their name, email and avatar.
+ *
+ * Credentials — password and connected logins — belong to `SecuritySection`.
  *
  * First in the sidebar, and the section the modal falls back to when the fragment
  * names none — every installation has an account, whatever else is installed.
@@ -52,10 +54,7 @@ class ProfileSection extends SettingsSection
                 'avatar' => $user->avatar,
                 'last_login_at' => $user->last_login_at,
                 'has_uploaded_avatar' => $user->hasMedia('avatars'),
-                'has_password' => ! empty($user->password),
-                'social_accounts' => $user->connected_providers,
             ],
-            'available_providers' => config('services.socialite_providers', []),
         ];
     }
 }

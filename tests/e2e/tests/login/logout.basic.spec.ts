@@ -1,8 +1,12 @@
-import { test, expect } from '@e2e/fixtures';
+import { expect, test } from '@e2e/fixtures';
 import { expectAuthenticated } from '@e2e/helpers/auth';
 
 test.describe.parallel('Logout Basics', () => {
-    test('logs out from user menu and redirects to login', async ({ page, credentials, loginAs }) => {
+    test('logs out from user menu and redirects to login', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         const user = credentials.user;
 
         await loginAs(user);
@@ -33,7 +37,11 @@ test.describe.parallel('Logout Basics', () => {
         await expect(page).toHaveURL('/auth/login');
     });
 
-    test('clicking outside the logout dialog does not dismiss it', async ({ page, credentials, loginAs }) => {
+    test('clicking outside the logout dialog does not dismiss it', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         const user = credentials.user;
 
         await loginAs(user);
@@ -57,7 +65,11 @@ test.describe.parallel('Logout Basics', () => {
         await expect(confirmDialog).toBeVisible();
     });
 
-    test('cancelling logout dialog keeps user logged in', async ({ page, credentials, loginAs }) => {
+    test('cancelling logout dialog keeps user logged in', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         const user = credentials.user;
 
         await loginAs(user);

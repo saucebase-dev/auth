@@ -1,6 +1,14 @@
 import { expect, test } from '@e2e/fixtures';
 
 /**
+ * Opening a modal is a server round trip, not a local state flip: the click
+ * fetches the auth route before anything can render. Under parallel workers the
+ * 5s default is tight, the same budget reasoning as `ROLE_CHANGE_TIMEOUT` in the
+ * tenancy specs.
+ */
+const MODAL_OPEN_TIMEOUT = 15_000;
+
+/**
  * Sign-in and registration are pages first. They open in a modal only where the
  * site asks for one, so the URL stays something you can type, bookmark or share.
  */
@@ -21,7 +29,9 @@ test.describe('Auth modal', () => {
 
         await page.getByTestId('header-sign-in').click();
 
-        await expect(page.getByTestId('login-modal')).toBeVisible();
+        await expect(page.getByTestId('login-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
         await expect(page.getByTestId('login-form')).toBeVisible();
 
         // The address bar still names the canonical page behind the modal.
@@ -35,7 +45,9 @@ test.describe('Auth modal', () => {
 
         await page.getByTestId('header-get-started').click();
 
-        await expect(page.getByTestId('register-modal')).toBeVisible();
+        await expect(page.getByTestId('register-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
         await expect(page).toHaveURL(/\/auth\/register$/);
     });
 
@@ -44,7 +56,9 @@ test.describe('Auth modal', () => {
     }) => {
         await page.goto('/');
         await page.getByTestId('header-sign-in').click();
-        await expect(page.getByTestId('login-modal')).toBeVisible();
+        await expect(page.getByTestId('login-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
 
         await page.goBack();
 
@@ -59,11 +73,15 @@ test.describe('Auth modal', () => {
     test('the sign-up link swaps the modal in place', async ({ page }) => {
         await page.goto('/');
         await page.getByTestId('header-sign-in').click();
-        await expect(page.getByTestId('login-modal')).toBeVisible();
+        await expect(page.getByTestId('login-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
 
         await page.getByTestId('sign-up-link').click();
 
-        await expect(page.getByTestId('register-modal')).toBeVisible();
+        await expect(page.getByTestId('register-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
         await expect(page).toHaveURL(/\/auth\/register$/);
     });
 
@@ -73,13 +91,23 @@ test.describe('Auth modal', () => {
     }) => {
         await page.goto('/');
         await page.getByTestId('header-sign-in').click();
-        await expect(page.getByTestId('login-modal')).toBeVisible();
+        await expect(page.getByTestId('login-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
 
         await page.getByTestId('email').fill(credentials.user.email);
         await page.getByTestId('password').fill(credentials.user.password);
         await page.getByTestId('login-button').click();
 
+        // Where signing in lands depends on the checkout: with tenancy installed
+        // it hands off to a workspace host, a full browser navigation. Wait for
+        // that to settle before asking whether the modal is gone, or the answer
+        // is about the page being left rather than the page arrived at.
+        await expect(page).not.toHaveURL(/\/auth\/login/, {
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
+        await page.waitForLoadState('networkidle');
+
         await expect(page.getByTestId('login-modal')).toHaveCount(0);
-        await expect(page).not.toHaveURL(/\/auth\/login/);
     });
 });

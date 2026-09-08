@@ -6,6 +6,7 @@ import '@modules/auth/resources/css/style.css';
 import { LogOut } from 'lucide-react';
 import IconLogOut from '~icons/lucide/log-out';
 import IconSettings from '~icons/lucide/settings';
+import IconShieldCheck from '~icons/lucide/shield-check';
 import IconUserCircle from '~icons/lucide/user-circle';
 import ImpersonationAlert from './components/ImpersonationAlert';
 
@@ -13,6 +14,7 @@ export function setup() {
     registerIcon('logout', IconLogOut);
     registerIcon('settings', IconSettings);
     registerIcon('profile', IconUserCircle);
+    registerIcon('security', IconShieldCheck);
     registerAuthActions();
     registerGlobalComponent('top', ImpersonationAlert);
 }

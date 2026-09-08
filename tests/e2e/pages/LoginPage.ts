@@ -111,7 +111,6 @@ export class LoginPage {
         });
     }
 
-
     /**
      * Verify redirect to specific intended URL
      */
