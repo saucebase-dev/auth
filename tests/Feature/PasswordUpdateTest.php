@@ -2,7 +2,7 @@
 
 namespace Modules\Auth\Tests\Feature;
 
-use App\Notifications\PasswordChangedNotification;
+use Modules\Auth\Notifications\PasswordChangedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
