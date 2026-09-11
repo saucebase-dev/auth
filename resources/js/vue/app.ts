@@ -6,6 +6,9 @@ import { LogOut } from '@lucide/vue';
 import '@modules/auth/resources/css/style.css';
 import { trans } from 'laravel-vue-i18n';
 import IconLogOut from '~icons/lucide/log-out';
+import IconSettings from '~icons/lucide/settings';
+import IconShieldCheck from '~icons/lucide/shield-check';
+import IconUserCircle from '~icons/lucide/user-circle';
 import ImpersonationAlert from './components/ImpersonationAlert.vue';
 
 /**
@@ -14,6 +17,9 @@ import ImpersonationAlert from './components/ImpersonationAlert.vue';
  */
 export function setup() {
     registerIcon('logout', IconLogOut);
+    registerIcon('settings', IconSettings);
+    registerIcon('profile', IconUserCircle);
+    registerIcon('security', IconShieldCheck);
     registerAuthActions();
     registerGlobalComponent('top', ImpersonationAlert);
 }

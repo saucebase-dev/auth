@@ -1,4 +1,4 @@
-import { test, expect } from '@e2e/fixtures';
+import { expect, test } from '@e2e/fixtures';
 import { expectAuthenticated } from '@e2e/helpers/auth';
 import { LoginPage } from '../../pages/LoginPage';
 
@@ -18,7 +18,9 @@ test.describe.parallel('Login Basics', () => {
         await expectAuthenticated(loginPage.page);
     }
 
-    test('logs in with valid credentials and redirects to dashboard', async ({ credentials }) => {
+    test('logs in with valid credentials and redirects to dashboard', async ({
+        credentials,
+    }) => {
         const user = credentials.admin;
         const loginResponse = loginPage.waitForLoginResponse();
         await loginPage.login(user.email, user.password);

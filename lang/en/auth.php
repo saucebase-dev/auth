@@ -26,6 +26,10 @@ return [
         'enabled' => 'Allow new registrations',
         'help' => 'When disabled, the sign-up page returns 404 and social login cannot create new accounts.',
     ],
+    'modal' => [
+        'enabled' => 'Open sign-in and sign-up in a modal',
+        'help' => 'Links on the site open sign-in and registration over the current page. Their URLs still work on their own, so a typed, bookmarked or shared link lands on the full page.',
+    ],
     'notifications' => [
         'title' => 'Notifications',
         'description' => 'Configure security notifications sent to users.',

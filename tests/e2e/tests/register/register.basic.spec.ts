@@ -1,7 +1,7 @@
-import { test, expect } from '@e2e/fixtures';
+import { expect, test } from '@e2e/fixtures';
 import { expectAuthenticated } from '@e2e/helpers/auth';
-import { RegisterPage } from '../../pages/RegisterPage';
 import { faker } from '@faker-js/faker';
+import { RegisterPage } from '../../pages/RegisterPage';
 
 test.describe.parallel('Register Basics', () => {
     let registerPage: RegisterPage;
@@ -32,7 +32,6 @@ test.describe.parallel('Register Basics', () => {
         };
     }
 
-
     test('registers with valid details and redirects to dashboard', async () => {
         const user = newUser(); // Using the newUser function to generate user details
 
@@ -44,7 +43,6 @@ test.describe.parallel('Register Basics', () => {
     });
 
     test('toggles password visibility', async () => {
-
         await registerPage.passwordInput.fill('password123');
 
         await registerPage.expectPasswordHidden();

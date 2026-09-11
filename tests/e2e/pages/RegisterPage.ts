@@ -74,7 +74,6 @@ export class RegisterPage {
         await expect(this.passwordInput).toHaveAttribute('type', 'password');
     }
 
-
     async waitForLoginResponse() {
         return this.page.waitForResponse((response: Response) =>
             response.url().includes(this.signupEndpoint),
@@ -110,7 +109,6 @@ export class RegisterPage {
             await route.continue();
         });
     }
-
 
     /**
      * Verify redirect to specific intended URL

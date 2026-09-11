@@ -1,4 +1,4 @@
-import { test, expect } from '@e2e/fixtures';
+import { expect, test } from '@e2e/fixtures';
 import { LoginPage } from '../../pages/LoginPage';
 
 test.describe('Login Security', () => {
@@ -12,9 +12,11 @@ test.describe('Login Security', () => {
     });
 
     test.describe('Rate Limiting', () => {
-        
         test('blocks login after too many failed attempts', async () => {
-            const invalidUser = { email: 'invalid@example.com', password: 'wrongpassword' };
+            const invalidUser = {
+                email: 'invalid@example.com',
+                password: 'wrongpassword',
+            };
 
             for (let i = 0; i <= 5; i++) {
                 await loginPage.login(invalidUser.email, invalidUser.password);
@@ -30,15 +32,16 @@ test.describe('Login Security', () => {
 
             await loginPage.login(invalidUser.email, invalidUser.password);
 
-            await expect(
-                loginPage.page.getByText(/too many/i),
-            ).toBeVisible();
+            await expect(loginPage.page.getByText(/too many/i)).toBeVisible();
         });
 
         test('handles rate limit response', async () => {
             // This test verifies that the form can display rate limit errors
             // Since rate limiting is implemented on the backend, we test the UI's ability to show the error
-            const invalidUser = { email: 'invalid@example.com', password: 'wrongpassword' };
+            const invalidUser = {
+                email: 'invalid@example.com',
+                password: 'wrongpassword',
+            };
 
             // Make multiple failed login attempts - backend should handle rate limiting
             await loginPage.login(invalidUser.email, invalidUser.password);
@@ -50,7 +53,9 @@ test.describe('Login Security', () => {
     });
 
     test.describe('CSRF Protection', () => {
-        test('rejects submission with invalid CSRF token', async ({ credentials }) => {
+        test('rejects submission with invalid CSRF token', async ({
+            credentials,
+        }) => {
             const user = credentials.user;
 
             await loginPage.mockServerResponse(419, {

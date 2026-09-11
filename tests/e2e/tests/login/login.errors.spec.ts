@@ -1,4 +1,4 @@
-import { test, expect } from '@e2e/fixtures';
+import { expect, test } from '@e2e/fixtures';
 import { LoginPage } from '../../pages/LoginPage';
 
 test.describe.parallel('Login Error Handling', () => {
@@ -10,7 +10,10 @@ test.describe.parallel('Login Error Handling', () => {
     });
 
     test('shows error for invalid credentials', async () => {
-        const user = { email: 'invalid@example.com', password: 'wrongpassword' };
+        const user = {
+            email: 'invalid@example.com',
+            password: 'wrongpassword',
+        };
 
         await loginPage.login(user.email, user.password);
 

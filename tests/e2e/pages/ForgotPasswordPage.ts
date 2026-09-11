@@ -31,7 +31,9 @@ export class ForgotPasswordPage {
     }
 
     async expectToBeVisible() {
-        await expect(this.page.getByTestId('forgot-password-form')).toBeVisible();
+        await expect(
+            this.page.getByTestId('forgot-password-form'),
+        ).toBeVisible();
         await expect(this.emailInput).toBeVisible();
         await expect(this.resetButton).toBeVisible();
     }
@@ -54,7 +56,9 @@ export class ForgotPasswordPage {
     }
 
     async mockNetworkFailure() {
-        await this.page.route(this.passwordResetEndpoint, (route) => route.abort());
+        await this.page.route(this.passwordResetEndpoint, (route) =>
+            route.abort(),
+        );
     }
 
     async mockServerResponse(
@@ -76,7 +80,6 @@ export class ForgotPasswordPage {
             await route.continue();
         });
     }
-
 
     /**
      * Verify redirect to specific intended URL

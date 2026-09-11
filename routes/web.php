@@ -7,6 +7,7 @@ use Modules\Auth\Http\Controllers\ForgotPasswordController;
 use Modules\Auth\Http\Controllers\LoginController;
 use Modules\Auth\Http\Controllers\MagicLinkController;
 use Modules\Auth\Http\Controllers\PasswordController;
+use Modules\Auth\Http\Controllers\ProfileController;
 use Modules\Auth\Http\Controllers\RegisterController;
 use Modules\Auth\Http\Controllers\ReimpersonateController;
 use Modules\Auth\Http\Controllers\ResetPasswordController;
@@ -101,5 +102,42 @@ Route::middleware('web')->group(function (): void {
         Route::get('magic-link/{token}', [MagicLinkController::class, 'authenticate'])
             ->middleware('throttle:10,1')
             ->name('magic-link.authenticate');
+    });
+
+    /**
+     * Account Settings Routes
+     *
+     * Profile management lives under the /settings prefix rather than /auth so the
+     * URLs and route names stay stable for the settings sidebar, the user menu, and
+     * PasswordChangedNotification, all of which resolve `settings.profile`.
+     */
+    Route::group(['middleware' => [
+        'auth',
+        'verified',
+        'role:admin|user',
+    ]], function (): void {
+        Route::prefix('settings')->group(function (): void {
+            /*
+             * Profile is a section of the settings modal, which lives behind the
+             * `#settings/profile` fragment. This route stays so the links that
+             * resolve `settings.profile` by name — the user menu and
+             * PasswordChangedNotification — keep working: it drops the visitor on
+             * the dashboard with that section already open.
+             */
+            Route::get('profile', [ProfileController::class, 'show'])
+                ->name('settings.profile');
+
+            Route::patch('profile/info', [ProfileController::class, 'updateInfo'])
+                ->name('settings.profile.update-info');
+
+            Route::post('profile/avatar', [ProfileController::class, 'updateAvatar'])
+                ->name('settings.profile.update-avatar');
+
+            Route::delete('profile/avatar', [ProfileController::class, 'deleteAvatar'])
+                ->name('settings.profile.delete-avatar');
+
+            Route::put('profile/password', [PasswordController::class, 'update'])
+                ->name('settings.profile.password.update');
+        });
     });
 });

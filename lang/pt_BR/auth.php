@@ -24,6 +24,10 @@ return [
         'enabled' => 'Permitir novos cadastros',
         'help' => 'Quando desativado, a página de cadastro retorna 404 e o login social não cria novas contas.',
     ],
+    'modal' => [
+        'enabled' => 'Abrir login e cadastro em um modal',
+        'help' => 'Os links do site abrem o login e o cadastro sobre a página atual. As URLs continuam funcionando sozinhas, então um link digitado, salvo ou compartilhado leva à página completa.',
+    ],
     'notifications' => [
         'title' => 'Notificações',
         'description' => 'Configure as notificações de segurança enviadas aos usuários.',
