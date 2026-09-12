@@ -2,7 +2,6 @@
 
 namespace Modules\Auth\Http\Controllers;
 
-use App\Helpers\Toast;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,11 +11,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use InertiaUI\Modal\Modal;
 use Modules\Auth\Events\ReturningUserAuthenticated;
 use Modules\Auth\Http\Middleware\EnsureMagicLinkEnabled;
 use Modules\Auth\Models\MagicLinkToken;
 use Modules\Auth\Notifications\MagicLinkNotification;
 use Modules\Auth\Settings\AuthSettings;
+use Saucebase\Core\Helpers\Toast;
 
 class MagicLinkController extends Controller implements HasMiddleware
 {
@@ -32,9 +33,9 @@ class MagicLinkController extends Controller implements HasMiddleware
     /**
      * Display the magic link request form.
      */
-    public function create(): Response
+    public function create(): Response|Modal
     {
-        return Inertia::render('Auth::MagicLink', [
+        return $this->pageOrModal('Auth::MagicLink', [
             'status' => session('status'),
         ]);
     }

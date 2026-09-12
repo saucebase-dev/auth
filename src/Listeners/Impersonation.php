@@ -2,8 +2,8 @@
 
 namespace Modules\Auth\Listeners;
 
-use App\Helpers\Toast;
 use App\Models\User;
+use Saucebase\Core\Helpers\Toast;
 use STS\FilamentImpersonate\Events\EnterImpersonation;
 
 class Impersonation

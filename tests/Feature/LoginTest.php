@@ -222,6 +222,19 @@ class LoginTest extends TestCase
         $this->assertGuest();
     }
 
+    /**
+     * A GET logout is reachable from any other site's markup, so signing out has
+     * to be something the app asked for.
+     */
+    public function test_logout_is_not_reachable_by_get(): void
+    {
+        $user = $this->createUser();
+
+        $this->actingAs($user)->get('/auth/logout')->assertStatus(405);
+
+        $this->assertAuthenticatedAs($user);
+    }
+
     public function test_logout_redirects_to_home(): void
     {
         $user = $this->createUser();

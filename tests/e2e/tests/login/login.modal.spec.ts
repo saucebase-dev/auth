@@ -83,6 +83,75 @@ test.describe('Auth modal', () => {
             timeout: MODAL_OPEN_TIMEOUT,
         });
         await expect(page).toHaveURL(/\/auth\/register$/);
+        await expect(page.getByTestId('login-modal')).toHaveCount(0);
+    });
+
+    /**
+     * Swapping has to replace, not stack: each screen is its own route, so a
+     * plain modal link would pile a new modal on every hop between them.
+     */
+    test('hopping between the auth screens leaves one modal, not a pile', async ({
+        page,
+    }) => {
+        await page.goto('/');
+        await page.getByTestId('header-sign-in').click();
+        await expect(page.getByTestId('login-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
+
+        for (let hop = 0; hop < 3; hop++) {
+            await page.getByTestId('sign-up-link').click();
+            await expect(page.getByTestId('register-modal')).toBeVisible({
+                timeout: MODAL_OPEN_TIMEOUT,
+            });
+
+            await page.getByTestId('login-link').click();
+            await expect(page.getByTestId('login-modal')).toBeVisible({
+                timeout: MODAL_OPEN_TIMEOUT,
+            });
+        }
+
+        await expect(page.getByTestId('login-modal')).toHaveCount(1);
+        await expect(page.getByTestId('register-modal')).toHaveCount(0);
+    });
+
+    test('the forgot-password link swaps the modal in place', async ({
+        page,
+    }) => {
+        await page.goto('/');
+        await page.getByTestId('header-sign-in').click();
+        await expect(page.getByTestId('login-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
+
+        await page.getByTestId('forgot-password-link').click();
+
+        await expect(page.getByTestId('forgot-password-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
+        await expect(page).toHaveURL(/\/auth\/forgot-password/);
+        await expect(page.getByTestId('login-modal')).toHaveCount(0);
+    });
+
+    /** Back to login is the same swap, in the other direction. */
+    test('back to login swaps the sign-in modal back in', async ({ page }) => {
+        await page.goto('/');
+        await page.getByTestId('header-sign-in').click();
+        await expect(page.getByTestId('login-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
+        await page.getByTestId('forgot-password-link').click();
+        await expect(page.getByTestId('forgot-password-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
+
+        await page.getByTestId('back-to-login-link').click();
+
+        await expect(page.getByTestId('login-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
+        await expect(page.getByTestId('login-form')).toBeVisible();
+        await expect(page.getByTestId('forgot-password-modal')).toHaveCount(0);
     });
 
     test('signing in from the modal lands on the dashboard', async ({

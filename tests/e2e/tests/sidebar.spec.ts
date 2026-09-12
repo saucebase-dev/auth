@@ -15,7 +15,10 @@ test.describe.parallel('Sidebar layout', () => {
         await page.goto('/dashboard');
         await expectAuthenticated(page);
 
-        await expect(page.getByTestId('sidebar-header')).not.toBeEmpty();
+        // Not `not.toBeEmpty()`: that asserts text, and a brand may be artwork only.
+        await expect(
+            page.getByTestId('sidebar-header').locator(':scope > *').first(),
+        ).toBeVisible();
     });
 
     test('user dropdown contains language and theme selectors', async ({

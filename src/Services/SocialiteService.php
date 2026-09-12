@@ -204,7 +204,6 @@ class SocialiteService
         $user = User::create([
             'name' => $socialiteUser->getName() ?: $socialiteUser->getNickname(),
             'email' => $socialiteUser->getEmail(),
-            'email_verified_at' => now(),
             'password' => Hash::make(Str::random(32)), // Random password
             'avatar' => $avatarUrl,
         ]);

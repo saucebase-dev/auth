@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useT } from '@/i18n';
 import { Link, useForm } from '@inertiajs/react';
-import { ModalLink, useModal } from '@inertiaui/modal-react';
+import { useModal } from '@inertiaui/modal-react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
+import AuthLink from './AuthLink';
 import SocialiteProviders from './SocialiteProviders';
 
 interface RegisterFormProps {
@@ -34,9 +35,6 @@ export default function RegisterForm({ modal }: RegisterFormProps) {
     });
 
     const currentModal = useModal();
-
-    const SiblingLink = modal ? ModalLink : Link;
-    const siblingLinkProps = modal ? { navigate: true } : {};
 
     const handleSuccess = () => {
         if (modal) {
@@ -200,14 +198,14 @@ export default function RegisterForm({ modal }: RegisterFormProps) {
 
                 <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
                     {t('Already registered?')}{' '}
-                    <SiblingLink
-                        {...siblingLinkProps}
+                    <AuthLink
+                        modal={modal}
                         href={route('login')}
                         className="text-primary font-medium underline-offset-4 hover:underline"
                         data-testid="login-link"
                     >
                         {t('Log in')}
-                    </SiblingLink>
+                    </AuthLink>
                 </p>
             </form>
         </>

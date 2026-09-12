@@ -29,6 +29,33 @@ class PasswordResetTest extends TestCase
         $response->assertSessionHas('status');
     }
 
+    /**
+     * Without a limit this endpoint mails anybody on demand. The response stays
+     * the same either way, so the limit cannot be used to probe for accounts.
+     */
+    public function test_reset_link_requests_are_rate_limited(): void
+    {
+        $user = $this->createUser();
+
+        for ($attempt = 0; $attempt < 6; $attempt++) {
+            $this->post(route('password.email'), ['email' => $user->email])
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->post(route('password.email'), ['email' => $user->email])
+            ->assertStatus(429);
+    }
+
+    public function test_unknown_emails_are_throttled_on_the_same_counter(): void
+    {
+        for ($attempt = 0; $attempt < 6; $attempt++) {
+            $this->post(route('password.email'), ['email' => 'nobody@example.com']);
+        }
+
+        $this->post(route('password.email'), ['email' => 'nobody@example.com'])
+            ->assertStatus(429);
+    }
+
     public function test_reset_password_page_renders_with_valid_token(): void
     {
         $user = $this->createUser();

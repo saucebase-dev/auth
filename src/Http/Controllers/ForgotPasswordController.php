@@ -6,17 +6,17 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
-use Inertia\Inertia;
 use Inertia\Response;
+use InertiaUI\Modal\Modal;
 
 class ForgotPasswordController extends Controller
 {
     /**
      * Display the password reset link request view.
      */
-    public function create(): Response
+    public function create(): Response|Modal
     {
-        return Inertia::render('Auth::ForgotPassword', [
+        return $this->pageOrModal('Auth::ForgotPassword', [
             'status' => session('status'),
             'email' => request()->email,
         ]);

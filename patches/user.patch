@@ -1,10 +1,10 @@
 --- a/app/Models/User.php
 +++ b/app/Models/User.php
-@@ -10,2 +10,3 @@
+@@ -11,2 +11,3 @@
  use Illuminate\Notifications\Notifiable;
 +use Modules\Auth\Traits\Sociable;
- use Spatie\MediaLibrary\HasMedia;
-@@ -23,2 +24,3 @@
+ use Saucebase\Core\Settings\LocalizationSettings;
+@@ -25,2 +26,3 @@
      use Notifiable;
 +    use Sociable;
-
+ 

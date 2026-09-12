@@ -2,11 +2,11 @@
 
 namespace Modules\Auth\Http\Controllers;
 
-use App\Helpers\Toast;
-use App\Settings\SettingsSection;
 use Illuminate\Http\RedirectResponse;
 use Modules\Auth\Http\Requests\UpdateProfileAvatarRequest;
 use Modules\Auth\Http\Requests\UpdateProfileInfoRequest;
+use Saucebase\Core\Helpers\Toast;
+use Saucebase\Core\Settings\SettingsSection;
 
 class ProfileController extends Controller
 {
@@ -28,7 +28,14 @@ class ProfileController extends Controller
      */
     public function updateInfo(UpdateProfileInfoRequest $request): RedirectResponse
     {
-        auth()->user()->update($request->validated());
+        $user = auth()->user();
+
+        $user->update($request->validated());
+
+        // A new address has not been confirmed, whatever the old one had earned.
+        if ($user->wasChanged('email')) {
+            $user->forceFill(['email_verified_at' => null])->save();
+        }
 
         Toast::success('Profile updated successfully!');
 

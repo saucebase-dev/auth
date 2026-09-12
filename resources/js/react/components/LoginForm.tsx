@@ -4,10 +4,11 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useT } from '@/i18n';
-import { Link, useForm, usePage } from '@inertiajs/react';
-import { ModalLink, useModal } from '@inertiaui/modal-react';
+import { useForm, usePage } from '@inertiajs/react';
+import { useModal } from '@inertiaui/modal-react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
+import AuthLink from './AuthLink';
 import SocialiteProviders from './SocialiteProviders';
 
 type AuthProps = {
@@ -43,9 +44,6 @@ export default function LoginForm({ modal }: LoginFormProps) {
     const forgotUrl = route('password.request', { email });
 
     const currentModal = useModal();
-
-    const SiblingLink = modal ? ModalLink : Link;
-    const siblingLinkProps = modal ? { navigate: true } : {};
 
     const handleSuccess = () => {
         if (modal) {
@@ -151,13 +149,14 @@ export default function LoginForm({ modal }: LoginFormProps) {
                     </Field>
 
                     {route().has('password.request') && (
-                        <Link
+                        <AuthLink
+                            modal={modal}
                             href={forgotUrl}
                             className="text-primary ml-auto inline-block text-sm font-medium whitespace-nowrap underline-offset-4 hover:underline"
                             data-testid="forgot-password-link"
                         >
                             {t('Forgot your password?')}
-                        </Link>
+                        </AuthLink>
                     )}
                 </div>
 
@@ -172,27 +171,28 @@ export default function LoginForm({ modal }: LoginFormProps) {
 
                 <p className="mt-2 text-center text-sm">
                     {auth.magic_link_enabled && (
-                        <Link
+                        <AuthLink
+                            modal={modal}
                             href={route('magic-link.create')}
                             className="text-primary font-medium underline-offset-4 hover:underline"
                             data-testid="magic-link-login-link"
                         >
                             {t('Login with magic link')}
-                        </Link>
+                        </AuthLink>
                     )}
                 </p>
 
                 {auth.registration_enabled && (
                     <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
                         {t("Don't have an account?")}{' '}
-                        <SiblingLink
-                            {...siblingLinkProps}
+                        <AuthLink
+                            modal={modal}
                             href={route('register')}
                             className="text-primary font-medium underline-offset-4 hover:underline"
                             data-testid="sign-up-link"
                         >
                             {t('Sign up')}
-                        </SiblingLink>
+                        </AuthLink>
                     </p>
                 )}
             </form>

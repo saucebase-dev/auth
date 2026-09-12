@@ -2,10 +2,10 @@
 
 namespace Modules\Auth\Tests\Feature;
 
-use Modules\Auth\Notifications\PasswordChangedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Modules\Auth\Notifications\PasswordChangedNotification;
 use Tests\TestCase;
 
 class PasswordUpdateTest extends TestCase

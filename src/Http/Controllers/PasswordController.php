@@ -2,12 +2,12 @@
 
 namespace Modules\Auth\Http\Controllers;
 
-use App\Helpers\Toast;
-use Modules\Auth\Notifications\PasswordChangedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Modules\Auth\Http\Requests\UpdatePasswordRequest;
+use Modules\Auth\Notifications\PasswordChangedNotification;
+use Saucebase\Core\Helpers\Toast;
 
 class PasswordController extends Controller
 {

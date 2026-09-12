@@ -140,6 +140,25 @@ class SocialiteCallbackTest extends TestCase
         Notification::assertNotSentTo($user, LoginNotification::class);
     }
 
+    /**
+     * Signing in with a provider is not proof of the address: nothing here has
+     * asked the person to confirm it, so the account starts unverified.
+     */
+    public function test_social_signup_does_not_mark_the_email_verified(): void
+    {
+        $this->enableGithub();
+
+        $socialiteUser = $this->makeSocialiteUser();
+        $this->mockSocialiteDriver($socialiteUser);
+
+        $this->get(route('auth.socialite.callback', ['provider' => 'github']));
+
+        $this->assertDatabaseHas('users', [
+            'email' => $socialiteUser->email,
+            'email_verified_at' => null,
+        ]);
+    }
+
     public function test_callback_does_not_set_cookie_during_account_linking(): void
     {
         $this->enableGithub();

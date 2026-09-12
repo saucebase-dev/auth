@@ -9,7 +9,7 @@ return new class extends SettingsMigration
         $defaults = [
             'auth.registration_enabled' => true,
             'auth.modal_enabled' => true,
-            'auth.magic_link_enabled' => true,
+            'auth.magic_link_enabled' => false,
             'auth.magic_link_expiry' => 15,
             'auth.login_notification_enabled' => false,
             'auth.enabled_socialite_providers' => [],

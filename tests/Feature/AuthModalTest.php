@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
 use InertiaUI\Modal\Modal;
 use Modules\Auth\Settings\AuthSettings;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -29,6 +30,13 @@ class AuthModalTest extends TestCase
     {
         $settings = app(AuthSettings::class);
         $settings->modal_enabled = $enabled;
+        $settings->save();
+    }
+
+    private function enableMagicLink(bool $enabled = true): void
+    {
+        $settings = app(AuthSettings::class);
+        $settings->magic_link_enabled = $enabled;
         $settings->save();
     }
 
@@ -142,6 +150,80 @@ class AuthModalTest extends TestCase
 
         $this->withHeader(Modal::HEADER_MODAL, 'test-modal-id')
             ->get(route('register'))
+            ->assertNotFound();
+    }
+
+    /**
+     * Forgot-password and magic link follow the same rule as sign-in and
+     * registration: the URL is a page, the modal is the exception.
+     *
+     * @return array<string, array{string, string}>
+     */
+    public static function siblingScreenProvider(): array
+    {
+        return [
+            'forgot password' => ['password.request', 'Auth::ForgotPassword'],
+            'magic link' => ['magic-link.create', 'Auth::MagicLink'],
+        ];
+    }
+
+    #[DataProvider('siblingScreenProvider')]
+    public function test_a_sibling_screen_renders_the_page_without_the_modal_header(
+        string $route,
+        string $component,
+    ): void {
+        $this->enableModal();
+        $this->enableMagicLink();
+
+        $this->assertRenderedAsPage($route, $component);
+    }
+
+    #[DataProvider('siblingScreenProvider')]
+    public function test_a_sibling_screen_renders_the_modal_when_one_is_asked_for(
+        string $route,
+        string $component,
+    ): void {
+        $this->enableModal();
+        $this->enableMagicLink();
+
+        $this->withHeader(Modal::HEADER_MODAL, 'test-modal-id')
+            ->get(route($route))
+            ->assertOk()
+            ->assertInertia(
+                fn (AssertableInertia $page): AssertableInertia => $page
+                    ->component($component, false)
+                    ->where('modal', true),
+            );
+    }
+
+    #[DataProvider('siblingScreenProvider')]
+    public function test_a_sibling_screen_ignores_the_modal_header_when_the_setting_is_off(
+        string $route,
+        string $component,
+    ): void {
+        $this->enableModal(false);
+        $this->enableMagicLink();
+
+        $this->withHeader(Modal::HEADER_MODAL, 'test-modal-id')
+            ->get(route($route))
+            ->assertOk()
+            ->assertInertia(
+                fn (AssertableInertia $page): AssertableInertia => $page
+                    ->component($component, false)
+                    ->missing('modal'),
+            );
+    }
+
+    /**
+     * Magic links being switched off is a route-level concern, so the modal must
+     * not become a way around it.
+     */
+    public function test_the_magic_link_modal_is_unreachable_when_magic_links_are_disabled(): void
+    {
+        $this->enableModal();
+
+        $this->withHeader(Modal::HEADER_MODAL, 'test-modal-id')
+            ->get(route('magic-link.create'))
             ->assertNotFound();
     }
 

@@ -1,65 +1,55 @@
-import { Button } from '@/components/ui/button';
-import { Field, FieldError } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import AlertMessage from '@/components/AlertMessage';
 import { useT } from '@/i18n';
-import { Link, useForm } from '@inertiajs/react';
+import { Modal } from '@inertiaui/modal-react';
+import MagicLinkForm from '../components/MagicLinkForm';
 import AuthCardLayout from '../layouts/AuthCardLayout';
 
-export default function MagicLink() {
-    const t = useT();
-    const { data, setData, post, processing, errors } = useForm({ email: '' });
+interface MagicLinkProps {
+    status?: string;
+    modal?: boolean;
+}
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        post(route('magic-link.store'), { preserveScroll: true });
-    };
+/** Requesting a magic link, as a page or a modal. See `Login.tsx` for the reasoning. */
+export default function MagicLink({ status, modal }: MagicLinkProps) {
+    const t = useT();
+
+    if (!modal) {
+        return (
+            <AuthCardLayout
+                title={t('Magic Link Login')}
+                description={t(
+                    'Enter your email to receive a secure, one-time login link.',
+                )}
+            >
+                <MagicLinkForm />
+            </AuthCardLayout>
+        );
+    }
 
     return (
-        <AuthCardLayout
-            title={t('Magic Link Login')}
-            description={t(
-                'Enter your email to receive a secure, one-time login link.',
-            )}
-        >
-            <form
-                onSubmit={handleSubmit}
-                className="w-full space-y-3"
-                data-testid="magic-link-form"
-            >
-                <Field>
-                    <Label htmlFor="email">{t('Email')}</Label>
-                    <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder={t('Enter your email')}
-                        autoComplete="email"
-                        required
-                        value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
-                        data-testid="magic-link-email"
-                    />
-                    {errors.email && <FieldError>{errors.email}</FieldError>}
-                </Field>
-
-                <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
-                    <Link
-                        href={route('login')}
-                        className="mt-4 text-center text-sm text-gray-600 hover:text-gray-900 sm:mt-0 sm:text-left dark:text-gray-400 dark:hover:text-gray-100"
-                        data-testid="back-to-login-link"
-                    >
-                        {t('Back to login')}
-                    </Link>
-                    <Button
-                        type="submit"
-                        disabled={processing}
-                        data-testid="magic-link-submit"
-                    >
-                        {t('Send Magic Link')}
-                    </Button>
+        <Modal maxWidth="md">
+            <div className="space-y-4" data-testid="magic-link-modal">
+                <div className="space-y-1.5 text-center">
+                    <h2 className="text-2xl font-semibold">
+                        {t('Magic Link Login')}
+                    </h2>
+                    <p className="text-muted-foreground text-sm">
+                        {t(
+                            'Enter your email to receive a secure, one-time login link.',
+                        )}
+                    </p>
                 </div>
-            </form>
-        </AuthCardLayout>
+
+                {/* The page frame shows this from the shared props; inside the
+                    modal it arrives as the modal's own prop. */}
+                <AlertMessage
+                    message={status}
+                    variant="success"
+                    data-testid="alert"
+                />
+
+                <MagicLinkForm modal />
+            </div>
+        </Modal>
     );
 }

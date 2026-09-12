@@ -2,7 +2,7 @@
 
 namespace Modules\Auth\Settings;
 
-use App\Settings\SettingsSection;
+use Saucebase\Core\Settings\SettingsSection;
 
 /**
  * How the signed-in user proves who they are: their password and their

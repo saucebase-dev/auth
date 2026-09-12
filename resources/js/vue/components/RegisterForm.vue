@@ -4,15 +4,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import InputField from '@/components/ui/input/InputField.vue';
 import { Form, Link, usePage } from '@inertiajs/vue3';
-import { ModalLink, useModal } from '@inertiaui/modal-vue';
+import { useModal } from '@inertiaui/modal-vue';
 import { computed, ref } from 'vue';
+import AuthLink from './AuthLink.vue';
 import SocialiteProviders from './SocialiteProviders.vue';
 
 const props = defineProps<{
     /**
-     * Whether this is the copy inside the auth modal. Only affects the link to
-     * sign-in, which swaps the modal in place rather than navigating the page
-     * out from under it.
+     * Whether this is the copy inside the auth modal. Only affects the links out
+     * of this form — see `AuthLink`.
      */
     modal?: boolean;
 }>();
@@ -28,8 +28,6 @@ function handleSuccess(): void {
         currentModal?.close();
     }
 }
-
-const LogInLink = computed(() => (props.modal ? ModalLink : Link));
 
 const page = usePage();
 const termsError = computed(() => page.props.errors?.terms);
@@ -138,15 +136,14 @@ const canSubmit = computed(
 
         <p class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
             {{ $t('Already registered?') }}
-            <component
-                :is="LogInLink"
-                v-bind="modal ? { navigate: true } : {}"
+            <AuthLink
+                :modal="modal"
                 :href="route('login')"
                 class="text-primary font-medium underline-offset-4 hover:underline"
                 data-testid="login-link"
             >
                 {{ $t('Log in') }}
-            </component>
+            </AuthLink>
         </p>
     </Form>
 </template>

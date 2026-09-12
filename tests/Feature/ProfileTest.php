@@ -64,6 +64,54 @@ class ProfileTest extends TestCase
         $this->assertSame('Updated Name', $user->fresh()->name);
     }
 
+    /**
+     * Verification is earned by an address, not by the account: a new one starts
+     * unconfirmed however long the old one had been trusted.
+     */
+    public function test_changing_the_email_clears_the_verified_timestamp(): void
+    {
+        $user = $this->createUser();
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        $this->actingAs($user)
+            ->patch(route('settings.profile.update-info'), [
+                'name' => $user->name,
+                'email' => 'moved@example.com',
+            ]);
+
+        $this->assertNull($user->fresh()->email_verified_at);
+    }
+
+    public function test_keeping_the_same_email_keeps_the_verified_timestamp(): void
+    {
+        $user = $this->createUser();
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        $this->actingAs($user)
+            ->patch(route('settings.profile.update-info'), [
+                'name' => 'Updated Name',
+                'email' => $user->email,
+            ]);
+
+        $this->assertNotNull($user->fresh()->email_verified_at);
+    }
+
+    /** The column is not mass assignable, so a payload cannot grant itself trust. */
+    public function test_a_request_cannot_mark_its_own_email_verified(): void
+    {
+        $user = $this->createUser();
+        $user->forceFill(['email_verified_at' => null])->save();
+
+        $this->actingAs($user)
+            ->patch(route('settings.profile.update-info'), [
+                'name' => $user->name,
+                'email' => $user->email,
+                'email_verified_at' => now()->toDateTimeString(),
+            ]);
+
+        $this->assertNull($user->fresh()->email_verified_at);
+    }
+
     public function test_user_cannot_take_an_email_owned_by_another_user(): void
     {
         $user = $this->createUser();

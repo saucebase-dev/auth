@@ -35,7 +35,11 @@ Route::middleware('web')->group(function (): void {
             Route::get('forgot-password', [ForgotPasswordController::class, 'create'])
                 ->name('password.request');
 
+            // Throttled like the reset itself: without it this is a button that
+            // mails anybody on demand. The response stays generic either way, so
+            // the limit does not become an account oracle.
             Route::post('forgot-password', [ForgotPasswordController::class, 'store'])
+                ->middleware('throttle:6,1')
                 ->name('password.email');
 
             Route::get('reset-password/{token}', [ResetPasswordController::class, 'create'])
@@ -55,7 +59,7 @@ Route::middleware('web')->group(function (): void {
 
         Route::middleware('auth')->group(function (): void {
 
-            Route::any('logout', [LoginController::class, 'destroy'])
+            Route::post('logout', [LoginController::class, 'destroy'])
                 ->name('logout');
 
             Route::get('verify-email', EmailVerificationPromptController::class)

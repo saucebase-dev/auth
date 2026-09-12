@@ -2,7 +2,6 @@
 
 namespace Modules\Auth\Http\Controllers;
 
-use App\Helpers\Toast;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -11,6 +10,7 @@ use Laravel\Socialite\Two\User;
 use Modules\Auth\Events\ReturningUserAuthenticated;
 use Modules\Auth\Exceptions\SocialiteException;
 use Modules\Auth\Services\SocialiteService;
+use Saucebase\Core\Helpers\Toast;
 use Symfony\Component\HttpFoundation\Response as RedirectResponse;
 
 class SocialiteController extends Controller

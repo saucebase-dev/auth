@@ -31,9 +31,9 @@ Follows the dual-framework pattern (see root `CLAUDE.md` → Architecture > Fron
 
 ## Routes
 
-**Guest routes** (`/auth/*`): login (GET/POST), register (GET/POST), forgot-password (GET/POST), reset-password/{token} (GET, signed), reset-password (POST, throttle:6,1), magic-link (GET/POST, throttle:5,1)
+**Guest routes** (`/auth/*`): login (GET/POST), register (GET/POST), forgot-password (GET/POST, throttle:6,1), reset-password/{token} (GET, signed), reset-password (POST, throttle:6,1), magic-link (GET/POST, throttle:5,1)
 
-**Auth routes** (`/auth/*`): logout (ANY), verify-email (GET), verify-email/{id}/{hash} (GET, signed), email/verification-notification (POST, throttle:6,1), password (PUT)
+**Auth routes** (`/auth/*`): logout (POST — a GET logout is reachable from any other site's markup), verify-email (GET), verify-email/{id}/{hash} (GET, signed), email/verification-notification (POST, throttle:6,1), password (PUT)
 
 **Socialite** (outside guest/auth groups): `auth.socialite.redirect` (GET), `auth.socialite.callback` (GET), `auth.socialite.disconnect` (DELETE, auth)
 
@@ -49,6 +49,19 @@ socialite disconnect are rendered by the **Security** panel, not Profile.
 **API**: `/api/v1/auth/me` (GET, auth:sanctum)
 
 ## Patterns
+
+### Changing Your Email Drops Its Verification
+`ProfileController::updateInfo()` clears `email_verified_at` when the address actually
+changed. `email_verified_at` is deliberately **not** in the User model's `$fillable`, so no
+request payload can grant itself a verified address; `SocialiteService` sets it with
+`forceFill()`.
+
+Changing a password does **not** yet end other sessions — that needs `AuthenticateSession`
+in the `web` group, which is an app-wide change awaiting a regression pass (sc-714).
+
+Note that `User` does not implement `MustVerifyEmail` (the import is commented out), so the
+`verified` middleware is currently a pass-through and the verification routes are not
+enforced. The timestamp is still kept accurate for when that changes.
 
 ### Socialite Dual-Flow
 `SocialiteController::callback()` checks `Auth::check()` to branch:
@@ -72,8 +85,8 @@ Uses `lab404/laravel-impersonate` + `filament-impersonate`. Session stores histo
 `MagicLinkController::authenticate()` hashes the incoming token, looks it up, calls `isValid()` (not expired + not used), logs in the user, marks the token used, and redirects to intended URL or dashboard.
 
 `AuthSettings` is auto-discovered from `src/Settings`, with defaults installed
-from `database/settings`. Magic links are enabled by default with a 15-minute
-expiry. Administrators manage both values through the `AuthenticationSettings`
+from `database/settings`. Magic links are disabled by default, with a 15-minute
+expiry once switched on. Administrators manage both values through the `AuthenticationSettings`
 Filament page under the Settings navigation group.
 
 **Token storage:** Plain token only lives in the email link. DB stores `hash('sha256', $plainToken)`. This means even if the DB is compromised, tokens cannot be forged or replayed.
@@ -137,7 +150,7 @@ npx playwright test --project="@auth*"                 # E2E
 ## Gotchas
 
 - `LoginRequest::validateCredentials()` validates without logging in — the controller handles `Auth::login()` separately
-- Social users get email auto-verified (`email_verified_at = now()`) and a random password
+- Social users get a random password and are **not** marked verified — signing in with a provider is not proof of the address, and nobody has confirmed it (sc-713)
 - Socialite redirect/callback routes are outside both guest and auth middleware groups
 - `RegisterRequest::passedValidation()` hashes the password before the controller sees it
 - Filament UserResource enforces single role (maxItems: 1) despite multi-select UI

@@ -3,19 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldLabel } from '@/components/ui/field';
 import InputField from '@/components/ui/input/InputField.vue';
-import { Form, Link } from '@inertiajs/vue3';
-import { ModalLink, useModal } from '@inertiaui/modal-vue';
+import { Form } from '@inertiajs/vue3';
+import { useModal } from '@inertiaui/modal-vue';
 import { computed, ref } from 'vue';
+import AuthLink from './AuthLink.vue';
 import SocialiteProviders from './SocialiteProviders.vue';
 
 const props = defineProps<{
-    /**
-     * Whether this is the copy inside the auth modal.
-     *
-     * Only affects the link to registration: from inside the modal it swaps the
-     * modal in place, rather than navigating the page out from under it. The
-     * other links leave for a page of their own either way.
-     */
+    /** Whether this is the copy inside the auth modal. */
     modal?: boolean;
 }>();
 
@@ -30,8 +25,6 @@ function handleSuccess(): void {
         currentModal?.close();
     }
 }
-
-const SignUpLink = computed(() => (props.modal ? ModalLink : Link));
 
 const emailRef = ref('');
 
@@ -92,15 +85,16 @@ const forgotUrl = computed(() =>
             </div>
 
             <!-- Forgot password link -->
-            <Link
+            <AuthLink
                 v-if="route().has('password.request')"
+                :modal="modal"
                 :href="forgotUrl"
                 class="text-primary ml-auto inline-block text-sm font-medium whitespace-nowrap underline-offset-4 hover:underline"
                 data-testid="forgot-password-link"
                 :data-invalid="false"
             >
                 {{ $t('Forgot your password?') }}
-            </Link>
+            </AuthLink>
         </div>
 
         <Button type="submit" class="mt-3 w-full" data-testid="login-button">
@@ -108,14 +102,15 @@ const forgotUrl = computed(() =>
         </Button>
 
         <p class="mt-2 text-center text-sm">
-            <Link
+            <AuthLink
                 v-if="$page.props.auth.magic_link_enabled"
+                :modal="modal"
                 :href="route('magic-link.create')"
                 class="text-primary font-medium underline-offset-4 hover:underline"
                 data-testid="magic-link-login-link"
             >
                 {{ $t('Login with magic link') }}
-            </Link>
+            </AuthLink>
         </p>
 
         <p
@@ -123,15 +118,14 @@ const forgotUrl = computed(() =>
             class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400"
         >
             {{ $t("Don't have an account?") }}
-            <component
-                :is="SignUpLink"
-                v-bind="modal ? { navigate: true } : {}"
+            <AuthLink
+                :modal="modal"
                 :href="route('register')"
                 class="text-primary font-medium underline-offset-4 hover:underline"
                 data-testid="sign-up-link"
             >
                 {{ $t('Sign up') }}
-            </component>
+            </AuthLink>
         </p>
     </Form>
 </template>

@@ -2,7 +2,6 @@
 
 namespace Modules\Auth\Http\Controllers;
 
-use App\Helpers\Toast;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,31 +10,20 @@ use Inertia\Response;
 use InertiaUI\Modal\Modal;
 use Modules\Auth\Events\ReturningUserAuthenticated;
 use Modules\Auth\Exceptions\AuthException;
-use Modules\Auth\Settings\AuthSettings;
 use Modules\Auth\Http\Requests\LoginRequest;
+use Saucebase\Core\Helpers\Toast;
 
 class LoginController extends Controller
 {
     /**
      * Display the login view.
-     *
-     * The URL is the canonical page; a modal is the exception, and only when both
-     * the site allows it and the caller explicitly asked. Deciding on the request
-     * header rather than the referer matters: the package would otherwise treat
-     * any ordinary in-app link as "open me over the previous page".
      */
-    public function create(Request $request, AuthSettings $settings): Response|Modal
+    public function create(): Response|Modal
     {
-        $props = [
+        return $this->pageOrModal('Auth::Login', [
             'status' => session('status'),
             'error' => session('error'),
-        ];
-
-        if (! $settings->modal_enabled || ! $request->hasHeader(Modal::HEADER_MODAL)) {
-            return Inertia::render('Auth::Login', $props);
-        }
-
-        return Inertia::modal('Auth::Login', [...$props, 'modal' => true]);
+        ]);
     }
 
     /**

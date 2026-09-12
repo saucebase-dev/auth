@@ -3,12 +3,11 @@
 namespace Modules\Auth\Tests\Feature;
 
 use App\Models\User;
-use Modules\Auth\Notifications\PasswordChangedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Lang;
-use Illuminate\Support\Facades\Route;
+use Modules\Auth\Notifications\PasswordChangedNotification;
 use Tests\TestCase;
 
 /**
@@ -65,23 +64,13 @@ class NotificationTranslatabilityTest extends TestCase
         $this->assertSame('OLA Ana,', (new PasswordChangedNotification)->toMail($user)->greeting);
     }
 
-    /**
-     * The profile button points into the settings module, which core installs without.
-     */
-    public function test_the_profile_button_appears_only_where_the_route_exists(): void
+    public function test_the_profile_button_is_translated(): void
     {
         $user = User::factory()->create();
 
         App::setLocale('xx');
 
-        if (Route::has('settings.profile')) {
-            $this->assertSame('PERFIL', (new PasswordChangedNotification)->toMail($user)->actionText);
-
-            return;
-        }
-
-        // Without the settings module the mail still sends, minus the button.
-        $this->assertNull((new PasswordChangedNotification)->toMail($user)->actionText);
+        $this->assertSame('PERFIL', (new PasswordChangedNotification)->toMail($user)->actionText);
     }
 
     /**

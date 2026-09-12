@@ -213,10 +213,10 @@ const initiateDisconnect = async (provider: string) => {
             </Form>
         </div>
 
-        <Separator />
-
         <!-- Connected accounts -->
         <template v-if="hasSocialiteProviders">
+            <Separator />
+
             <div class="space-y-4">
                 <div class="space-y-1">
                     <h3 class="font-medium">{{ $t('Connected Accounts') }}</h3>

@@ -30,7 +30,7 @@ class AuthenticationSettingsPageTest extends TestCase
             ->assertFormFieldExists('login_notification_enabled')
             ->assertSchemaStateSet([
                 'enabled_socialite_providers' => [],
-                'magic_link_enabled' => true,
+                'magic_link_enabled' => false,
                 'magic_link_expiry' => 15,
                 'login_notification_enabled' => false,
             ]);
@@ -120,7 +120,7 @@ class AuthenticationSettingsPageTest extends TestCase
 
         Livewire::test(AuthenticationSettings::class)
             ->fillForm([
-                'magic_link_enabled' => false,
+                'magic_link_enabled' => true,
                 'magic_link_expiry' => $expiry,
             ])
             ->call('save')
@@ -129,7 +129,7 @@ class AuthenticationSettingsPageTest extends TestCase
 
         $settings = new AuthSettings;
 
-        $this->assertTrue($settings->magic_link_enabled);
+        $this->assertFalse($settings->magic_link_enabled);
         $this->assertSame(15, $settings->magic_link_expiry);
     }
 

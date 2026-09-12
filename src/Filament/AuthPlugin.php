@@ -2,10 +2,10 @@
 
 namespace Modules\Auth\Filament;
 
-use App\Filament\ModulePlugin;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Filament\Support\Facades\FilamentView;
+use Saucebase\Core\Filament\ModulePlugin;
 
 class AuthPlugin implements Plugin
 {

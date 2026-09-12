@@ -2,7 +2,7 @@
 
 namespace Modules\Auth\Settings;
 
-use App\Settings\SettingsSection;
+use Saucebase\Core\Settings\SettingsSection;
 
 /**
  * The signed-in user's own account: their name, email and avatar.

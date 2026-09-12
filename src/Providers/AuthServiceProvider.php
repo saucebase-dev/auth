@@ -3,12 +3,12 @@
 namespace Modules\Auth\Providers;
 
 use App\Models\User;
-use App\Providers\ModuleServiceProvider;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Modules\Auth\Services\SocialiteService;
 use Modules\Auth\Settings\AuthSettings;
+use Saucebase\Core\Providers\ModuleServiceProvider;
 use Spatie\Permission\Models\Role;
 use STS\FilamentImpersonate\ImpersonateManager;
 

@@ -2,13 +2,13 @@
 
 namespace Modules\Auth\Http\Controllers;
 
-use App\Helpers\Toast;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Saucebase\Core\Helpers\Toast;
 
 class VerifyEmailController extends Controller
 {

@@ -15,6 +15,16 @@ class MagicLinkTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Magic links ship switched off; every test here but the last needs them on. */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $settings = app(AuthSettings::class);
+        $settings->magic_link_enabled = true;
+        $settings->save();
+    }
+
     public function test_magic_link_page_renders(): void
     {
         $response = $this->get(route('magic-link.create'));

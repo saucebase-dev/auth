@@ -1,7 +1,7 @@
 <?php
 
-use App\Facades\Navigation;
-use App\Navigation\Section;
+use Saucebase\Core\Facades\Navigation;
+use Saucebase\Core\Navigation\Section;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,7 +24,6 @@ Navigation::add('Settings', '#settings', function (Section $section) {
         'external' => true,
     ]);
 });
-
 
 // User menu - Logout
 Navigation::add('Log out', '#', function (Section $section) {
