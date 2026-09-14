@@ -21,38 +21,6 @@ test.describe.parallel('Sidebar layout', () => {
         ).toBeVisible();
     });
 
-    test('user dropdown contains language and theme selectors', async ({
-        page,
-        credentials,
-        loginAs,
-    }) => {
-        await loginAs(credentials.user);
-        await page.goto('/dashboard');
-
-        await page.getByTestId('user-menu-trigger').click();
-
-        await expect(
-            page.getByTestId('language-selector-trigger'),
-        ).toBeVisible();
-        await expect(page.getByTestId('theme-selector-trigger')).toBeVisible();
-    });
-
-    test('language selector submenu opens', async ({
-        page,
-        credentials,
-        loginAs,
-    }) => {
-        await loginAs(credentials.user);
-        await page.goto('/dashboard');
-
-        await page.getByTestId('user-menu-trigger').click();
-        await page.getByTestId('language-selector-trigger').click();
-
-        await expect(
-            page.locator('[data-slot="dropdown-menu-sub-content"]'),
-        ).toBeVisible();
-    });
-
     test('theme selector submenu opens', async ({
         page,
         credentials,

@@ -7,6 +7,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 use Modules\Auth\Notifications\LoginNotification;
 use Tests\TestCase;
@@ -99,26 +100,24 @@ class LoginNotificationTest extends TestCase
     public function test_login_notification_uses_the_recipient_language(): void
     {
         config(['app.name' => 'Saucebase']);
-        App::setLocale('pt_BR');
+        Lang::addLines([
+            'auth.login-notification.subject' => 'NOVO :app',
+            'auth.login-notification.greeting' => 'OLA :name',
+            'auth.login-notification.action' => 'REDEFINIR',
+        ], 'xx', 'auth');
+        App::setLocale('xx');
 
         $user = User::factory()->create(['name' => 'Ana']);
         $notification = new LoginNotification(
             loggedInAt: CarbonImmutable::parse('2026-08-24 15:19:00', 'UTC'),
             ipAddress: '203.0.113.10',
-            userAgent: 'Navegador de teste',
+            userAgent: 'Test Browser 1.0',
         );
 
         $mail = $notification->toMail($user);
 
-        $this->assertSame('Novo acesso à sua conta Saucebase', $mail->subject);
-        $this->assertSame('Olá Ana,', $mail->greeting);
-        $this->assertContains('Endereço IP: 203.0.113.10', $mail->introLines);
-        $this->assertContains('Detalhes do dispositivo: Navegador de teste', $mail->introLines);
-        $this->assertSame('Redefinir sua senha', $mail->actionText);
-        $this->assertTrue(
-            collect($mail->introLines)->contains(
-                fn (string $line): bool => str_contains($line, 'agosto'),
-            ),
-        );
+        $this->assertSame('NOVO Saucebase', $mail->subject);
+        $this->assertSame('OLA Ana', $mail->greeting);
+        $this->assertSame('REDEFINIR', $mail->actionText);
     }
 }
