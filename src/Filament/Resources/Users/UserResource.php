@@ -26,11 +26,6 @@ class UserResource extends Resource
 
     protected static ?int $navigationSort = 100;
 
-    public static function getNavigationGroup(): ?string
-    {
-        return __('Authentication');
-    }
-
     public static function getGloballySearchableAttributes(): array
     {
         return ['name', 'email'];
