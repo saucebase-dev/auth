@@ -176,13 +176,12 @@ class LoginTest extends TestCase
         $response->assertInvalid('email');
     }
 
-    public function test_login_fires_lockout_event_after_five_failed_attempts(): void
+    public function test_login_locks_out_after_five_failed_attempts(): void
     {
         Event::fake([Lockout::class]);
 
         $user = $this->createUser();
 
-        // Make 5 failed attempts to build up the rate limiter
         for ($i = 0; $i < 5; $i++) {
             $this->post(route('login'), [
                 'email' => $user->email,
@@ -190,13 +189,40 @@ class LoginTest extends TestCase
             ]);
         }
 
-        // 6th attempt triggers the lockout
+        // Locked out even with the right password.
         $this->post(route('login'), [
             'email' => $user->email,
-            'password' => 'wrong-password',
-        ]);
+            'password' => 'password',
+        ])->assertSessionHas('error', fn (string $message) => str_contains($message, 'Too many login attempts'));
 
+        $this->assertGuest();
         Event::assertDispatched(Lockout::class);
+    }
+
+    public function test_successful_login_resets_the_failed_attempt_count(): void
+    {
+        $user = $this->createUser();
+
+        for ($i = 0; $i < 4; $i++) {
+            $this->post(route('login'), [
+                'email' => $user->email,
+                'password' => 'wrong-password',
+            ]);
+        }
+
+        $this->post(route('login'), ['email' => $user->email, 'password' => 'password']);
+        $this->post(route('logout'));
+
+        for ($i = 0; $i < 4; $i++) {
+            $this->post(route('login'), [
+                'email' => $user->email,
+                'password' => 'wrong-password',
+            ]);
+        }
+
+        $this->post(route('login'), ['email' => $user->email, 'password' => 'password']);
+
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_login_updates_last_login_at(): void

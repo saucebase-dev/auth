@@ -74,7 +74,7 @@ Cannot disconnect if it's the user's only login method. `SocialiteService::disco
 Also prevents account takeover: linking a social ID already owned by another user throws `accountAlreadyLinked`.
 
 ### Rate Limiting
-`LoginRequest::ensureIsNotRateLimited()` — 5 attempts per `email|ip` key. Fires `Lockout` event, throws `AuthException::throttle($seconds)`. Cleared on success.
+`LoginRequest::ensureIsNotRateLimited()` — 5 attempts per `email|ip` key. Fires `Lockout` event, throws `AuthException::throttle($seconds)`. Cleared on success. Covered in PHP (`LoginTest`), not e2e: Playwright workers share one IP, so a lockout there leaks into other login tests.
 
 ### Impersonation
 Uses `lab404/laravel-impersonate` + `filament-impersonate`. Session stores history at `impersonation.recent_history` (max 4 user IDs). `ReimpersonateController` lets admins re-impersonate from recent list (max 3 shown in UI, filters deleted users and self). Stop via `filament-impersonate.leave` route.
@@ -145,7 +145,7 @@ php artisan test --testsuite=Modules --filter='^Modules\\Auth\\Tests'  # PHPUnit
 npx playwright test --project="@auth*"                 # E2E
 ```
 
-**E2E coverage**: login (basic, errors, security/rate-limiting, social, modal, logout), register (basic, errors), forgot-password (basic, errors), verify-email, profile (avatar, socialite settings under the Security panel). Page objects in `tests/e2e/pages/`, fixtures in `tests/e2e/fixtures/users.ts`.
+**E2E coverage**: login (basic, errors, security (CSRF), social, modal, logout), register (basic, errors), forgot-password (basic, errors), verify-email, profile (avatar, socialite settings under the Security panel). Page objects in `tests/e2e/pages/`, fixtures in `tests/e2e/fixtures/users.ts`.
 
 ## Gotchas
 
