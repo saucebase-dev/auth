@@ -47,9 +47,11 @@ test.describe('Security Socialite Settings', () => {
             // Disconnect confirms through the app-level dialog now.
             await page.getByTestId('confirm-dialog-confirm').click();
 
+            // Disconnecting is a server round trip and a panel reload, which
+            // outruns the default budget when the suite runs in parallel.
             await expect(
                 page.getByTestId('socialite-account-google'),
-            ).not.toBeVisible();
+            ).not.toBeVisible({ timeout: 15_000 });
         } finally {
             await laravel.query(
                 'DELETE FROM social_accounts WHERE provider = ? AND provider_id = ?',

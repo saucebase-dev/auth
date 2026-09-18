@@ -1,11 +1,16 @@
+import { expect, test } from '@e2e/fixtures';
 import { faker } from '@faker-js/faker';
-import { expect, test } from '@playwright/test';
 import { ForgotPasswordPage } from '../../pages/ForgotPasswordPage';
 
 test.describe.parallel('Forgot Password Basics', () => {
     let forgotPasswordPage: ForgotPasswordPage;
 
-    test.beforeEach(async ({ page }) => {
+    test.beforeEach(async ({ page, laravel }) => {
+        // Six requests a minute, counted per IP, which every worker shares —
+        // and the count outlives the run. Rate limiter counters live in the
+        // cache table under hashed keys, so the whole table goes.
+        await laravel.query('DELETE FROM cache');
+
         forgotPasswordPage = new ForgotPasswordPage(page);
         await forgotPasswordPage.goto();
         await forgotPasswordPage.expectToBeVisible();
