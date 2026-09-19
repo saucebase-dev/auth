@@ -209,12 +209,9 @@ export default function SettingsSecurity({
 
     return (
         <div className="space-y-8" data-testid="settings-security-panel">
-            <div className="space-y-1.5">
-                <h2 className="text-lg font-semibold">{t('Security')}</h2>
-                <p className="text-muted-foreground text-sm">
-                    {t('Your password and the accounts that can sign you in')}
-                </p>
-            </div>
+            <p className="text-muted-foreground text-sm">
+                {t('Your password and the accounts that can sign you in')}
+            </p>
 
             {/* Password */}
             <div className="space-y-4">

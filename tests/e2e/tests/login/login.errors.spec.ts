@@ -22,18 +22,24 @@ test.describe.parallel('Login Error Handling', () => {
         await loginPage.expectAlertToBeVisible();
     });
 
-    test('handles network failure gracefully', async ({ credentials }) => {
-        const user = credentials.user;
+    // Aborting the request is the point of this test, so the client's own
+    // "Network error" is expected rather than a defect.
+    test.describe(() => {
+        test.use({ allowedPageErrors: [/Network error/] });
 
-        await loginPage.mockNetworkFailure();
-        const failedRequestPromise = loginPage.waitForFailedLoginRequest();
+        test('handles network failure gracefully', async ({ credentials }) => {
+            const user = credentials.user;
 
-        await loginPage.login(user.email, user.password);
+            await loginPage.mockNetworkFailure();
+            const failedRequestPromise = loginPage.waitForFailedLoginRequest();
 
-        await expect(loginPage.page).toHaveURL(loginPage.loginEndpoint);
+            await loginPage.login(user.email, user.password);
 
-        const failedRequest = await failedRequestPromise;
-        expect(failedRequest.url()).toContain(loginPage.loginEndpoint);
+            await expect(loginPage.page).toHaveURL(loginPage.loginEndpoint);
+
+            const failedRequest = await failedRequestPromise;
+            expect(failedRequest.url()).toContain(loginPage.loginEndpoint);
+        });
     });
 
     test('handles server 500 error gracefully', async ({ credentials }) => {

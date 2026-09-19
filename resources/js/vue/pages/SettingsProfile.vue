@@ -104,12 +104,9 @@ const removeAvatar = async () => {
 
 <template>
     <div class="space-y-8" data-testid="settings-profile-panel">
-        <div class="space-y-1.5">
-            <h2 class="text-lg font-semibold">{{ $t('Profile') }}</h2>
-            <p class="text-muted-foreground text-sm">
-                {{ $t('Your personal information and account details') }}
-            </p>
-        </div>
+        <p class="text-muted-foreground text-sm">
+            {{ $t('Your personal information and account details') }}
+        </p>
 
         <!-- Avatar + identity -->
         <div class="flex flex-col gap-8 sm:flex-row sm:items-start">

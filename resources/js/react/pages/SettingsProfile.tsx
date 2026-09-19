@@ -89,12 +89,9 @@ export default function SettingsProfile({ user }: SettingsProfileProps) {
 
     return (
         <div className="space-y-8" data-testid="settings-profile-panel">
-            <div className="space-y-1.5">
-                <h2 className="text-lg font-semibold">{t('Profile')}</h2>
-                <p className="text-muted-foreground text-sm">
-                    {t('Your personal information and account details')}
-                </p>
-            </div>
+            <p className="text-muted-foreground text-sm">
+                {t('Your personal information and account details')}
+            </p>
 
             {/* Avatar + identity */}
             <div className="flex flex-col gap-8 sm:flex-row sm:items-start">

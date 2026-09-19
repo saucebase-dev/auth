@@ -150,12 +150,9 @@ const initiateDisconnect = async (provider: string) => {
 
 <template>
     <div class="space-y-8" data-testid="settings-security-panel">
-        <div class="space-y-1.5">
-            <h2 class="text-lg font-semibold">{{ $t('Security') }}</h2>
-            <p class="text-muted-foreground text-sm">
-                {{ $t('Your password and the accounts that can sign you in') }}
-            </p>
-        </div>
+        <p class="text-muted-foreground text-sm">
+            {{ $t('Your password and the accounts that can sign you in') }}
+        </p>
 
         <!-- Password -->
         <div class="space-y-4">
