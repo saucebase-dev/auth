@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import InputField from '@/components/ui/input/InputField.vue';
 import Separator from '@/components/ui/separator/Separator.vue';
 import { useDialog } from '@/composables/useDialog';
+import { useLocalization } from '@/composables/useLocalization';
+import { formatDateTime } from '@js/lib/dates';
 import { Form, router, usePage } from '@inertiajs/vue3';
 import { Loader2 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
@@ -36,6 +38,7 @@ const props = defineProps<{
 }>();
 
 const page = usePage();
+const { language } = useLocalization();
 const { confirm } = useDialog();
 
 const isDisconnecting = ref<string | null>(null);
@@ -57,15 +60,6 @@ const getConnectedAccount = (providerName: string) =>
     props.user?.social_accounts?.find(
         (account) => account.provider === providerName,
     );
-
-const formatLastLogin = (date: string): string =>
-    new Date(date).toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
 
 const enabledProviders = computed<SocialiteProvider[]>(() => {
     const auth = page.props.auth as {
@@ -248,9 +242,10 @@ const initiateDisconnect = async (provider: string) => {
                                 >
                                     {{ $t('Last login') }}:
                                     {{
-                                        formatLastLogin(
+                                        formatDateTime(
                                             getConnectedAccount(provider.name)
-                                                ?.last_login_at ?? '',
+                                                ?.last_login_at,
+                                            language,
                                         )
                                     }}
                                 </p>

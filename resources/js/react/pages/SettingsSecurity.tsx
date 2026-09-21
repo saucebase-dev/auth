@@ -3,8 +3,9 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { useDialog } from '@/hooks/useDialog';
-import { useT } from '@/i18n';
+import { useT, useTranslation } from '@/i18n';
 import { Form, router, usePage } from '@inertiajs/react';
+import { formatDateTime } from '@js/lib/dates';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useMemo, useState, type ComponentType } from 'react';
 import IconGithub from '~icons/simple-icons/github';
@@ -109,7 +110,7 @@ export default function SettingsSecurity({
     user,
     available_providers,
 }: SettingsSecurityProps) {
-    const t = useT();
+    const { t, locale } = useTranslation();
     const page = usePage();
     const { confirm } = useDialog();
 
@@ -171,15 +172,6 @@ export default function SettingsSecurity({
         user?.social_accounts?.find(
             (account) => account.provider === providerName,
         );
-
-    const formatLastLogin = (date: string): string =>
-        new Date(date).toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        });
 
     /**
      * Confirm through the app-level dialog rather than a nested one: a dialog
@@ -319,11 +311,11 @@ export default function SettingsSecurity({
                                                 {connected ? (
                                                     <p className="text-muted-foreground text-sm">
                                                         {t('Last login')}:{' '}
-                                                        {formatLastLogin(
+                                                        {formatDateTime(
                                                             getConnectedAccount(
                                                                 provider.name,
-                                                            )?.last_login_at ??
-                                                                '',
+                                                            )?.last_login_at,
+                                                            locale,
                                                         )}
                                                     </p>
                                                 ) : (
