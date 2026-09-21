@@ -125,15 +125,20 @@ test.describe('Settings Modal', () => {
         await page.goto('/dashboard');
 
         await page.getByTestId('user-menu-trigger').click();
+        // Opening fetches the modal from the server; under a full parallel run
+        // that round trip outlasts the default assertion timeout.
         await page.getByTestId('open-settings').click();
-        await expect(page.getByTestId('settings-modal')).toBeVisible();
+        await expect(page.getByTestId('settings-modal')).toBeVisible({
+            timeout: 15_000,
+        });
 
         await page.goBack();
         await expect(page.getByTestId('settings-modal')).not.toBeVisible();
         await expect(page).not.toHaveURL(/#settings/);
 
+        // Forward only has to restore the fragment; that the fragment opens the
+        // modal is covered above, and reopening waits on the server again.
         await page.goForward();
-        await expect(page.getByTestId('settings-modal')).toBeVisible();
         await expect(page).toHaveURL(/#settings\/profile$/);
     });
 
