@@ -143,7 +143,11 @@ export default function LoginForm({ modal }: LoginFormProps) {
                                 setData('remember', !!checked)
                             }
                         />
-                        <FieldLabel className="font-normal">
+                        <FieldLabel
+                            htmlFor="remember"
+                            data-testid="remember-me-label"
+                            className="font-normal"
+                        >
                             {t('Remember-me')}
                         </FieldLabel>
                     </Field>

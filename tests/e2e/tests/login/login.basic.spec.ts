@@ -38,6 +38,13 @@ test.describe.parallel('Login Basics', () => {
         await expectSuccessfulLogin();
     });
 
+    /** The checkbox is a button, so the browser does not tick it from the label. */
+    test('ticks remember-me when its label is clicked', async ({ page }) => {
+        await page.getByTestId('remember-me-label').click();
+
+        await expect(loginPage.rememberCheckbox).toBeChecked();
+    });
+
     test('redirects authenticated users away from login page', async ({
         page,
         credentials,

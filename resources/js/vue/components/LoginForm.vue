@@ -77,7 +77,11 @@ const forgotUrl = computed(() =>
                             name="remember"
                             data-testid="remember-me"
                         />
-                        <FieldLabel for="remember" class="font-normal">
+                        <FieldLabel
+                            for="remember"
+                            data-testid="remember-me-label"
+                            class="font-normal"
+                        >
                             {{ $t('Remember-me') }}
                         </FieldLabel>
                     </Field>
