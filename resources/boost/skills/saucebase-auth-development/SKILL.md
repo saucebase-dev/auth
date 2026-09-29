@@ -44,7 +44,7 @@ Pages, layouts and components live under `resources/js/`. The module's `resource
 
 **Magic Link** (outside guest/auth groups): `magic-link.authenticate` — `/auth/magic-link/{token}` (GET) — must be accessible from email clients
 
-**Account settings** (`/settings/*`, middleware `auth`, `verified`, `role:admin|user`): `settings.profile` (redirects to the `#settings/profile` fragment), `settings.profile.update-info` (PATCH), `settings.profile.update-avatar` (POST), `settings.profile.delete-avatar` (DELETE), `settings.profile.password.update` (PUT)
+**Account settings** (`/settings/*`, middleware `auth`, `verified`): `settings.profile` (redirects to the `#settings/profile` fragment), `settings.profile.update-info` (PATCH), `settings.profile.update-avatar` (POST), `settings.profile.delete-avatar` (DELETE), `settings.profile.password.update` (PUT)
 
 The routes are grouped under `settings.profile.*` for history; password and
 socialite disconnect are rendered by the **Security** panel, not Profile.

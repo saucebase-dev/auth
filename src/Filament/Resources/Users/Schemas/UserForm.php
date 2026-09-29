@@ -2,7 +2,6 @@
 
 namespace Modules\Auth\Filament\Resources\Users\Schemas;
 
-use App\Enums\Role as RoleEnum;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
@@ -33,8 +32,7 @@ class UserForm
                     ->multiple()
                     ->minItems(1)
                     ->preload()
-                    // Optional: default to "user" on create:
-                    ->default(fn () => [Role::where('name', RoleEnum::USER)->value('id')]),
+                    ->default(fn () => [Role::where('name', 'user')->value('id')]),
                 TextInput::make('password')
                     ->label(__('Password'))
                     ->password()

@@ -118,7 +118,6 @@ Route::middleware('web')->group(function (): void {
     Route::group(['middleware' => [
         'auth',
         'verified',
-        'role:admin|user',
     ]], function (): void {
         Route::prefix('settings')->group(function (): void {
             /*

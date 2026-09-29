@@ -2,7 +2,6 @@
 
 namespace Modules\Auth\Tests\Feature;
 
-use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -23,7 +22,7 @@ class ProfileAvatarTest extends TestCase
     private function createVerifiedUser(): User
     {
         $user = User::factory()->create();
-        $user->assignRole(Role::USER);
+        $user->assignRole('user');
 
         return $user;
     }

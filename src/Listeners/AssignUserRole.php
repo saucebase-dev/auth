@@ -2,7 +2,6 @@
 
 namespace Modules\Auth\Listeners;
 
-use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 
@@ -17,7 +16,7 @@ class AssignUserRole
         $user = $event->user;
 
         if ($user->roles->isEmpty()) {
-            $user->syncRoles([Role::USER->value]);
+            $user->syncRoles(['user']);
         }
     }
 }

@@ -2,7 +2,6 @@
 
 namespace Modules\Auth\Filament\Resources\Users\Tables;
 
-use App\Enums\Role;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -33,7 +32,7 @@ class UsersTable
                 TextColumn::make('roles.name')
                     ->label(__('Role'))
                     ->badge()
-                    ->color(fn (string $state): string => Role::fromString($state)->getColor()),
+                    ->color(fn (string $state): string => $state === 'admin' ? 'danger' : 'info'),
                 TextColumn::make('last_login_at')
                     ->dateTime()
                     ->sortable()
