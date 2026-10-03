@@ -9,8 +9,7 @@ import { Form, router, usePage } from '@inertiajs/vue3';
 import { Loader2 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed, ref } from 'vue';
-import IconGithub from '~icons/simple-icons/github';
-import IconGoogle from '~icons/simple-icons/google';
+import { providerIcons } from '../components/providerIcons';
 
 type SocialiteProvider = {
     name: string;
@@ -43,18 +42,8 @@ const { confirm } = useDialog();
 
 const isDisconnecting = ref<string | null>(null);
 
-const providerIcons: Record<string, unknown> = {
-    google: IconGoogle,
-    github: IconGithub,
-};
-
 const getProviderIcon = (providerName: string) =>
     providerIcons[providerName.toLowerCase()];
-
-const isProviderConnected = (providerName: string): boolean =>
-    props.user?.social_accounts?.some(
-        (account) => account.provider === providerName,
-    ) ?? false;
 
 const getConnectedAccount = (providerName: string) =>
     props.user?.social_accounts?.find(
@@ -229,7 +218,7 @@ const initiateDisconnect = async (provider: string) => {
                                 v-if="getProviderIcon(provider.name)"
                                 class="size-6"
                                 :class="{
-                                    'opacity-50': !isProviderConnected(
+                                    'opacity-50': !getConnectedAccount(
                                         provider.name,
                                     ),
                                 }"
@@ -237,7 +226,7 @@ const initiateDisconnect = async (provider: string) => {
                             <div>
                                 <p class="font-medium">{{ provider.label }}</p>
                                 <p
-                                    v-if="isProviderConnected(provider.name)"
+                                    v-if="getConnectedAccount(provider.name)"
                                     class="text-muted-foreground text-sm"
                                 >
                                     {{ $t('Last login') }}:
@@ -256,7 +245,7 @@ const initiateDisconnect = async (provider: string) => {
                         </div>
 
                         <Button
-                            v-if="isProviderConnected(provider.name)"
+                            v-if="getConnectedAccount(provider.name)"
                             variant="destructive"
                             size="sm"
                             :data-testid="`disconnect-socialite-${provider.name}`"

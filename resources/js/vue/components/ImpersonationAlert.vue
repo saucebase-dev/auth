@@ -2,6 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import type { User } from '@/types';
+import { getInitials } from '@js/lib/initials';
 import { router, usePage } from '@inertiajs/vue3';
 import { onClickOutside, onKeyStroke } from '@vueuse/core';
 import { Drama, HistoryIcon, X } from '@lucide/vue';
@@ -19,15 +20,6 @@ const page = usePage();
 const impersonation = computed<Impersonation | null>(
     () => (page.props?.impersonation as Impersonation) || null,
 );
-
-// User initials helper
-const getUserInitials = (name: string) => {
-    return name
-        .split(' ')
-        .map((word) => word.charAt(0).toUpperCase())
-        .slice(0, 2)
-        .join('');
-};
 
 // Role badge helper
 const getRoleBadgeClasses = (role: string) => {
@@ -70,23 +62,22 @@ onClickOutside(alertRef, () => {
 onKeyStroke('Escape', () => {
     if (isExpanded.value) collapse();
 });
-
-// Positioning classes
-const containerClasses = computed(() => cn('fixed bottom-3 right-3 z-50'));
 </script>
 
 <template>
     <div
         v-if="impersonation"
         ref="alertRef"
-        :class="containerClasses"
+        class="fixed right-3 bottom-3 z-50"
         data-testid="impersonation-alert"
     >
         <!-- Collapsed state: Avatar only with orange border -->
         <button
             v-if="!isExpanded"
             @click="toggleExpanded"
-            :title="`Impersonating ${impersonation.user.name}`"
+            :title="
+                $t('Impersonating :name', { name: impersonation.user.name })
+            "
             class="animate-in fade-in zoom-in-95 relative cursor-pointer rounded-xl shadow-lg ring-2 ring-orange-500 transition-all duration-300 hover:shadow-xl hover:ring-orange-600"
             :aria-label="$t('Show impersonation details')"
             :aria-expanded="false"
@@ -97,7 +88,7 @@ const containerClasses = computed(() => cn('fixed bottom-3 right-3 z-50'));
                     :alt="impersonation.user.name"
                 />
                 <AvatarFallback class="bg-yellow-600 text-sm text-white">
-                    {{ getUserInitials(impersonation.user.name) }}
+                    {{ getInitials(impersonation.user.name) }}
                 </AvatarFallback>
             </Avatar>
             <!-- Impersonation icon badge -->
@@ -130,7 +121,7 @@ const containerClasses = computed(() => cn('fixed bottom-3 right-3 z-50'));
                         :alt="impersonation.user.name"
                     />
                     <AvatarFallback class="bg-yellow-600 text-sm text-white">
-                        {{ getUserInitials(impersonation.user.name) }}
+                        {{ getInitials(impersonation.user.name) }}
                     </AvatarFallback>
                 </Avatar>
                 <div class="min-w-0 flex-1">
@@ -187,7 +178,7 @@ const containerClasses = computed(() => cn('fixed bottom-3 right-3 z-50'));
                             <AvatarFallback
                                 class="bg-yellow-600/80 text-xs text-white"
                             >
-                                {{ getUserInitials(user.name) }}
+                                {{ getInitials(user.name) }}
                             </AvatarFallback>
                         </Avatar>
                         <div class="min-w-0 flex-1 p-2 pl-1">

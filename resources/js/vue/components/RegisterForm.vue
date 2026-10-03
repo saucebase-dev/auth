@@ -134,7 +134,7 @@ const canSubmit = computed(
             {{ $t('Register') }}
         </Button>
 
-        <p class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+        <p class="text-muted-foreground mt-4 text-center text-sm">
             {{ $t('Already registered?') }}
             <AuthLink
                 :modal="modal"

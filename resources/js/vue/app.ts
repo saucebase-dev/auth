@@ -10,10 +10,6 @@ import IconShieldCheck from '~icons/lucide/shield-check';
 import IconUserCircle from '~icons/lucide/user-circle';
 import ImpersonationAlert from './components/ImpersonationAlert.vue';
 
-/**
- * Auth module setup
- * Called during app initialization before mounting
- */
 export function setup() {
     registerIcon('logout', IconLogOut);
     registerIcon('settings', IconSettings);
@@ -55,5 +51,5 @@ function registerAuthActions() {
  * Called after the app has been mounted
  */
 export function afterMount() {
-    console.debug('Auth module after mount logic executed');
+
 }

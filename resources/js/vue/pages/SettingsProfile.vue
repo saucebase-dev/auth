@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import InputField from '@/components/ui/input/InputField.vue';
 import { useDialog } from '@/composables/useDialog';
 import type { User } from '@/types';
+import { getInitials } from '@js/lib/initials';
 import { Form, router, usePage } from '@inertiajs/vue3';
 import { Camera, Loader2, Trash2 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps<{
     user: User & {
@@ -30,17 +31,15 @@ const avatarPreview = computed(() => {
     return props.user?.avatar ?? null;
 });
 
+// Each object URL holds the file in memory until revoked.
+watch(avatarPreview, (_, previous) => {
+    if (previous?.startsWith('blob:')) {
+        URL.revokeObjectURL(previous);
+    }
+});
+
 const hasUploadedAvatar = computed(
     () => props.user?.has_uploaded_avatar ?? false,
-);
-
-const userInitials = computed(() =>
-    (props.user?.name ?? '')
-        .split(' ')
-        .map((part) => part[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2),
 );
 
 const handleAvatarChange = (event: Event) => {
@@ -118,7 +117,7 @@ const removeAvatar = async () => {
                             :alt="user?.name"
                         />
                         <AvatarFallback class="text-2xl">
-                            {{ userInitials }}
+                            {{ getInitials(user?.name) }}
                         </AvatarFallback>
                     </Avatar>
 
@@ -159,7 +158,7 @@ const removeAvatar = async () => {
                         "
                         type="button"
                         data-testid="remove-avatar"
-                        class="absolute right-0 bottom-0 flex size-9 items-center justify-center rounded-full bg-red-500 text-white shadow-md transition-transform hover:scale-110"
+                        class="bg-destructive absolute right-0 bottom-0 flex size-9 items-center justify-center rounded-full text-white shadow-md transition-transform hover:scale-110"
                         @click="removeAvatar"
                     >
                         <Trash2 class="size-4" />
