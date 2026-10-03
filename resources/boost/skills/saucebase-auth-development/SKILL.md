@@ -87,7 +87,7 @@ Uses `stechstudio/filament-impersonate`. Session stores history at `impersonatio
 ### Magic Link Flow
 `MagicLinkController::store()` silently finds the user by email (no error on unknown email). If found: deletes existing tokens for that user, creates a new `MagicLinkToken` (token = SHA-256 hash of `Str::random(64)`, expiry controlled by `AuthSettings`), and sends `MagicLinkNotification` with the plain-token URL.
 
-`MagicLinkController::authenticate()` hashes the incoming token, looks it up, calls `isValid()` (not expired + not used), logs in the user, marks the token used, and redirects to intended URL or dashboard.
+`MagicLinkController::authenticate()` hashes the incoming token and consumes it in one atomic `UPDATE` (unused and unexpired only), so a link works once even under concurrent clicks, then logs in the user and redirects to intended URL or dashboard.
 
 `AuthSettings` is auto-discovered from `src/Settings`, with defaults installed
 from `database/settings`. Magic links are disabled by default, with a 15-minute
@@ -166,6 +166,5 @@ npx playwright test --project="@auth*"                 # E2E
 - `RegisterRequest::passedValidation()` hashes the password before the controller sees it
 - Filament UserResource enforces single role (maxItems: 1) despite multi-select UI
 - Magic link authenticate route is outside both guest and auth middleware groups (link is clicked from email client)
-- `MagicLinkToken::isValid()` checks both `expires_at->isFuture()` and `used_at === null`
 - `modal_enabled` is presentation only. Turning it off does not change what the routes do, only how they are reached — the canonical URLs work either way, which is why there is no separate modal route.
 - `registration_enabled` closes both signup paths: `EnsureRegistrationEnabled` 404s the register routes, and `SocialiteService::handleCallback()` throws `registrationDisabled()` rather than creating a new user (existing users still sign in). Login is deliberately not toggleable — disabling it would lock out admins.

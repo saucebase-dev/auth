@@ -16,19 +16,9 @@ class SocialiteException extends Exception
         return new self(trans('auth::socialite.cannot_disconnect_only_method'));
     }
 
-    public static function authenticationFailed(): self
-    {
-        return new self(trans('auth::socialite.error'));
-    }
-
     public static function providerNotConnected(string $provider): self
     {
         return new self(trans('auth::socialite.not_connected', ['Provider' => $provider]));
-    }
-
-    public static function missingSocialAccountsRelation(): self
-    {
-        return new self(trans('auth::socialite.missing_social_accounts_relation'));
     }
 
     public static function accountAlreadyLinked(string $provider): self

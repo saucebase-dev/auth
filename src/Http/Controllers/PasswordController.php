@@ -24,7 +24,7 @@ class PasswordController extends Controller
 
         $user->notify(new PasswordChangedNotification);
 
-        Toast::success('Password changed successfully.');
+        Toast::success(__('Password changed successfully.'));
 
         return back();
     }

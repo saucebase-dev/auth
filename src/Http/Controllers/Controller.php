@@ -2,10 +2,15 @@
 
 namespace Modules\Auth\Http\Controllers;
 
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 use InertiaUI\Modal\Modal;
+use Modules\Auth\Events\ReturningUserAuthenticated;
 use Modules\Auth\Settings\AuthSettings;
+use Saucebase\Core\Helpers\Toast;
 
 abstract class Controller
 {
@@ -28,5 +33,17 @@ abstract class Controller
         }
 
         return Inertia::modal($component, [...$props, 'modal' => true]);
+    }
+
+    /** Sign a returning user in, the same way whichever method they used. */
+    protected function signIn(Request $request, User $user, bool $remember = false): void
+    {
+        Auth::login($user, $remember);
+
+        $request->session()->regenerate();
+
+        ReturningUserAuthenticated::dispatch($user, now(), $request->ip(), $request->userAgent());
+
+        Toast::default(__('auth::auth.welcome-back', ['name' => $user->name]));
     }
 }

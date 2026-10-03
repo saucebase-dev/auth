@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('social_accounts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('provider'); // google, github, facebook, etc.
             $table->string('provider_id'); // unique ID from the provider
             $table->text('provider_token')->nullable(); // access token

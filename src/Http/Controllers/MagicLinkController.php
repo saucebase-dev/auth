@@ -7,17 +7,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use InertiaUI\Modal\Modal;
-use Modules\Auth\Events\ReturningUserAuthenticated;
 use Modules\Auth\Http\Middleware\EnsureMagicLinkEnabled;
 use Modules\Auth\Models\MagicLinkToken;
 use Modules\Auth\Notifications\MagicLinkNotification;
 use Modules\Auth\Settings\AuthSettings;
-use Saucebase\Core\Helpers\Toast;
 
 class MagicLinkController extends Controller implements HasMiddleware
 {
@@ -103,18 +100,7 @@ class MagicLinkController extends Controller implements HasMiddleware
             return redirect()->route('login')->with('error', __('auth::auth.magic-link-expired'));
         }
 
-        Auth::login($user);
-
-        $request->session()->regenerate();
-
-        ReturningUserAuthenticated::dispatch(
-            $user,
-            now(),
-            $request->ip(),
-            $request->userAgent(),
-        );
-
-        Toast::default(__('auth::auth.welcome-back', ['name' => $user->name]));
+        $this->signIn($request, $user);
 
         $intended = $request->query('intended');
 

@@ -22,7 +22,6 @@ return [
     'invalid_user' => 'Invalid social account data received',
     'invalid_provider' => 'The selected social provider is invalid or not supported',
     'cannot_disconnect_only_method' => 'Cannot disconnect your only login method. Set a password first or connect another provider and try again',
-    'missing_social_accounts_relation' => 'The User model is missing the socialAccounts relationship required for social authentication',
     'account_already_linked' => 'This :provider account is already linked to another user',
     'unsupported_provider' => 'The social provider :provider is not supported',
     'registration_disabled' => 'New account registration is currently disabled',

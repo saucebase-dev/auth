@@ -37,7 +37,7 @@ class ProfileController extends Controller
             $user->forceFill(['email_verified_at' => null])->save();
         }
 
-        Toast::success('Profile updated successfully!');
+        Toast::success(__('Profile updated successfully!'));
 
         return back();
     }
@@ -55,7 +55,7 @@ class ProfileController extends Controller
                 ->toMediaCollection('avatars');
         }
 
-        Toast::success('Avatar updated successfully.');
+        Toast::success(__('Avatar updated successfully.'));
 
         return back();
     }
@@ -67,7 +67,7 @@ class ProfileController extends Controller
     {
         auth()->user()->clearMediaCollection('avatars');
 
-        Toast::success('Avatar removed successfully.');
+        Toast::success(__('Avatar removed successfully.'));
 
         return back();
     }

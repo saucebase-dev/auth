@@ -8,10 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 use InertiaUI\Modal\Modal;
-use Modules\Auth\Events\ReturningUserAuthenticated;
 use Modules\Auth\Exceptions\AuthException;
 use Modules\Auth\Http\Requests\LoginRequest;
-use Saucebase\Core\Helpers\Toast;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class LoginController extends Controller
 {
@@ -28,9 +27,8 @@ class LoginController extends Controller
 
     /**
      * Handle an incoming authentication request.
-     * Login
      */
-    public function store(LoginRequest $request)
+    public function store(LoginRequest $request): SymfonyResponse
     {
         try {
             $user = $request->validateCredentials();
@@ -38,20 +36,7 @@ class LoginController extends Controller
             return back()->with(['error' => $e->getMessage()]);
         }
 
-        Auth::login($user, $request->boolean('remember'));
-
-        $request->session()->regenerate();
-
-        ReturningUserAuthenticated::dispatch(
-            $user,
-            now(),
-            $request->ip(),
-            $request->userAgent(),
-        );
-
-        Toast::default(
-            __('auth::auth.welcome-back', ['name' => $user->name]),
-        );
+        $this->signIn($request, $user, $request->boolean('remember'));
 
         if ($request->session()->has('url.intended')) {
             return Inertia::location(session('url.intended'));

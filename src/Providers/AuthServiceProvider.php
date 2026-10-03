@@ -19,24 +19,14 @@ class AuthServiceProvider extends ModuleServiceProvider
      */
     protected function shareInertiaData(): void
     {
-        Inertia::share('auth.user', fn () => Auth::user());
-        Inertia::share('auth.last_social_provider', fn () => request()->cookie('last_social_provider'));
-        Inertia::share(
-            'auth.socialite_providers',
-            fn (): array => $this->app->make(SocialiteService::class)->enabledProviders(),
-        );
-        Inertia::share(
-            'auth.registration_enabled',
-            fn (): bool => $this->app->make(AuthSettings::class)->registration_enabled,
-        );
-        Inertia::share(
-            'auth.modal_enabled',
-            fn (): bool => $this->app->make(AuthSettings::class)->modal_enabled,
-        );
-        Inertia::share(
-            'auth.magic_link_enabled',
-            fn (): bool => $this->app->make(AuthSettings::class)->magic_link_enabled,
-        );
+        Inertia::share([
+            'auth.user' => fn () => Auth::user(),
+            'auth.last_social_provider' => fn () => request()->cookie('last_social_provider'),
+            'auth.socialite_providers' => fn (): array => $this->app->make(SocialiteService::class)->enabledProviders(),
+            'auth.registration_enabled' => fn (): bool => $this->app->make(AuthSettings::class)->registration_enabled,
+            'auth.modal_enabled' => fn (): bool => $this->app->make(AuthSettings::class)->modal_enabled,
+            'auth.magic_link_enabled' => fn (): bool => $this->app->make(AuthSettings::class)->magic_link_enabled,
+        ]);
 
         Inertia::share('impersonation', function () {
             if (! $this->isUserImpersonated()) {

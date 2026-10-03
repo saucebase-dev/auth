@@ -26,7 +26,7 @@ class ReimpersonateController extends Controller
 
         abort_if(! $impersonator, 403, __('Impersonator not authenticated'));
 
-        abort_if(! $impersonator->can('access admin panel'), 403, __('Impersonator is not an administrador'));
+        abort_if(! $impersonator->can('access admin panel'), 403, __('Impersonator is not an administrator'));
 
         // Security check: cannot impersonate yourself
         abort_if($userId === $impersonator->id, 403, __('Cannot impersonate yourself'));
