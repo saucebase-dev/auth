@@ -2,7 +2,6 @@ import { confirm } from '@/hooks/useDialog';
 import { registerGlobalComponent } from '@/lib/globalComponents';
 import { registerAction, registerIcon } from '@/lib/navigation';
 import { router } from '@inertiajs/react';
-import '@modules/auth/resources/css/style.css';
 import { LogOut } from 'lucide-react';
 import IconLogOut from '~icons/lucide/log-out';
 import IconSettings from '~icons/lucide/settings';
