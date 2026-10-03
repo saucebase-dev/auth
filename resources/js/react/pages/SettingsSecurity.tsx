@@ -7,9 +7,8 @@ import { useT, useTranslation } from '@/i18n';
 import { Form, router, usePage } from '@inertiajs/react';
 import { formatDateTime } from '@js/lib/dates';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import { useMemo, useState, type ComponentType } from 'react';
-import IconGithub from '~icons/simple-icons/github';
-import IconGoogle from '~icons/simple-icons/google';
+import { useMemo, useState } from 'react';
+import { providerIcons } from '../components/providerIcons';
 
 type SocialiteProvider = {
     name: string;
@@ -29,11 +28,6 @@ interface SettingsSecurityProps {
     };
     available_providers?: SocialiteProvider[];
 }
-
-const providerIcons: Record<string, ComponentType<{ className?: string }>> = {
-    google: IconGoogle,
-    github: IconGithub,
-};
 
 /**
  * Vue reaches this through the shared `InputField`/`InputPassword` pair, which
@@ -163,11 +157,6 @@ export default function SettingsSecurity({
     const hasSocialiteProviders =
         route().has('auth.socialite.redirect') && socialiteProviders.length > 0;
 
-    const isProviderConnected = (providerName: string): boolean =>
-        user?.social_accounts?.some(
-            (account) => account.provider === providerName,
-        ) ?? false;
-
     const getConnectedAccount = (providerName: string) =>
         user?.social_accounts?.find(
             (account) => account.provider === providerName,
@@ -284,7 +273,7 @@ export default function SettingsSecurity({
                             {socialiteProviders.map((provider) => {
                                 const ProviderIcon =
                                     providerIcons[provider.name.toLowerCase()];
-                                const connected = isProviderConnected(
+                                const connected = !!getConnectedAccount(
                                     provider.name,
                                 );
 

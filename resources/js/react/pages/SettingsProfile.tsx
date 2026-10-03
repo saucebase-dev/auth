@@ -6,6 +6,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { useT } from '@/i18n';
 import type { User } from '@/types';
 import { Form, router, usePage } from '@inertiajs/react';
+import { getInitials } from '@js/lib/initials';
 import { Camera, Loader2, Trash2 } from 'lucide-react';
 import { useState, type ChangeEvent } from 'react';
 
@@ -27,19 +28,13 @@ export default function SettingsProfile({ user }: SettingsProfileProps) {
     const hasUploadedAvatar = user?.has_uploaded_avatar ?? false;
     const avatarBusy = isUpdatingAvatar || isRemovingAvatar;
 
-    const userInitials = (user?.name ?? '')
-        .split(' ')
-        .map((part) => part[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-
     const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
         const target = event.target;
         const file = target.files?.[0];
 
         if (file) {
-            setAvatarPreview(URL.createObjectURL(file));
+            const preview = URL.createObjectURL(file);
+            setAvatarPreview(preview);
             setIsUpdatingAvatar(true);
 
             const formData = new FormData();
@@ -48,6 +43,8 @@ export default function SettingsProfile({ user }: SettingsProfileProps) {
             router.post(route('settings.profile.update-avatar'), formData, {
                 preserveUrl: true,
                 onFinish: () => {
+                    // Each object URL holds the file in memory until revoked.
+                    URL.revokeObjectURL(preview);
                     setAvatarPreview(null);
                     setIsUpdatingAvatar(false);
                 },
@@ -103,7 +100,7 @@ export default function SettingsProfile({ user }: SettingsProfileProps) {
                                 alt={user?.name}
                             />
                             <AvatarFallback className="text-2xl">
-                                {userInitials}
+                                {getInitials(user?.name)}
                             </AvatarFallback>
                         </Avatar>
 
@@ -138,7 +135,7 @@ export default function SettingsProfile({ user }: SettingsProfileProps) {
                             <button
                                 type="button"
                                 data-testid="remove-avatar"
-                                className="absolute right-0 bottom-0 flex size-9 cursor-pointer items-center justify-center rounded-full bg-red-500 text-white shadow-md transition-transform hover:scale-110"
+                                className="bg-destructive absolute right-0 bottom-0 flex size-9 cursor-pointer items-center justify-center rounded-full text-white shadow-md transition-transform hover:scale-110"
                                 onClick={removeAvatar}
                             >
                                 <Trash2 className="size-4" />

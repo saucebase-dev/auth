@@ -196,7 +196,7 @@ export default function RegisterForm({ modal }: RegisterFormProps) {
                     {t('Register')}
                 </Button>
 
-                <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-muted-foreground mt-4 text-center text-sm">
                     {t('Already registered?')}{' '}
                     <AuthLink
                         modal={modal}

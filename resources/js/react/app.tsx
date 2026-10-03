@@ -1,4 +1,5 @@
 import { confirm } from '@/hooks/useDialog';
+import { trans } from '@/i18n';
 import { registerGlobalComponent } from '@/lib/globalComponents';
 import { registerAction, registerIcon } from '@/lib/navigation';
 import { router } from '@inertiajs/react';
@@ -23,11 +24,12 @@ function registerAuthActions() {
         event.preventDefault();
 
         const confirmed = await confirm({
-            title: 'Log out',
-            description:
+            title: trans('Log out'),
+            description: trans(
                 'Are you sure you want to log out? You will need to sign in again.',
-            confirmLabel: 'Log out',
-            cancelLabel: 'Cancel',
+            ),
+            confirmLabel: trans('Log out'),
+            cancelLabel: trans('Cancel'),
             variant: 'destructive',
             icon: LogOut,
             align: 'left',
@@ -39,6 +41,4 @@ function registerAuthActions() {
     });
 }
 
-export function afterMount() {
-    console.debug('Auth module after mount logic executed');
-}
+export function afterMount() {}

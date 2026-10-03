@@ -187,7 +187,7 @@ export default function LoginForm({ modal }: LoginFormProps) {
                 </p>
 
                 {auth.registration_enabled && (
-                    <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-muted-foreground mt-2 text-center text-sm">
                         {t("Don't have an account?")}{' '}
                         <AuthLink
                             modal={modal}

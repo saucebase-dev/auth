@@ -1,8 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { useT } from '@/i18n';
 import { usePage } from '@inertiajs/react';
-import IconGithub from '~icons/simple-icons/github';
-import IconGoogle from '~icons/simple-icons/google';
+import { providerIcons } from './providerIcons';
 
 type Provider = {
     name: string;
@@ -12,14 +11,6 @@ type Provider = {
 type AuthProps = {
     last_social_provider?: string | null;
     socialite_providers?: Provider[];
-};
-
-const providerIcons: Record<
-    string,
-    React.ComponentType<{ className?: string }>
-> = {
-    google: IconGoogle,
-    github: IconGithub,
 };
 
 export default function SocialiteProviders() {
