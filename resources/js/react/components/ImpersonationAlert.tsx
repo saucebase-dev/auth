@@ -73,6 +73,7 @@ export default function ImpersonationAlert() {
             {!isExpanded ? (
                 <button
                     onClick={() => setIsExpanded(true)}
+                    data-testid="impersonation-toggle"
                     title={t('Impersonating :name', {
                         name: impersonation.user.name,
                     })}
@@ -138,6 +139,7 @@ export default function ImpersonationAlert() {
                     </div>
                     <a
                         href={impersonation.route}
+                    data-testid="impersonation-leave"
                         className="bg-background text-foreground hover:bg-background/90 w-full rounded-xl px-3 py-2 text-center text-sm font-medium transition-colors"
                     >
                         {impersonation.label}

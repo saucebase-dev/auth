@@ -75,6 +75,7 @@ onKeyStroke('Escape', () => {
         <button
             v-if="!isExpanded"
             @click="toggleExpanded"
+            data-testid="impersonation-toggle"
             :title="
                 $t('Impersonating :name', { name: impersonation.user.name })
             "
@@ -147,6 +148,7 @@ onKeyStroke('Escape', () => {
             </div>
             <a
                 :href="impersonation.route"
+                data-testid="impersonation-leave"
                 class="bg-background text-foreground hover:bg-background/90 w-full rounded-xl px-3 py-2 text-center text-sm font-medium transition-colors"
             >
                 {{ impersonation.label }}
