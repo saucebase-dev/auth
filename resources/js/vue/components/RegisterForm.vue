@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import InputField from '@/components/ui/input/InputField.vue';
-import { Form, Link, usePage } from '@inertiajs/vue3';
+import { Form, usePage } from '@inertiajs/vue3';
 import { useModal } from '@inertiaui/modal-vue';
 import { computed, ref } from 'vue';
 import AuthLink from './AuthLink.vue';
@@ -104,21 +104,25 @@ const canSubmit = computed(
             />
             <FieldLabel for="terms" class="text-sm leading-snug font-normal">
                 {{ $t('I agree to the') }}
-                <Link
+                <a
                     :href="route('terms')"
+                    target="_blank"
+                    rel="noopener"
                     class="text-primary font-medium underline-offset-4 hover:underline"
                     data-testid="terms-link"
                 >
                     {{ $t('Terms of Service') }}
-                </Link>
+                </a>
                 {{ $t('and the') }}
-                <Link
+                <a
                     :href="route('privacy')"
+                    target="_blank"
+                    rel="noopener"
                     class="text-primary font-medium underline-offset-4 hover:underline"
                     data-testid="privacy-link"
                 >
                     {{ $t('Privacy Policy') }}
-                </Link>
+                </a>
             </FieldLabel>
         </Field>
         <FieldError v-if="termsError" data-testid="terms-error">

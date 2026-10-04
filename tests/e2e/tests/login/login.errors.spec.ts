@@ -19,7 +19,7 @@ test.describe.parallel('Login Error Handling', () => {
 
         await expect(loginPage.page).toHaveURL(loginPage.loginEndpoint);
 
-        await loginPage.expectAlertToBeVisible();
+        await loginPage.expectEmailError();
     });
 
     // Aborting the request is the point of this test, so the client's own

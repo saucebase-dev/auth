@@ -90,6 +90,28 @@ class AuthModalTest extends TestCase
             );
     }
 
+    /**
+     * A failed sign-in redirects back to the modal's own URL. The browser follows it
+     * with the modal's base-URL header but not the modal header, so without this the
+     * modal was replaced by the full login page.
+     */
+    public function test_a_failed_sign_in_in_the_modal_comes_back_as_the_modal(): void
+    {
+        $this->enableModal();
+
+        $this->from(route('login'))
+            ->withHeader(Modal::HEADER_BASE_URL, url('/'))
+            ->followingRedirects()
+            ->post(route('login'), ['email' => 'nobody@example.com', 'password' => 'wrong-password'])
+            ->assertInertia(
+                fn (AssertableInertia $page): AssertableInertia => $page
+                    ->where('_inertiaui_modal.component', 'Auth::Login')
+                    ->where('_inertiaui_modal.props.modal', true)
+                    ->has('errors.email')
+                    ->etc(),
+            );
+    }
+
     public function test_login_ignores_the_modal_header_when_the_setting_is_off(): void
     {
         $this->enableModal(false);

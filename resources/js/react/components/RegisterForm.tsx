@@ -4,7 +4,7 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useT } from '@/i18n';
-import { Link, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { useModal } from '@inertiaui/modal-react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
@@ -164,21 +164,25 @@ export default function RegisterForm({ modal }: RegisterFormProps) {
                         className="text-sm leading-snug font-normal"
                     >
                         {t('I agree to the')}{' '}
-                        <Link
+                        <a
                             href={route('terms')}
+                            target="_blank"
+                            rel="noopener"
                             className="text-primary font-medium underline-offset-4 hover:underline"
                             data-testid="terms-link"
                         >
                             {t('Terms of Service')}
-                        </Link>{' '}
+                        </a>{' '}
                         {t('and the')}{' '}
-                        <Link
+                        <a
                             href={route('privacy')}
+                            target="_blank"
+                            rel="noopener"
                             className="text-primary font-medium underline-offset-4 hover:underline"
                             data-testid="privacy-link"
                         >
                             {t('Privacy Policy')}
-                        </Link>
+                        </a>
                     </FieldLabel>
                 </Field>
                 {errors.terms && (

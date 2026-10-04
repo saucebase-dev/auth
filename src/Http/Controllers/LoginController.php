@@ -5,6 +5,7 @@ namespace Modules\Auth\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use InertiaUI\Modal\Modal;
@@ -33,7 +34,9 @@ class LoginController extends Controller
         try {
             $user = $request->validateCredentials();
         } catch (AuthException $e) {
-            return back()->with(['error' => $e->getMessage()]);
+            // A field error, not a flash: in the modal, "back" is the page behind it,
+            // where a flashed message is never shown.
+            throw ValidationException::withMessages(['email' => $e->getMessage()]);
         }
 
         $this->signIn($request, $user, $request->boolean('remember'));

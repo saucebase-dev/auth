@@ -145,7 +145,7 @@ class LoginTest extends TestCase
         ]);
 
         $this->assertGuest();
-        $response->assertSessionHas('error');
+        $response->assertInvalid(['email' => trans('auth::auth.failed')]);
     }
 
     public function test_login_validates_email_is_required(): void
@@ -193,7 +193,7 @@ class LoginTest extends TestCase
         $this->post(route('login'), [
             'email' => $user->email,
             'password' => 'password',
-        ])->assertSessionHas('error', fn (string $message) => str_contains($message, 'Too many login attempts'));
+        ])->assertInvalid(['email' => 'Too many login attempts']);
 
         $this->assertGuest();
         Event::assertDispatched(Lockout::class);

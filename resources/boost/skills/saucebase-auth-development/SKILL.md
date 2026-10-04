@@ -124,6 +124,18 @@ Branching on the header explicitly matters: `Modal::toResponse()` falls back to 
 when the header is absent, which would turn any ordinary in-app link to `/auth/login` into a
 modal over the previous page.
 
+The modal's **base-URL** header counts as asking too. A form in the modal that fails
+validation is redirected back to the modal's own URL, and the browser follows that with
+the base-URL header but not the modal header; without it the modal came back as the full
+page. The client sends that header only while a modal is open. Login errors are
+validation errors on `email` for the same reason: a flashed `error` lands on the page
+behind the modal, where nothing shows it.
+
+`AuthLink` swaps sibling screens by closing the modal and opening the next one only after
+the close has navigated back to the page behind. Opened sooner, the sibling records the
+closing modal's URL as its base and is torn down by that navigation. A second click while
+a swap is in flight is ignored.
+
 `AuthServiceProvider` shares the setting as `auth.modal_enabled`, and core's `Header`
 reads it to swap `Link` for `ModalLink` on the navbar Sign In and Get Started
 entries — `ModalLink` is what sends the header. Every other link to those URLs stays a page.

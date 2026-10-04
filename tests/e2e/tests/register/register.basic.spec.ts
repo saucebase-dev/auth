@@ -81,4 +81,14 @@ test.describe.parallel('Register Basics', () => {
         await registerPage.termsCheckbox.check();
         await expect(registerPage.registerButton).toBeEnabled();
     });
+
+    // Following them in place would throw away the half-filled form.
+    test('opens the terms and privacy policy in a new tab', async () => {
+        for (const id of ['terms-link', 'privacy-link']) {
+            await expect(registerPage.page.getByTestId(id)).toHaveAttribute(
+                'target',
+                '_blank',
+            );
+        }
+    });
 });

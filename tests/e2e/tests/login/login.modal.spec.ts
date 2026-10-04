@@ -38,6 +38,100 @@ test.describe('Auth modal', () => {
         await expect(page).toHaveURL(/\/auth\/login$/);
     });
 
+    /**
+     * The failed sign-in is answered by redirecting back, and in a modal "back" is
+     * the page behind it. A flashed message landed there unseen and the modal
+     * closed as if the sign-in had worked.
+     */
+    test('wrong credentials keep the modal open and say why', async ({
+        page,
+    }) => {
+        await page.goto('/');
+        await page.getByTestId('header-sign-in').click();
+        const modal = page.getByTestId('login-modal');
+        await expect(modal).toBeVisible({ timeout: MODAL_OPEN_TIMEOUT });
+
+        await modal.getByTestId('email').fill('nobody@example.com');
+        await modal.getByTestId('password').fill('wrong-password');
+        await modal.getByTestId('login-button').click();
+
+        await expect(modal.getByTestId('email-error')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
+        await expect(modal).toBeVisible();
+        // Still over the site, not replaced by the full login page.
+        await expect(page.getByTestId('header-sign-in')).toBeVisible();
+    });
+
+    /**
+     * A screen reached by swapping inside the modal must remember the page the
+     * modal opened over, or its failed form comes back as a full page.
+     */
+    test('a failed sign-up reached from sign-in stays in the modal over the page', async ({
+        page,
+    }) => {
+        await page.goto('/');
+        await page.getByTestId('header-sign-in').click();
+        await expect(page.getByTestId('login-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
+        await page.getByTestId('sign-up-link').click();
+        const modal = page.getByTestId('register-modal');
+        await expect(modal).toBeVisible({ timeout: MODAL_OPEN_TIMEOUT });
+
+        await modal.getByTestId('name').fill('Short Password');
+        await modal.getByTestId('email').fill('short-password@example.com');
+        await modal.getByTestId('password').fill('1');
+        await modal.getByTestId('terms-checkbox').click();
+        await modal.locator('[type=submit]').click();
+
+        await expect(modal.getByTestId('password-error')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
+        await expect(page.getByTestId('header-sign-in')).toBeVisible();
+    });
+
+    test('a failed reset request reached from sign-in stays in the modal over the page', async ({
+        page,
+    }) => {
+        await page.goto('/');
+        await page.getByTestId('header-sign-in').click();
+        await expect(page.getByTestId('login-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
+        await page.getByTestId('forgot-password-link').click();
+        const modal = page.getByTestId('forgot-password-modal');
+        await expect(modal).toBeVisible({ timeout: MODAL_OPEN_TIMEOUT });
+
+        // The browser's own email check would stop the request before the server.
+        await modal
+            .locator('form')
+            .evaluate((form) => form.setAttribute('novalidate', ''));
+        await modal.getByTestId('email').fill('not-an-email');
+        await modal.locator('[type=submit]').click();
+
+        await expect(modal.getByTestId('email-error')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
+        await expect(page.getByTestId('header-sign-in')).toBeVisible();
+    });
+
+    test('a double click on a sibling link opens it once', async ({ page }) => {
+        await page.goto('/');
+        await page.getByTestId('header-sign-in').click();
+        await expect(page.getByTestId('login-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
+
+        await page.getByTestId('sign-up-link').dblclick();
+
+        await expect(page.getByTestId('register-modal')).toBeVisible({
+            timeout: MODAL_OPEN_TIMEOUT,
+        });
+        await expect(page.getByTestId('register-modal')).toHaveCount(1);
+        await expect(page.getByTestId('login-modal')).toHaveCount(0);
+    });
+
     test('the header get-started link opens the registration modal', async ({
         page,
     }) => {
@@ -88,15 +182,9 @@ test.describe('Auth modal', () => {
 
     /**
      * Swapping has to replace, not stack: each screen is its own route, so a
-     * plain modal link would pile a new modal on every hop between them.
-     *
-     * Parked: hopping fast closes the modal instead of swapping it. The panel
-     * drops its old contents while the click is still being handled, so the
-     * link is no longer inside the panel and the modal reads it as a click
-     * outside. It lives in the modal package; the single-hop swaps above cover
-     * the behaviour this test is about.
+     * plain modal link to a sibling would pile a new modal on every hop.
      */
-    test.fixme('hopping between the auth screens leaves one modal, not a pile', async ({
+    test('hopping between the auth screens leaves one modal, not a pile', async ({
         page,
     }) => {
         await page.goto('/');
