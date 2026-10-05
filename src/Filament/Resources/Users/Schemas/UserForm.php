@@ -2,6 +2,7 @@
 
 namespace Modules\Auth\Filament\Resources\Users\Schemas;
 
+use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
@@ -26,8 +27,11 @@ class UserForm
                     ->label(__('Email address'))
                     ->email()
                     ->required(),
+                // Only an admin assigns roles, and never their own: one admin always remains.
                 Select::make('roles')
                     ->label(__('Role'))
+                    ->visible(fn (): bool => auth()->user()?->hasRole('admin') ?? false)
+                    ->disabled(fn (?User $record): bool => $record?->is(auth()->user()) ?? false)
                     ->relationship('roles', 'name')
                     ->multiple()
                     ->minItems(1)

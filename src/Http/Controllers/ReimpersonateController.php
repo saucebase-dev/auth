@@ -26,12 +26,12 @@ class ReimpersonateController extends Controller
 
         abort_if(! $impersonator, 403, __('Impersonator not authenticated'));
 
-        abort_if(! $impersonator->can('access admin panel'), 403, __('Impersonator is not an administrator'));
-
         // Security check: cannot impersonate yourself
         abort_if($userId === $impersonator->id, 403, __('Cannot impersonate yourself'));
 
         $target = User::findOrFail($userId);
+
+        abort_unless($impersonator->can('impersonate', $target), 403, __('You may not impersonate this user'));
         // Store session data (like the Filament Impersonate package does)
         // Preserve existing back_to value when re-impersonating from history
         session()->put([

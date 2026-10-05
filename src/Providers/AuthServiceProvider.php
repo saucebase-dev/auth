@@ -5,15 +5,29 @@ namespace Modules\Auth\Providers;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use Modules\Auth\Policies\UserPolicy;
 use Modules\Auth\Services\SocialiteService;
 use Modules\Auth\Settings\AuthSettings;
 use Saucebase\Core\Providers\ModuleServiceProvider;
 use Spatie\Permission\Models\Role;
+use STS\FilamentImpersonate\Actions\Impersonate;
 use STS\FilamentImpersonate\ImpersonateManager;
 
 class AuthServiceProvider extends ModuleServiceProvider
 {
+    public function boot(): void
+    {
+        parent::boot();
+
+        Gate::policy(User::class, UserPolicy::class);
+
+        // Every impersonate button asks the same question the controllers do.
+        Impersonate::configureUsing(fn (Impersonate $action) => $action
+            ->authorize(fn (User $record): bool => Gate::allows('impersonate', $record)));
+    }
+
     /**
      * Share Inertia data globally.
      */

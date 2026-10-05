@@ -2,6 +2,7 @@
 
 namespace Modules\Auth\Filament\Resources\Users\Tables;
 
+use App\Models\User;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -10,6 +11,7 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Modules\Auth\Filament\Resources\Users\UserResource;
 use STS\FilamentImpersonate\Actions\Impersonate;
 
 class UsersTable
@@ -57,7 +59,8 @@ class UsersTable
             )
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->authorizeIndividualRecords(fn (User $record): bool => UserResource::canDelete($record)),
                 ]),
             ]);
     }

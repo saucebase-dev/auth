@@ -26,6 +26,17 @@ class UserResource extends Resource
 
     protected static ?int $navigationSort = 100;
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->can('manage users') ?? false;
+    }
+
+    /** Nobody deletes their own account here, so the last admin always remains. */
+    public static function canDelete(Model $record): bool
+    {
+        return ! $record->is(auth()->user()) && parent::canDelete($record);
+    }
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['name', 'email'];

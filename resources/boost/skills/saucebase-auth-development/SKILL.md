@@ -89,6 +89,16 @@ resolved when clicked.
 ### Rate Limiting
 `LoginRequest::ensureIsNotRateLimited()` — 5 attempts per `email|ip` key. Fires `Lockout` event, throws `AuthException::throttle($seconds)`. Cleared on success. Covered in PHP (`LoginTest`), not e2e: Playwright workers share one IP, so a lockout there leaks into other login tests.
 
+### Users Admin Permissions
+
+`manage users` opens the Users page (`UserResource::canAccess()`); `impersonate users` is separate. Both come from `Database\Seeders\DatabaseSeeder`, granted to nobody. `AuthenticationSettings` is a site-wide settings page (`manage settings`, from core's `SettingsPage`).
+
+Staff with `manage users` can never reach an admin, and one admin always remains:
+- `UserPolicy` refuses `update`, `delete` and `impersonate` on an admin. `admin` passes every check through `Gate::before`, so it binds only non-admins.
+- The Role field is visible only to admins, and disabled on their own record. A hidden or disabled field is not saved, so a forged value is ignored. A user created by someone who cannot assign roles gets `user` (`CreateUser::afterCreate()`).
+- Nobody deletes their own account here (`UserResource::canDelete()`), which the delete button and each row of the bulk delete both ask.
+- Every way to impersonate asks `can('impersonate', $target)`: the Filament action (`Impersonate::configureUsing()` in the provider), `ReimpersonateController`, and tenancy's handoff.
+
 ### Impersonation
 Uses `stechstudio/filament-impersonate`. Session stores history at `impersonation.recent_history` (max 4 user IDs). `ReimpersonateController` lets admins re-impersonate from recent list (max 3 shown in UI, filters deleted users and self). Stop via `filament-impersonate.leave` route.
 
