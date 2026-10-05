@@ -78,6 +78,14 @@ Cannot disconnect if it's the user's only login method. `SocialiteService::disco
 
 Also prevents account takeover: linking a social ID already owned by another user throws `accountAlreadyLinked`.
 
+### Every Way In Lands on Home
+
+Login, register, magic link, socialite and verification redirect to
+`redirect()->intended(Home::url($request, <reason>))`, with the reason `login`,
+`registered` (a new account, including a first social sign-in) or `verified`, so the app
+can send a new account to onboarding. The welcome email links to `route('home')`, which is
+resolved when clicked.
+
 ### Rate Limiting
 `LoginRequest::ensureIsNotRateLimited()` — 5 attempts per `email|ip` key. Fires `Lockout` event, throws `AuthException::throttle($seconds)`. Cleared on success. Covered in PHP (`LoginTest`), not e2e: Playwright workers share one IP, so a lockout there leaks into other login tests.
 
@@ -87,7 +95,7 @@ Uses `stechstudio/filament-impersonate`. Session stores history at `impersonatio
 ### Magic Link Flow
 `MagicLinkController::store()` silently finds the user by email (no error on unknown email). If found: deletes existing tokens for that user, creates a new `MagicLinkToken` (token = SHA-256 hash of `Str::random(64)`, expiry controlled by `AuthSettings`), and sends `MagicLinkNotification` with the plain-token URL.
 
-`MagicLinkController::authenticate()` hashes the incoming token and consumes it in one atomic `UPDATE` (unused and unexpired only), so a link works once even under concurrent clicks, then logs in the user and redirects to intended URL or dashboard.
+`MagicLinkController::authenticate()` hashes the incoming token and consumes it in one atomic `UPDATE` (unused and unexpired only), so a link works once even under concurrent clicks, then logs in the user and redirects to the intended URL or home.
 
 `AuthSettings` is auto-discovered from `src/Settings`, with defaults installed
 from `database/settings`. Magic links are disabled by default, with a 15-minute
