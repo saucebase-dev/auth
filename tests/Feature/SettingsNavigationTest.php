@@ -16,7 +16,7 @@ class SettingsNavigationTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('settings.profile'))
-            ->assertRedirect(route('dashboard').'#settings/profile');
+            ->assertRedirect(route('home').'#settings/profile');
     }
 
     public function test_profile_leads_the_settings_sections(): void

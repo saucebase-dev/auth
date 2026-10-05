@@ -16,7 +16,7 @@ class ProfileTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('settings.profile'))
-            ->assertRedirect(route('dashboard').'#settings/profile');
+            ->assertRedirect(route('home').'#settings/profile');
     }
 
     public function test_guest_cannot_view_profile(): void

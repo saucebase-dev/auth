@@ -11,6 +11,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use InertiaUI\Modal\Modal;
 use Modules\Auth\Http\Requests\RegisterRequest;
+use Saucebase\Core\Facades\Home;
 use Saucebase\Core\Helpers\Toast;
 
 class RegisterController extends Controller
@@ -41,6 +42,6 @@ class RegisterController extends Controller
             __('auth::auth.welcome', ['name' => $user->name]),
         );
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(Home::url($request, Home::REGISTERED));
     }
 }

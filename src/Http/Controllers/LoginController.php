@@ -11,6 +11,7 @@ use Inertia\Response;
 use InertiaUI\Modal\Modal;
 use Modules\Auth\Exceptions\AuthException;
 use Modules\Auth\Http\Requests\LoginRequest;
+use Saucebase\Core\Facades\Home;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class LoginController extends Controller
@@ -45,7 +46,7 @@ class LoginController extends Controller
             return Inertia::location(session('url.intended'));
         }
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(Home::url($request, Home::LOGIN));
     }
 
     /**

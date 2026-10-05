@@ -8,6 +8,7 @@ use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User;
 use Modules\Auth\Exceptions\SocialiteException;
 use Modules\Auth\Services\SocialiteService;
+use Saucebase\Core\Facades\Home;
 use Saucebase\Core\Helpers\Toast;
 use Symfony\Component\HttpFoundation\Response as RedirectResponse;
 
@@ -56,7 +57,7 @@ class SocialiteController extends Controller
             $this->signIn($request, $user);
         }
 
-        return redirect()->intended(route('dashboard'))
+        return redirect()->intended(Home::url($request, $user->wasRecentlyCreated ? Home::REGISTERED : Home::LOGIN))
             ->withCookie(cookie('last_social_provider', $provider, 60 * 24 * 365));
     }
 

@@ -15,6 +15,7 @@ use Modules\Auth\Http\Middleware\EnsureMagicLinkEnabled;
 use Modules\Auth\Models\MagicLinkToken;
 use Modules\Auth\Notifications\MagicLinkNotification;
 use Modules\Auth\Settings\AuthSettings;
+use Saucebase\Core\Facades\Home;
 
 class MagicLinkController extends Controller implements HasMiddleware
 {
@@ -112,6 +113,6 @@ class MagicLinkController extends Controller implements HasMiddleware
             }
         }
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(Home::url($request, Home::LOGIN));
     }
 }
