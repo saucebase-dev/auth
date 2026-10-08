@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Modules\Auth\Http\Requests\UpdatePasswordRequest;
 use Modules\Auth\Notifications\PasswordChangedNotification;
-use Saucebase\Core\Helpers\Toast;
+use Saucebase\Core\Toast;
 
 class PasswordController extends Controller
 {

@@ -5,7 +5,7 @@ namespace Modules\Auth\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Modules\Auth\Http\Requests\UpdateProfileAvatarRequest;
 use Modules\Auth\Http\Requests\UpdateProfileInfoRequest;
-use Saucebase\Core\Helpers\Toast;
+use Saucebase\Core\Toast;
 use Saucebase\Core\Settings\SettingsSection;
 
 class ProfileController extends Controller

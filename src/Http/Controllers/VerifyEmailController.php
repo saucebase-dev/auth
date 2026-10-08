@@ -10,7 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Uri;
 use Saucebase\Core\Facades\Home;
-use Saucebase\Core\Helpers\Toast;
+use Saucebase\Core\Toast;
 
 class VerifyEmailController extends Controller
 {

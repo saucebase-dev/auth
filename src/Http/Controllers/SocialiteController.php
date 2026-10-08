@@ -9,7 +9,7 @@ use Laravel\Socialite\Two\User;
 use Modules\Auth\Exceptions\SocialiteException;
 use Modules\Auth\Services\SocialiteService;
 use Saucebase\Core\Facades\Home;
-use Saucebase\Core\Helpers\Toast;
+use Saucebase\Core\Toast;
 use Symfony\Component\HttpFoundation\Response as RedirectResponse;
 
 class SocialiteController extends Controller

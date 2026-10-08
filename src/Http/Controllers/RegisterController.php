@@ -5,14 +5,13 @@ namespace Modules\Auth\Http\Controllers;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use InertiaUI\Modal\Modal;
 use Modules\Auth\Http\Requests\RegisterRequest;
 use Saucebase\Core\Facades\Home;
-use Saucebase\Core\Helpers\Toast;
+use Saucebase\Core\Toast;
 
 class RegisterController extends Controller
 {

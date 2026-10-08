@@ -10,7 +10,7 @@ use Inertia\Response;
 use InertiaUI\Modal\Modal;
 use Modules\Auth\Events\ReturningUserAuthenticated;
 use Modules\Auth\Settings\AuthSettings;
-use Saucebase\Core\Helpers\Toast;
+use Saucebase\Core\Toast;
 
 abstract class Controller
 {
