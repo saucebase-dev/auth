@@ -51,8 +51,6 @@ socialite disconnect are rendered by the **Security** panel, not Profile.
 
 **Impersonation**: `auth.impersonate.reimpersonate` — `/auth/impersonate/{userId}` (POST, auth)
 
-**API**: `/api/v1/auth/me` (GET, auth:sanctum)
-
 ## Patterns
 
 ### Changing Your Email Drops Its Verification
