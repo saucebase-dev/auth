@@ -1,6 +1,6 @@
 import AlertMessage from '@/components/AlertMessage';
-import { useT } from '@/i18n';
 import { Modal } from '@inertiaui/modal-react';
+import { useT } from '@saucebase/react/i18n';
 import LoginForm from '../components/LoginForm';
 import AuthCardLayout from '../layouts/AuthCardLayout';
 

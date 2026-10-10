@@ -1,5 +1,5 @@
-import { useT } from '@/i18n';
 import { Modal } from '@inertiaui/modal-react';
+import { useT } from '@saucebase/react/i18n';
 import RegisterForm from '../components/RegisterForm';
 import AuthCardLayout from '../layouts/AuthCardLayout';
 

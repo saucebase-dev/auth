@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
-import { useT } from '@/i18n';
 import { usePage } from '@inertiajs/react';
+import { useT } from '@saucebase/react/i18n';
 import { providerIcons } from './providerIcons';
 
 type Provider = {

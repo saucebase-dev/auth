@@ -1,6 +1,6 @@
-import { useDialog } from '@/composables/useDialog';
 import { router } from '@inertiajs/vue3';
 import { LogOut } from '@lucide/vue';
+import { useDialog } from '@saucebase/vue/composables/useDialog';
 import { registerGlobalComponent } from '@saucebase/vue/lib/globalComponents';
 import { registerAction, registerIcon } from '@saucebase/vue/lib/navigation';
 import { trans } from 'laravel-vue-i18n';

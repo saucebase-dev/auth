@@ -1,9 +1,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useT } from '@/i18n';
 import { cn } from '@/lib/utils';
 import type { User } from '@/types';
 import { router, usePage } from '@inertiajs/react';
 import { getInitials } from '@saucebase/core/lib/initials';
+import { useT } from '@saucebase/react/i18n';
 import { Drama, History, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 

@@ -2,11 +2,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { useDialog } from '@/hooks/useDialog';
-import { useT } from '@/i18n';
 import type { User } from '@/types';
 import { Form, router, usePage } from '@inertiajs/react';
 import { getInitials } from '@saucebase/core/lib/initials';
+import { useDialog } from '@saucebase/react/hooks/useDialog';
+import { useT } from '@saucebase/react/i18n';
 import { Camera, Loader2, Trash2 } from 'lucide-react';
 import { useState, type ChangeEvent } from 'react';
 

@@ -1,6 +1,6 @@
-import { confirm } from '@/hooks/useDialog';
-import { trans } from '@/i18n';
 import { router } from '@inertiajs/react';
+import { confirm } from '@saucebase/react/hooks/useDialog';
+import { trans } from '@saucebase/react/i18n';
 import { registerGlobalComponent } from '@saucebase/react/lib/globalComponents';
 import { registerAction, registerIcon } from '@saucebase/react/lib/navigation';
 import { LogOut } from 'lucide-react';

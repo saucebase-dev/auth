@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
-import { useT } from '@/i18n';
 import { Link, useForm } from '@inertiajs/react';
+import { useT } from '@saucebase/react/i18n';
 import AuthCardLayout from '../layouts/AuthCardLayout';
 
 export default function VerifyEmail() {

@@ -2,8 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useT } from '@/i18n';
 import { useForm } from '@inertiajs/react';
+import { useT } from '@saucebase/react/i18n';
 import AuthLink from './AuthLink';
 
 interface MagicLinkFormProps {
