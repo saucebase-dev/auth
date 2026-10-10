@@ -2,7 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import type { User } from '@/types';
-import { getInitials } from '@js/lib/initials';
+import { getInitials } from '@saucebase/core/lib/initials';
 import { router, usePage } from '@inertiajs/vue3';
 import { onClickOutside, onKeyStroke } from '@vueuse/core';
 import { Drama, HistoryIcon, X } from '@lucide/vue';

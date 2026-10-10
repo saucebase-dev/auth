@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { useDialog } from '@/hooks/useDialog';
 import { useT, useTranslation } from '@/i18n';
 import { Form, router, usePage } from '@inertiajs/react';
-import { formatDateTime } from '@js/lib/dates';
+import { formatDateTime } from '@saucebase/core/lib/dates';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { providerIcons } from '../components/providerIcons';

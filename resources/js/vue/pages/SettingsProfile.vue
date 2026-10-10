@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import InputField from '@/components/ui/input/InputField.vue';
 import { useDialog } from '@/composables/useDialog';
 import type { User } from '@/types';
-import { getInitials } from '@js/lib/initials';
+import { getInitials } from '@saucebase/core/lib/initials';
 import { Form, router, usePage } from '@inertiajs/vue3';
 import { Camera, Loader2, Trash2 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';

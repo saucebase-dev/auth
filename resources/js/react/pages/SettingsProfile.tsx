@@ -6,7 +6,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { useT } from '@/i18n';
 import type { User } from '@/types';
 import { Form, router, usePage } from '@inertiajs/react';
-import { getInitials } from '@js/lib/initials';
+import { getInitials } from '@saucebase/core/lib/initials';
 import { Camera, Loader2, Trash2 } from 'lucide-react';
 import { useState, type ChangeEvent } from 'react';
 

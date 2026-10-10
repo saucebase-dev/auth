@@ -4,7 +4,7 @@ import InputField from '@/components/ui/input/InputField.vue';
 import Separator from '@/components/ui/separator/Separator.vue';
 import { useDialog } from '@/composables/useDialog';
 import { useLocalization } from '@/composables/useLocalization';
-import { formatDateTime } from '@js/lib/dates';
+import { formatDateTime } from '@saucebase/core/lib/dates';
 import { Form, router, usePage } from '@inertiajs/vue3';
 import { Loader2 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';

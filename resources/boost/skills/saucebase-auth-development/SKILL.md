@@ -160,7 +160,7 @@ entries — `ModalLink` is what sends the header. Every other link to those URLs
 and `settings.profile.password.update`. It redirects to `settings.profile` on success.
 
 ### Logout Action Handler
-The module's `resources/js/app` entry registers the `logout`, `settings`, and `profile` icons plus the logout action handler via `registerIcon()` and `registerAction()` from `@/lib/navigation`. The action shows a confirmation dialog and posts to `route('logout')`.
+The module's `resources/js/app` entry registers the `logout`, `settings`, and `profile` icons plus the logout action handler via `registerIcon()` and `registerAction()` from `@saucebase/vue/lib/navigation` (or `@saucebase/react/...`). The action shows a confirmation dialog and posts to `route('logout')`.
 
 ## Commands
 
