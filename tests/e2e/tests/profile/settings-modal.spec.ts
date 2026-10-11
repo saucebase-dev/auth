@@ -44,6 +44,46 @@ test.describe('Settings Modal', () => {
         await expect(profile).toHaveAttribute('aria-current', 'page');
     });
 
+    /**
+     * Back before the modal's request lands: there is no modal to close yet, so
+     * the late response must not open one over a URL that no longer asks for it.
+     */
+    test('stays closed when closed before it finished opening', async ({
+        page,
+        loginAs,
+        credentials,
+    }) => {
+        await loginAs(credentials.user);
+        await page.goto('/dashboard');
+        await expect(page.getByTestId('user-menu-trigger')).toBeVisible();
+
+        // The modal's own request, not the page's.
+        const settings = /\/settings(\?|$)/;
+        let release = () => {};
+        const held = new Promise<void>((resolve) => (release = resolve));
+
+        await page.route(settings, async (route) => {
+            await held;
+            await route.continue();
+        });
+
+        const requested = page.waitForRequest(settings);
+        await page.evaluate(() => {
+            window.location.hash = 'settings/profile';
+        });
+        await requested;
+
+        await page.goBack();
+        await expect(page).not.toHaveURL(/#settings/);
+
+        const answered = page.waitForResponse(settings);
+        release();
+        await answered;
+        await page.waitForLoadState('networkidle');
+
+        await expect(page.getByTestId('settings-modal')).toBeHidden();
+    });
+
     test('opens from the user menu', async ({ page, loginAs, credentials }) => {
         await loginAs(credentials.user);
         await page.goto('/dashboard');
