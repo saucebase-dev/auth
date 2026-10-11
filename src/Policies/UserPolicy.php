@@ -6,7 +6,7 @@ use App\Models\User;
 
 /**
  * What staff who manage users may do to an account. `admin` passes every check through
- * the app's `Gate::before`, so these rules only ever bind non-admins: an admin's account
+ * core's `Gate::before`, so these rules only ever bind non-admins: an admin's account
  * is out of their reach.
  */
 class UserPolicy
