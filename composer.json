@@ -37,6 +37,7 @@
     }
   },
   "require": {
+    "saucebase/core": "^1.4",
     "laravel/socialite": "^5.30.1",
     "stechstudio/filament-impersonate": "^5.6"
   },
