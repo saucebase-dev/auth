@@ -45,9 +45,3 @@ function registerAuthActions() {
         }
     });
 }
-
-/**
- * Auth module after mount logic
- * Called after the app has been mounted
- */
-export function afterMount() {}

@@ -125,6 +125,7 @@ export default function SettingsProfile({ user }: SettingsProfileProps) {
                         {!hasUploadedAvatar && !avatarBusy && (
                             <label
                                 htmlFor="avatar-upload"
+                                aria-label={t('Upload Avatar')}
                                 className="bg-primary text-primary-foreground absolute right-0 bottom-0 flex size-9 cursor-pointer items-center justify-center rounded-full shadow-md transition-transform hover:scale-110"
                             >
                                 <Camera className="size-4" />
@@ -135,6 +136,7 @@ export default function SettingsProfile({ user }: SettingsProfileProps) {
                             <button
                                 type="button"
                                 data-testid="remove-avatar"
+                                aria-label={t('Remove Avatar')}
                                 className="bg-destructive absolute right-0 bottom-0 flex size-9 cursor-pointer items-center justify-center rounded-full text-white shadow-md transition-transform hover:scale-110"
                                 onClick={removeAvatar}
                             >

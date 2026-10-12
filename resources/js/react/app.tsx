@@ -40,5 +40,3 @@ function registerAuthActions() {
         }
     });
 }
-
-export function afterMount() {}

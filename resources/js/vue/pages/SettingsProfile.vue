@@ -145,6 +145,7 @@ const removeAvatar = async () => {
                             !isRemovingAvatar
                         "
                         for="avatar-upload"
+                        :aria-label="$t('Upload Avatar')"
                         class="bg-primary text-primary-foreground absolute right-0 bottom-0 flex size-9 cursor-pointer items-center justify-center rounded-full shadow-md transition-transform hover:scale-110"
                     >
                         <Camera class="size-4" />
@@ -158,6 +159,7 @@ const removeAvatar = async () => {
                         "
                         type="button"
                         data-testid="remove-avatar"
+                        :aria-label="$t('Remove Avatar')"
                         class="bg-destructive absolute right-0 bottom-0 flex size-9 items-center justify-center rounded-full text-white shadow-md transition-transform hover:scale-110"
                         @click="removeAvatar"
                     >

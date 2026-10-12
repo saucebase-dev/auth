@@ -43,13 +43,13 @@ export class ForgotPasswordPage {
         await expect(emailError).toBeVisible();
     }
 
-    async waitForPasswordResetResponse() {
+    waitForPasswordResetResponse() {
         return this.page.waitForResponse((response: Response) =>
             response.url().includes(this.passwordResetEndpoint),
         );
     }
 
-    async waitForFailedPasswordResetRequest() {
+    waitForFailedPasswordResetRequest() {
         return this.page.waitForEvent('requestfailed', (request: Request) =>
             request.url().includes(this.passwordResetEndpoint),
         );

@@ -74,13 +74,13 @@ export class RegisterPage {
         await expect(this.passwordInput).toHaveAttribute('type', 'password');
     }
 
-    async waitForLoginResponse() {
+    waitForLoginResponse() {
         return this.page.waitForResponse((response: Response) =>
             response.url().includes(this.signupEndpoint),
         );
     }
 
-    async waitForFailedLoginRequest() {
+    waitForFailedLoginRequest() {
         return this.page.waitForEvent('requestfailed', (request: Request) =>
             request.url().includes(this.signupEndpoint),
         );
