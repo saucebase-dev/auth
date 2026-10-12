@@ -11,8 +11,6 @@ permissions:
 
 jobs:
     test:
-        # Until core's test workflow is released: switch both lines to `main` and drop core_ref.
-        uses: saucebase-dev/core/.github/workflows/test-module.yml@dev-v3
+        uses: saucebase-dev/core/.github/workflows/test-module.yml@main
         with:
             module: auth
-            core_ref: dev-v3
