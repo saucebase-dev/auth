@@ -2,7 +2,6 @@
 
 namespace Modules\Auth\Filament\Resources\Users\Schemas;
 
-use App\Enums\Role;
 use Filament\Actions\Action;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -53,7 +52,7 @@ class UserInfolist
                             TextEntry::make('roles.name')
                                 ->label(__('Role'))
                                 ->badge()
-                                ->color(fn (string $state): string => Role::fromString($state)->getColor())
+                                ->color(fn (string $state): string => $state === 'admin' ? 'danger' : 'info')
                                 ->default(__('No role assigned')),
                         ])
                         ->columnSpan(1),

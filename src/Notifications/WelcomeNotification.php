@@ -30,7 +30,7 @@ class WelcomeNotification extends Notification
             ->greeting(__('Hello :name,', ['name' => $notifiable->name]))
             ->line(__('Welcome! Your account has been created successfully.'))
             ->line(__('You can now explore all the features available to you.'))
-            ->action(__('Go to Dashboard'), route('dashboard'))
+            ->action(__('Go to Dashboard'), route('home'))
             ->line(__('Thank you for joining us!'));
     }
 

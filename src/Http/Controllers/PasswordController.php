@@ -2,35 +2,29 @@
 
 namespace Modules\Auth\Http\Controllers;
 
-use App\Helpers\Toast;
-use App\Notifications\PasswordChangedNotification;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
+use Modules\Auth\Http\Requests\UpdatePasswordRequest;
+use Modules\Auth\Notifications\PasswordChangedNotification;
+use Saucebase\Core\Toast;
 
 class PasswordController extends Controller
 {
     /**
      * Update the user's password.
      */
-    public function update(Request $request): RedirectResponse
+    public function update(UpdatePasswordRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'current_password' => ['required', 'current_password'],
-            'password' => ['required', Password::defaults(), 'confirmed'],
-        ]);
-
         $user = Auth::user();
 
         $user->update([
-            'password' => Hash::make($validated['password']),
+            'password' => Hash::make($request->validated()['password']),
         ]);
 
         $user->notify(new PasswordChangedNotification);
 
-        Toast::success('Password changed successfully.');
+        Toast::success(__('Password changed successfully.'));
 
         return back();
     }

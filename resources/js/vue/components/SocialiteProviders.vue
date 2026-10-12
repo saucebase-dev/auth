@@ -2,18 +2,11 @@
 import { Button } from '@/components/ui/button';
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import IconGithub from '~icons/simple-icons/github';
-import IconGoogle from '~icons/simple-icons/google';
+import { providerIcons } from './providerIcons';
 
-type Provider = { name: string; icon: any };
 type AuthProps = {
     last_social_provider?: string | null;
     socialite_providers?: Array<{ name: string; label: string }>;
-};
-
-const providerIcons: Record<string, Provider['icon']> = {
-    google: IconGoogle,
-    github: IconGithub,
 };
 
 const page = usePage();

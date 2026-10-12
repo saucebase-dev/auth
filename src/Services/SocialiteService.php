@@ -69,7 +69,6 @@ class SocialiteService
      */
     public function handleCallback(string $provider): User
     {
-
         $this->validateProvider($provider);
 
         /** @var SocialiteUser $socialiteUser */
@@ -152,11 +151,6 @@ class SocialiteService
      */
     public function disconnectProvider(User $user, string $provider): void
     {
-        /* @phpstan-ignore function.alreadyNarrowedType */
-        if (! method_exists($user, 'socialAccounts')) {
-            throw SocialiteException::missingSocialAccountsRelation();
-        }
-
         $socialAccounts = $user->socialAccounts;
 
         $providerAccount = $socialAccounts->where('provider', $provider)->first();
@@ -204,7 +198,6 @@ class SocialiteService
         $user = User::create([
             'name' => $socialiteUser->getName() ?: $socialiteUser->getNickname(),
             'email' => $socialiteUser->getEmail(),
-            'email_verified_at' => now(),
             'password' => Hash::make(Str::random(32)), // Random password
             'avatar' => $avatarUrl,
         ]);
@@ -216,7 +209,6 @@ class SocialiteService
 
     private function createSocialAccount(User $user, string $provider, SocialiteUser $socialiteUser, ?string $avatarUrl): SocialAccount
     {
-
         return SocialAccount::create([
             'user_id' => $user->id,
             'provider' => $provider,

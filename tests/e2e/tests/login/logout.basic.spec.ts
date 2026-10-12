@@ -1,19 +1,12 @@
-import { test, expect } from '@e2e/fixtures';
+import { expect, test } from '@e2e/fixtures';
 import { expectAuthenticated } from '@e2e/helpers/auth';
-import { isModuleInstalled } from '@e2e/helpers/modules';
-
-// These tests click through the dashboard user menu to log out, not just
-// prove login. Under tenancy, an authenticated visitor without a workspace
-// never reaches that chrome (see modules/tenancy/src/Http/Middleware/
-// EnsureWorkspace.php) — skip here, tenancy's own e2e suite covers logout
-// from inside a workspace.
-async function skipIfTenancyInstalled(laravel: Parameters<typeof isModuleInstalled>[0]) {
-    test.skip(await isModuleInstalled(laravel, 'tenancy'), 'dashboard chrome is covered by tenancy\'s own e2e suite when tenancy is installed');
-}
 
 test.describe.parallel('Logout Basics', () => {
-    test('logs out from user menu and redirects to login', async ({ page, laravel, credentials, loginAs }) => {
-        await skipIfTenancyInstalled(laravel);
+    test('logs out from user menu and redirects to login', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         const user = credentials.user;
 
         await loginAs(user);
@@ -44,8 +37,11 @@ test.describe.parallel('Logout Basics', () => {
         await expect(page).toHaveURL('/auth/login');
     });
 
-    test('clicking outside the logout dialog does not dismiss it', async ({ page, laravel, credentials, loginAs }) => {
-        await skipIfTenancyInstalled(laravel);
+    test('clicking outside the logout dialog does not dismiss it', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         const user = credentials.user;
 
         await loginAs(user);
@@ -69,8 +65,11 @@ test.describe.parallel('Logout Basics', () => {
         await expect(confirmDialog).toBeVisible();
     });
 
-    test('cancelling logout dialog keeps user logged in', async ({ page, laravel, credentials, loginAs }) => {
-        await skipIfTenancyInstalled(laravel);
+    test('cancelling logout dialog keeps user logged in', async ({
+        page,
+        credentials,
+        loginAs,
+    }) => {
         const user = credentials.user;
 
         await loginAs(user);

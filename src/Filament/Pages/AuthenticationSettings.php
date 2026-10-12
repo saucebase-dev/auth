@@ -2,7 +2,6 @@
 
 namespace Modules\Auth\Filament\Pages;
 
-use App\Filament\Pages\SettingsPage;
 use BackedEnum;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TextInput;
@@ -13,6 +12,7 @@ use Filament\Support\Icons\Heroicon;
 use Illuminate\Validation\Rule;
 use Modules\Auth\Services\SocialiteService;
 use Modules\Auth\Settings\AuthSettings;
+use Saucebase\Core\Filament\Pages\SettingsPage;
 
 class AuthenticationSettings extends SettingsPage
 {
@@ -43,6 +43,10 @@ class AuthenticationSettings extends SettingsPage
                         ->label(__('auth::auth.registration.enabled'))
                         ->helperText(__('auth::auth.registration.help'))
                         ->extraAttributes(['data-testid' => 'admin-registration-enabled']),
+                    Toggle::make('modal_enabled')
+                        ->label(__('auth::auth.modal.enabled'))
+                        ->helperText(__('auth::auth.modal.help'))
+                        ->extraAttributes(['data-testid' => 'admin-modal-enabled']),
                 ])
                 ->columns(1),
             Section::make(__('Social Login'))

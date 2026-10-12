@@ -2,6 +2,7 @@
 
 namespace Modules\Auth\Filament\Resources\Users\Pages;
 
+use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
@@ -16,7 +17,8 @@ class EditUser extends EditRecord
     {
         return [
             ViewAction::make(),
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->authorize(fn (User $record): bool => UserResource::canDelete($record)),
             Impersonate::make()->record($this->getRecord()),
         ];
     }

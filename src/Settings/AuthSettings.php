@@ -11,6 +11,9 @@ class AuthSettings extends Settings
 
     public bool $registration_enabled;
 
+    /** Whether signing in and registering open in a modal over the current page. */
+    public bool $modal_enabled;
+
     public bool $magic_link_enabled;
 
     public int $magic_link_expiry;

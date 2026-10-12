@@ -2,24 +2,25 @@
 
 namespace Modules\Auth\Http\Controllers;
 
-use App\Helpers\Toast;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use Inertia\Inertia;
 use Inertia\Response;
+use InertiaUI\Modal\Modal;
 use Modules\Auth\Http\Requests\RegisterRequest;
+use Saucebase\Core\Facades\Home;
+use Saucebase\Core\Toast;
 
 class RegisterController extends Controller
 {
     /**
      * Display the registration view.
      */
-    public function create(): Response
+    public function create(): Response|Modal
     {
-        return Inertia::render('Auth::Register');
+        return $this->pageOrModal('Auth::Register');
     }
 
     /**
@@ -40,6 +41,6 @@ class RegisterController extends Controller
             __('auth::auth.welcome', ['name' => $user->name]),
         );
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(Home::url($request, Home::REGISTERED));
     }
 }

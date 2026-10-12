@@ -38,14 +38,4 @@ class MagicLinkToken extends Model
     {
         return $this->belongsTo(User::class);
     }
-
-    public function isValid(): bool
-    {
-        return $this->expires_at->isFuture() && $this->used_at === null;
-    }
-
-    public function markAsUsed(): void
-    {
-        $this->update(['used_at' => now()]);
-    }
 }

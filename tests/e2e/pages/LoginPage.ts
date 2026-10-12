@@ -75,13 +75,13 @@ export class LoginPage {
         await expect(this.passwordInput).toHaveAttribute('type', 'password');
     }
 
-    async waitForLoginResponse() {
+    waitForLoginResponse() {
         return this.page.waitForResponse((response: Response) =>
             response.url().includes(this.loginEndpoint),
         );
     }
 
-    async waitForFailedLoginRequest() {
+    waitForFailedLoginRequest() {
         return this.page.waitForEvent('requestfailed', (request: Request) =>
             request.url().includes(this.loginEndpoint),
         );
@@ -110,7 +110,6 @@ export class LoginPage {
             await route.continue();
         });
     }
-
 
     /**
      * Verify redirect to specific intended URL

@@ -4,6 +4,8 @@ namespace Modules\Auth\Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\AbstractProvider;
@@ -11,6 +13,7 @@ use Laravel\Socialite\Two\User as SocialiteUser;
 use Mockery\MockInterface;
 use Modules\Auth\Notifications\LoginNotification;
 use Modules\Auth\Settings\AuthSettings;
+use Saucebase\Core\Facades\Home;
 use Tests\TestCase;
 
 class SocialiteCallbackTest extends TestCase
@@ -68,6 +71,22 @@ class SocialiteCallbackTest extends TestCase
         $response->assertRedirect(route('login'));
         $this->assertGuest();
         $this->assertDatabaseMissing('users', ['email' => 'socialuser@example.com']);
+    }
+
+    /** A new account is a sign-up, so the application can send it somewhere else. */
+    public function test_social_callback_lands_on_home_with_the_reason(): void
+    {
+        $this->enableGithub();
+        Home::using(fn (Request $request, string $reason): string => url("/landing/{$reason}"));
+
+        $this->mockSocialiteDriver($this->makeSocialiteUser());
+        $this->get(route('auth.socialite.callback', ['provider' => 'github']))
+            ->assertRedirect(url('/landing/registered'));
+
+        Auth::logout();
+
+        $this->get(route('auth.socialite.callback', ['provider' => 'github']))
+            ->assertRedirect(url('/landing/login'));
     }
 
     public function test_social_callback_still_logs_in_existing_user_when_registration_is_disabled(): void
@@ -138,6 +157,25 @@ class SocialiteCallbackTest extends TestCase
         $user = User::where('email', $socialiteUser->email)->sole();
 
         Notification::assertNotSentTo($user, LoginNotification::class);
+    }
+
+    /**
+     * Signing in with a provider is not proof of the address: nothing here has
+     * asked the person to confirm it, so the account starts unverified.
+     */
+    public function test_social_signup_does_not_mark_the_email_verified(): void
+    {
+        $this->enableGithub();
+
+        $socialiteUser = $this->makeSocialiteUser();
+        $this->mockSocialiteDriver($socialiteUser);
+
+        $this->get(route('auth.socialite.callback', ['provider' => 'github']));
+
+        $this->assertDatabaseHas('users', [
+            'email' => $socialiteUser->email,
+            'email_verified_at' => null,
+        ]);
     }
 
     public function test_callback_does_not_set_cookie_during_account_linking(): void

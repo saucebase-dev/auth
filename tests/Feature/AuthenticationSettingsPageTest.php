@@ -2,7 +2,6 @@
 
 namespace Modules\Auth\Tests\Feature;
 
-use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -18,7 +17,7 @@ class AuthenticationSettingsPageTest extends TestCase
     public function test_administrator_can_load_authentication_settings_form(): void
     {
         $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
+        $admin->assignRole('admin');
 
         $this->actingAs($admin);
 
@@ -30,7 +29,7 @@ class AuthenticationSettingsPageTest extends TestCase
             ->assertFormFieldExists('login_notification_enabled')
             ->assertSchemaStateSet([
                 'enabled_socialite_providers' => [],
-                'magic_link_enabled' => true,
+                'magic_link_enabled' => false,
                 'magic_link_expiry' => 15,
                 'login_notification_enabled' => false,
             ]);
@@ -39,7 +38,7 @@ class AuthenticationSettingsPageTest extends TestCase
     public function test_administrator_can_save_authentication_settings(): void
     {
         $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
+        $admin->assignRole('admin');
 
         $this->actingAs($admin);
 
@@ -65,7 +64,7 @@ class AuthenticationSettingsPageTest extends TestCase
     public function test_administrator_can_disable_all_socialite_providers(): void
     {
         $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
+        $admin->assignRole('admin');
 
         $settings = app(AuthSettings::class);
         $settings->enabled_socialite_providers = ['google'];
@@ -90,7 +89,7 @@ class AuthenticationSettingsPageTest extends TestCase
     public function test_unknown_socialite_provider_does_not_change_authentication_settings(): void
     {
         $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
+        $admin->assignRole('admin');
 
         $this->actingAs($admin);
 
@@ -114,13 +113,13 @@ class AuthenticationSettingsPageTest extends TestCase
         string $rule,
     ): void {
         $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
+        $admin->assignRole('admin');
 
         $this->actingAs($admin);
 
         Livewire::test(AuthenticationSettings::class)
             ->fillForm([
-                'magic_link_enabled' => false,
+                'magic_link_enabled' => true,
                 'magic_link_expiry' => $expiry,
             ])
             ->call('save')
@@ -129,7 +128,7 @@ class AuthenticationSettingsPageTest extends TestCase
 
         $settings = new AuthSettings;
 
-        $this->assertTrue($settings->magic_link_enabled);
+        $this->assertFalse($settings->magic_link_enabled);
         $this->assertSame(15, $settings->magic_link_expiry);
     }
 
@@ -157,7 +156,7 @@ class AuthenticationSettingsPageTest extends TestCase
     public function test_regular_user_cannot_access_authentication_settings_page(): void
     {
         $user = User::factory()->create();
-        $user->assignRole(Role::USER);
+        $user->assignRole('user');
 
         $this->actingAs($user)
             ->get(AuthenticationSettings::getUrl(panel: 'admin'))

@@ -2,7 +2,7 @@
 
 namespace Modules\Auth\Filament\Resources\Users\Schemas;
 
-use App\Enums\Role as RoleEnum;
+use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
@@ -27,14 +27,16 @@ class UserForm
                     ->label(__('Email address'))
                     ->email()
                     ->required(),
+                // Only an admin assigns roles, and never their own: one admin always remains.
                 Select::make('roles')
                     ->label(__('Role'))
+                    ->visible(fn (): bool => auth()->user()?->hasRole('admin') ?? false)
+                    ->disabled(fn (?User $record): bool => $record?->is(auth()->user()) ?? false)
                     ->relationship('roles', 'name')
                     ->multiple()
                     ->minItems(1)
                     ->preload()
-                    // Optional: default to "user" on create:
-                    ->default(fn () => [Role::where('name', RoleEnum::USER)->value('id')]),
+                    ->default(fn () => [Role::where('name', 'user')->value('id')]),
                 TextInput::make('password')
                     ->label(__('Password'))
                     ->password()

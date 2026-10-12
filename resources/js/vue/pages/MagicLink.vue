@@ -1,54 +1,51 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
-import InputField from '@/components/ui/input/InputField.vue';
-import { Form, Link } from '@inertiajs/vue3';
+import AlertMessage from '@/components/AlertMessage.vue';
+import { Modal } from '@inertiaui/modal-vue';
+import MagicLinkForm from '../components/MagicLinkForm.vue';
 import AuthCardLayout from '../layouts/AuthCardLayout.vue';
 
+/** Requesting a magic link, as a page or a modal. See `Login.vue` for the reasoning. */
 defineProps<{
     status?: string;
+    modal?: boolean;
 }>();
 </script>
 
 <template>
+    <Modal v-if="modal" max-width="md">
+        <div class="space-y-4" data-testid="magic-link-modal">
+            <div class="space-y-1.5 text-center">
+                <h2 class="text-2xl font-semibold">
+                    {{ $t('Magic Link Login') }}
+                </h2>
+                <p class="text-muted-foreground text-sm">
+                    {{
+                        $t(
+                            'Enter your email to receive a secure, one-time login link.',
+                        )
+                    }}
+                </p>
+            </div>
+
+            <!-- The page frame shows this from the shared props; inside the
+                 modal it arrives as the modal's own prop. -->
+            <AlertMessage
+                :message="status"
+                variant="success"
+                data-testid="alert"
+            />
+
+            <MagicLinkForm modal />
+        </div>
+    </Modal>
+
     <AuthCardLayout
+        v-else
         :title="$t('Magic Link Login')"
         :description="
             $t('Enter your email to receive a secure, one-time login link.')
         "
-        :status="status"
     >
-        <Form
-            :action="route('magic-link.store')"
-            method="post"
-            class="w-full space-y-3"
-            data-testid="magic-link-form"
-            disable-while-processing
-            :reset-on-success="['email']"
-        >
-            <InputField
-                name="email"
-                type="email"
-                :label="$t('Email')"
-                :placeholder="$t('Enter your email')"
-                required
-                autocomplete="email"
-                data-testid="magic-link-email"
-            />
-
-            <div
-                class="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between"
-            >
-                <Link
-                    :href="route('login')"
-                    class="mt-4 text-center text-sm text-gray-600 hover:text-gray-900 sm:mt-0 sm:text-left dark:text-gray-400 dark:hover:text-gray-100"
-                    data-testid="back-to-login-link"
-                >
-                    {{ $t('Back to login') }}
-                </Link>
-                <Button type="submit" data-testid="magic-link-submit">
-                    {{ $t('Send Magic Link') }}
-                </Button>
-            </div>
-        </Form>
+        <MagicLinkForm />
     </AuthCardLayout>
 </template>

@@ -145,7 +145,7 @@ class LoginTest extends TestCase
         ]);
 
         $this->assertGuest();
-        $response->assertSessionHas('error');
+        $response->assertInvalid(['email' => trans('auth::auth.failed')]);
     }
 
     public function test_login_validates_email_is_required(): void
@@ -176,13 +176,12 @@ class LoginTest extends TestCase
         $response->assertInvalid('email');
     }
 
-    public function test_login_fires_lockout_event_after_five_failed_attempts(): void
+    public function test_login_locks_out_after_five_failed_attempts(): void
     {
         Event::fake([Lockout::class]);
 
         $user = $this->createUser();
 
-        // Make 5 failed attempts to build up the rate limiter
         for ($i = 0; $i < 5; $i++) {
             $this->post(route('login'), [
                 'email' => $user->email,
@@ -190,13 +189,40 @@ class LoginTest extends TestCase
             ]);
         }
 
-        // 6th attempt triggers the lockout
+        // Locked out even with the right password.
         $this->post(route('login'), [
             'email' => $user->email,
-            'password' => 'wrong-password',
-        ]);
+            'password' => 'password',
+        ])->assertInvalid(['email' => 'Too many login attempts']);
 
+        $this->assertGuest();
         Event::assertDispatched(Lockout::class);
+    }
+
+    public function test_successful_login_resets_the_failed_attempt_count(): void
+    {
+        $user = $this->createUser();
+
+        for ($i = 0; $i < 4; $i++) {
+            $this->post(route('login'), [
+                'email' => $user->email,
+                'password' => 'wrong-password',
+            ]);
+        }
+
+        $this->post(route('login'), ['email' => $user->email, 'password' => 'password']);
+        $this->post(route('logout'));
+
+        for ($i = 0; $i < 4; $i++) {
+            $this->post(route('login'), [
+                'email' => $user->email,
+                'password' => 'wrong-password',
+            ]);
+        }
+
+        $this->post(route('login'), ['email' => $user->email, 'password' => 'password']);
+
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_login_updates_last_login_at(): void
@@ -220,6 +246,19 @@ class LoginTest extends TestCase
         $this->actingAs($user)->post(route('logout'));
 
         $this->assertGuest();
+    }
+
+    /**
+     * A GET logout is reachable from any other site's markup, so signing out has
+     * to be something the app asked for.
+     */
+    public function test_logout_is_not_reachable_by_get(): void
+    {
+        $user = $this->createUser();
+
+        $this->actingAs($user)->get('/auth/logout')->assertStatus(405);
+
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_logout_redirects_to_home(): void

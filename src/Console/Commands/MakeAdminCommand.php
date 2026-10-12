@@ -2,7 +2,6 @@
 
 namespace Modules\Auth\Console\Commands;
 
-use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Console\Command;
 
@@ -28,7 +27,7 @@ class MakeAdminCommand extends Command
             return self::FAILURE;
         }
 
-        $user->syncRoles([Role::ADMIN->value]);
+        $user->syncRoles(['admin']);
 
         $this->info("Promoted admin: {$user->name} <{$user->email}>");
 

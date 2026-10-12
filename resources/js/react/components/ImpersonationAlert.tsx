@@ -1,8 +1,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useT } from '@/i18n';
 import { cn } from '@/lib/utils';
 import type { User } from '@/types';
 import { router, usePage } from '@inertiajs/react';
+import { getInitials } from '@saucebase/core/lib/initials';
+import { useT } from '@saucebase/react/i18n';
 import { Drama, History, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -11,14 +12,6 @@ interface Impersonation {
     route: string;
     label: string;
     recent: User[];
-}
-
-function getUserInitials(name: string): string {
-    return name
-        .split(' ')
-        .map((word) => word.charAt(0).toUpperCase())
-        .slice(0, 2)
-        .join('');
 }
 
 function getRoleBadgeClasses(role: string): string {
@@ -80,7 +73,10 @@ export default function ImpersonationAlert() {
             {!isExpanded ? (
                 <button
                     onClick={() => setIsExpanded(true)}
-                    title={`Impersonating ${impersonation.user.name}`}
+                    data-testid="impersonation-toggle"
+                    title={t('Impersonating :name', {
+                        name: impersonation.user.name,
+                    })}
                     aria-label={t('Show impersonation details')}
                     aria-expanded={false}
                     className="animate-in fade-in zoom-in-95 relative cursor-pointer rounded-xl shadow-lg ring-2 ring-orange-500 transition-all duration-300 hover:shadow-xl hover:ring-orange-600"
@@ -91,7 +87,7 @@ export default function ImpersonationAlert() {
                             alt={impersonation.user.name}
                         />
                         <AvatarFallback className="bg-yellow-600 text-sm text-white">
-                            {getUserInitials(impersonation.user.name)}
+                            {getInitials(impersonation.user.name)}
                         </AvatarFallback>
                     </Avatar>
                     <div className="absolute -top-3 -left-3 flex size-7 items-center justify-center rounded-xl bg-orange-500 shadow-lg">
@@ -118,7 +114,7 @@ export default function ImpersonationAlert() {
                                 alt={impersonation.user.name}
                             />
                             <AvatarFallback className="bg-yellow-600 text-sm text-white">
-                                {getUserInitials(impersonation.user.name)}
+                                {getInitials(impersonation.user.name)}
                             </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
@@ -143,6 +139,7 @@ export default function ImpersonationAlert() {
                     </div>
                     <a
                         href={impersonation.route}
+                        data-testid="impersonation-leave"
                         className="bg-background text-foreground hover:bg-background/90 w-full rounded-xl px-3 py-2 text-center text-sm font-medium transition-colors"
                     >
                         {impersonation.label}
@@ -167,7 +164,7 @@ export default function ImpersonationAlert() {
                                                 alt={user.name}
                                             />
                                             <AvatarFallback className="bg-yellow-600/80 text-xs text-white">
-                                                {getUserInitials(user.name)}
+                                                {getInitials(user.name)}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="min-w-0 flex-1 p-2 pl-1">

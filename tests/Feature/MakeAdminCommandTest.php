@@ -2,7 +2,6 @@
 
 namespace Modules\Auth\Tests\Feature;
 
-use App\Enums\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,7 +17,7 @@ class MakeAdminCommandTest extends TestCase
             ->assertSuccessful()
             ->expectsOutputToContain('Promoted admin');
 
-        $this->assertTrue($user->fresh()->hasRole(Role::ADMIN));
+        $this->assertTrue($user->fresh()->hasRole('admin'));
     }
 
     public function test_fails_when_user_not_found(): void
@@ -31,13 +30,13 @@ class MakeAdminCommandTest extends TestCase
     public function test_replaces_existing_role_with_admin(): void
     {
         $user = $this->createUser();
-        $user->assignRole(Role::USER);
+        $user->assignRole('user');
 
         $this->artisan('auth:make-admin', ['email' => $user->email])
             ->assertSuccessful();
 
-        $this->assertTrue($user->fresh()->hasRole(Role::ADMIN));
-        $this->assertFalse($user->fresh()->hasRole(Role::USER));
+        $this->assertTrue($user->fresh()->hasRole('admin'));
+        $this->assertFalse($user->fresh()->hasRole('user'));
     }
 
     public function test_is_idempotent(): void
@@ -48,6 +47,6 @@ class MakeAdminCommandTest extends TestCase
         $this->artisan('auth:make-admin', ['email' => $user->email])->assertSuccessful();
 
         $this->assertCount(1, $user->fresh()->roles);
-        $this->assertTrue($user->fresh()->hasRole(Role::ADMIN));
+        $this->assertTrue($user->fresh()->hasRole('admin'));
     }
 }

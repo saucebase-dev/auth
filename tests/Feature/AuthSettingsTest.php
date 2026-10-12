@@ -16,7 +16,7 @@ class AuthSettingsTest extends TestCase
 
         $this->assertSame([], $settings->enabled_socialite_providers);
         $this->assertTrue($settings->registration_enabled);
-        $this->assertTrue($settings->magic_link_enabled);
+        $this->assertFalse($settings->magic_link_enabled);
         $this->assertSame(15, $settings->magic_link_expiry);
         $this->assertFalse($settings->login_notification_enabled);
     }

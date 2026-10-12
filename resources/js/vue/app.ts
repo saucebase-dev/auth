@@ -1,19 +1,20 @@
-import { useDialog } from '@/composables/useDialog';
-import { registerGlobalComponent } from '@/lib/globalComponents';
-import { registerAction, registerIcon } from '@/lib/navigation';
 import { router } from '@inertiajs/vue3';
 import { LogOut } from '@lucide/vue';
-import '@modules/auth/resources/css/style.css';
+import { useDialog } from '@saucebase/vue/composables/useDialog';
+import { registerGlobalComponent } from '@saucebase/vue/lib/globalComponents';
+import { registerAction, registerIcon } from '@saucebase/vue/lib/navigation';
 import { trans } from 'laravel-vue-i18n';
 import IconLogOut from '~icons/lucide/log-out';
+import IconSettings from '~icons/lucide/settings';
+import IconShieldCheck from '~icons/lucide/shield-check';
+import IconUserCircle from '~icons/lucide/user-circle';
 import ImpersonationAlert from './components/ImpersonationAlert.vue';
 
-/**
- * Auth module setup
- * Called during app initialization before mounting
- */
 export function setup() {
     registerIcon('logout', IconLogOut);
+    registerIcon('settings', IconSettings);
+    registerIcon('profile', IconUserCircle);
+    registerIcon('security', IconShieldCheck);
     registerAuthActions();
     registerGlobalComponent('top', ImpersonationAlert);
 }
@@ -43,12 +44,4 @@ function registerAuthActions() {
             router.post(route('logout'));
         }
     });
-}
-
-/**
- * Auth module after mount logic
- * Called after the app has been mounted
- */
-export function afterMount() {
-    console.debug('Auth module after mount logic executed');
 }

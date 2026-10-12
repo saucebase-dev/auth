@@ -4,6 +4,7 @@ namespace Modules\Auth\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Saucebase\Core\Facades\Home;
 
 class EmailVerificationNotificationController extends Controller
 {
@@ -13,7 +14,7 @@ class EmailVerificationNotificationController extends Controller
     public function store(Request $request): RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard', absolute: false));
+            return redirect()->intended(Home::url($request));
         }
 
         $request->user()->sendEmailVerificationNotification();
