@@ -26,7 +26,7 @@ class WelcomeNotificationTranslatabilityTest extends TestCase
         // The real JSON loading path, rather than Lang::addLines() — that helper routes
         // keys through Arr::set(), which splits on dots and mangles any string ending in
         // a full stop.
-        Lang::addJsonPath(base_path('tests/fixtures/lang'));
+        Lang::addJsonPath(__DIR__.'/../fixtures/lang');
     }
 
     public function test_welcome_notification_translates_every_line(): void
