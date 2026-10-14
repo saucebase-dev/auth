@@ -1,0 +1,8 @@
+{
+    "name": "@saucebase/auth",
+    "private": true,
+    "type": "module",
+    "devDependencies": {
+        "@faker-js/faker": "^10.6.0"
+    }
+}
