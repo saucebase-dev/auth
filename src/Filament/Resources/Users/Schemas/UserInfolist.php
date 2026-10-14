@@ -10,6 +10,7 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
+use Illuminate\Support\Facades\Gate;
 use Modules\Auth\Exceptions\SocialiteException;
 use Modules\Auth\Services\SocialiteService;
 
@@ -79,6 +80,8 @@ class UserInfolist
                                                 ->iconButton()
                                                 ->color('danger')
                                                 ->tooltip(__('Disconnect'))
+                                                // The record here is the social account; the rule is about the user whose page this is.
+                                                ->authorize(fn ($livewire): bool => Gate::allows('update', $livewire->getRecord()))
                                                 ->requiresConfirmation()
                                                 ->modalHeading(fn ($record) => __('Disconnect :provider?', ['provider' => ucfirst($record->provider)]))
                                                 ->modalDescription(__('Are you sure you want to disconnect this social account? The user may lose access if this is their only login method without a password.'))

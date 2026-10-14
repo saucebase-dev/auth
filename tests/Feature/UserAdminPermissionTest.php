@@ -14,6 +14,7 @@ use Modules\Auth\Filament\Pages\AuthenticationSettings;
 use Modules\Auth\Filament\Resources\Users\Pages\CreateUser;
 use Modules\Auth\Filament\Resources\Users\Pages\EditUser;
 use Modules\Auth\Filament\Resources\Users\Pages\ListUsers;
+use Modules\Auth\Filament\Resources\Users\Pages\ViewUser;
 use Modules\Auth\Filament\Resources\Users\UserResource;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -52,6 +53,31 @@ class UserAdminPermissionTest extends TestCase
     {
         $this->actingAs($this->staff('manage users'))->get(AuthenticationSettings::getUrl())->assertForbidden();
         $this->actingAs($this->staff('manage settings'))->get(AuthenticationSettings::getUrl())->assertOk();
+    }
+
+    public function test_a_user_manager_cannot_disconnect_an_admins_social_login(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+        $admin->socialAccounts()->create(['provider' => 'github', 'provider_id' => 'admin-1']);
+
+        $member = User::factory()->create();
+        $member->socialAccounts()->create(['provider' => 'github', 'provider_id' => 'member-1']);
+
+        $disconnect = TestAction::make('disconnect')->schemaComponent('socialAccounts.0.created_at', 'infolist');
+
+        Livewire::actingAs($this->staff('manage users'))
+            ->test(ViewUser::class, ['record' => $admin->getKey()])
+            ->assertActionHidden($disconnect);
+
+        $this->assertSame(1, $admin->socialAccounts()->count());
+
+        // The same button works on a user the manager may update, so the refusal above is the rule.
+        Livewire::actingAs($this->staff('manage users'))
+            ->test(ViewUser::class, ['record' => $member->getKey()])
+            ->callAction($disconnect);
+
+        $this->assertSame(0, $member->socialAccounts()->count());
     }
 
     public function test_a_user_manager_edits_users_but_never_an_admin(): void
