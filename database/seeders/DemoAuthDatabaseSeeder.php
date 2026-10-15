@@ -23,7 +23,7 @@ class DemoAuthDatabaseSeeder extends Seeder
 
         $staff = User::firstOrCreate(
             ['email' => 'support@saucebase.dev'],
-            ['name' => 'Support Agent', 'password' => bcrypt('secretsauce')],
+            ['name' => 'Support Agent', 'password' => bcrypt(config('saucebase.demo_password'))],
         );
         $staff->syncRoles('support');
 
@@ -31,7 +31,7 @@ class DemoAuthDatabaseSeeder extends Seeder
             ['email' => 'chef@saucebase.dev'],
             [
                 'name' => 'Admin Chef',
-                'password' => bcrypt('secretsauce'),
+                'password' => bcrypt(config('saucebase.demo_password')),
             ]
         );
 

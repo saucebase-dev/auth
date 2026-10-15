@@ -4,6 +4,7 @@ namespace Modules\Auth\Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Modules\Auth\Database\Seeders\DatabaseSeeder;
 use Modules\Auth\Database\Seeders\DemoAuthDatabaseSeeder;
 use Tests\TestCase;
@@ -24,5 +25,14 @@ class DemoStaffTest extends TestCase
 
         $this->assertSame(['support'], $staff->getRoleNames()->all());
         $this->assertEqualsCanonicalizing(['access admin panel', 'manage users', 'impersonate users'], $staff->getAllPermissions()->pluck('name')->all());
+    }
+
+    public function test_demo_accounts_use_the_configured_demo_password(): void
+    {
+        config(['saucebase.demo_password' => 'not-the-old-default']);
+
+        $this->seed([DatabaseSeeder::class, DemoAuthDatabaseSeeder::class]);
+
+        $this->assertTrue(Hash::check('not-the-old-default', User::where('email', 'support@saucebase.dev')->value('password')));
     }
 }

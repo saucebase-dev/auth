@@ -1,67 +1,60 @@
-# Auth Module
+# Saucebase Auth
 
 <div align="center">
 
 [![Tests](https://github.com/saucebase-dev/auth/actions/workflows/test.yml/badge.svg)](https://github.com/saucebase-dev/auth/actions/workflows/test.yml)
 [![Release](https://img.shields.io/github/v/release/saucebase-dev/auth)](https://github.com/saucebase-dev/auth/releases)
-[![Saucebase Core](https://img.shields.io/badge/Saucebase_Core-1.6+-FF6B35)](https://github.com/saucebase-dev/core)
-[![PHP](https://img.shields.io/badge/PHP-8.4+-777BB4?logo=php&logoColor=white)](https://php.net)
-
-Works with:<br/>
-[![Vue 3.5](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org) [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev)
+[![Saucebase Core](https://img.shields.io/packagist/dependency-v/saucebase/auth/saucebase%2Fcore?label=Saucebase%20Core&color=FF6B35)](https://github.com/saucebase-dev/core)
+[![License](https://img.shields.io/github/license/saucebase-dev/auth)](LICENSE)
 
 </div>
 
-Everything your users need to sign in, for [Saucebase](https://github.com/saucebase-dev/saucebase), a Laravel SaaS starter kit.
+Sign-in for Saucebase: login, registration, social login, magic links, password reset and user admin.
 
-Login, registration, password reset, email verification, Google and GitHub sign-in, passwordless magic links, and profile settings. Plus user management in the admin.
-
-**[Full documentation →](https://saucebase-dev.github.io/docs/modules/auth)**
+A module for [Saucebase](https://github.com/saucebase-dev/saucebase), the AI-ready Laravel SaaS kit. Modules are Composer packages you add to a Saucebase app; once installed, the code is yours to change.
 
 ## Features
 
-- **Login and registration** — as a full page or a modal over whatever the user was reading
-- **Social login** — Google and GitHub, with accounts linked by email
-- **Magic links** — sign in from an emailed link, no password needed
-- **Password reset** — the standard emailed reset flow
-- **Email verification** — optional, with resend
-- **Profile settings** — name, email, avatar and password, in the settings modal
-- **Connected accounts** — users can link and unlink Google and GitHub themselves
-- **Impersonation** — admins can sign in as a user to debug, and switch back
-- **Registration switch** — close signups without touching code
-- **Rate limiting** — on login, reset and magic link requests
-- **Admin panel** — manage users and auth settings at `/admin`
-- **Vue and React** — every screen works on both
+- **Login and registration**, as a page or a modal over the current page
+- **Social login** with Google and GitHub built in, and any other Socialite provider you add; users link and unlink accounts themselves
+- **Magic links**: sign in from an emailed link, no password
+- **Password reset and email verification**
+- **Profile and security settings** in the settings modal
+- **Login alerts**: an email when someone signs in to the account
+- **Impersonation**: admins sign in as a user and switch back
+- **User admin** in the admin panel
+- **Vue and React**
 
-## Requirements
+## Install
 
-| | |
-| --- | --- |
-| Saucebase core | `^1.6` |
-| PHP packages | `laravel/socialite`, `stechstudio/filament-impersonate` |
-| Mail | A working mail setup, for reset, verification and magic link emails |
+**New to Saucebase?** Start a new app and pick **auth** when it asks for modules:
 
-For local development, [Mailpit](https://mailpit.axllent.org/) catches the emails. Docker users already have it.
+```bash
+curl -fsSL https://install.saucebase.dev | bash
+```
 
-## Installation
+It installs PHP and Composer if they're missing. With the CLI already installed, run `saucebase new my-app` instead.
+
+**Already have a Saucebase app?** Add it with:
 
 ```bash
 composer require saucebase/auth
+git apply modules/auth/patches/user.patch
 php artisan migrate
+php artisan modules:seed --module=auth
 npm run build
 ```
 
-### 1. Add the Sociable trait
+Then make yourself an admin with `php artisan auth:make-admin`.
 
-Required for social login and connected accounts.
+### Manual install
 
-```bash
-git apply modules/auth/patches/user.patch
-```
+If a patch doesn't apply, because your file has changed, make its change by hand:
 
-Or add it yourself in `app/Models/User.php`:
+**`user.patch`** adds the `Sociable` trait to your user model, for social login and connected accounts:
 
 ```php
+// app/Models/User.php
 use Modules\Auth\Traits\Sociable;
 
 class User extends Authenticatable
@@ -70,17 +63,11 @@ class User extends Authenticatable
 }
 ```
 
-### 2. Create your first admin
+## Configuration
 
-```bash
-php artisan auth:make-admin
-```
+Most settings are in the admin panel, under **Settings → Authentication**: open or close registration, login as a modal, magic links and how long they last, login alerts, and which social providers are on.
 
-### 3. Social login (optional)
-
-Skip this if you only want email and password.
-
-Create an app in the [Google Cloud console](https://console.cloud.google.com/apis/credentials) or [GitHub developer settings](https://github.com/settings/developers), then add the keys to `.env`:
+Social login needs keys from [Google](https://console.cloud.google.com/apis/credentials) or [GitHub](https://github.com/settings/developers). Add them to `.env`:
 
 ```env
 GOOGLE_CLIENT_ID=
@@ -90,47 +77,25 @@ GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
 ```
 
-The redirect URL to register with each provider is:
+Register `https://<your-app>/auth/socialite/<provider>/callback` as the redirect URL with each provider.
 
-```
-https://your-app.com/auth/socialite/google/callback
-https://your-app.com/auth/socialite/github/callback
-```
+**Another provider?** Any [Laravel Socialite](https://laravel.com/docs/socialite) driver works, including the community ones at [Socialite Providers](https://socialiteproviders.com):
 
-Then turn the provider on at `/admin` → Settings → Authentication. Only providers with keys can be switched on.
+1. Install the driver and add its keys to `.env`.
+2. In `modules/auth/config/services.php`, add its credentials next to `google` and `github`, and list it under `socialite_providers`.
+3. Add its icon to `providerIcons.ts`.
+4. Switch it on in the admin panel.
 
-### Sample data (optional)
+Emails (reset, verification, magic links, alerts) need a working mail setup.
+
+## Demo data
 
 ```bash
 php artisan modules:seed --module=auth --demo
 ```
 
-Adds a demo account to sign in with. Do not run this in production.
-
-## Extending
-
-**Listen to events.** Laravel's own auth events all fire as normal (`Registered`, `Login`, `Logout`, `PasswordReset`), plus `ReturningUserAuthenticated` when someone signs in again after time away.
-
-```php
-use Illuminate\Auth\Events\Registered;
-
-Event::listen(Registered::class, function (Registered $event) {
-    // $event->user
-});
-```
-
-**Change the screens.** Login, registration, password reset and the settings panels are normal Vue and React pages in `resources/js/`. Edit them like any other page.
-
-**Add a settings panel.** Your own module can add a panel to the settings modal — see the core documentation on settings sections.
-
-## Configuration
-
-The switches are at **`/admin` → Settings → Authentication**: whether registration is open, whether login opens as a modal, whether magic links are on and how long they last, whether users get an email when someone signs in to their account, and which social providers are enabled.
-
-Only your provider keys live in `.env`.
-
-For everything else — customising the emails, the OAuth flow, rate limits — see the [documentation](https://saucebase-dev.github.io/docs/modules/auth).
+Adds a user (`chef@saucebase.dev`) and a support staff account (`support@saucebase.dev`) that only sees user admin. Both use the `DEMO_PASSWORD` from `.env`.
 
 ## License
 
-Proprietary. Part of [Saucebase](https://github.com/saucebase-dev/saucebase).
+MIT. See [LICENSE](LICENSE).
