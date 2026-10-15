@@ -2,7 +2,7 @@
   "name": "saucebase/auth",
   "description": "Authentication module for Saucebase",
   "type": "saucebase-module",
-  "license": "proprietary",
+  "license": "MIT",
   "version": "v3.2.0",
   "authors": [
     {
