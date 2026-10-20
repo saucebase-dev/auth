@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\AbstractProvider;
@@ -191,5 +192,96 @@ class SocialiteCallbackTest extends TestCase
 
         $response->assertRedirect();
         $response->assertCookieMissing('last_social_provider');
+    }
+
+    public function test_a_signed_in_user_links_the_provider_account(): void
+    {
+        $this->enableGithub();
+        $user = $this->createUser();
+        $this->mockSocialiteDriver($this->makeSocialiteUser(id: 'gh-42', email: $user->email));
+
+        $this->actingAs($user)->get(route('auth.socialite.callback', ['provider' => 'github']));
+
+        $this->assertDatabaseHas('social_accounts', [
+            'user_id' => $user->id,
+            'provider' => 'github',
+            'provider_id' => 'gh-42',
+            'provider_refresh_token' => 'refresh-token',
+        ]);
+        $this->assertSame(trans('auth::socialite.account_connected', ['provider' => 'Github']), session('toast')['message']);
+    }
+
+    public function test_linking_an_account_owned_by_someone_else_is_refused_with_its_reason(): void
+    {
+        $this->enableGithub();
+        $owner = $this->createUser();
+        $owner->socialAccounts()->create(['provider' => 'github', 'provider_id' => 'gh-42']);
+        $user = $this->createUser();
+        $this->mockSocialiteDriver($this->makeSocialiteUser(id: 'gh-42', email: $user->email));
+
+        $this->actingAs($user)->get(route('auth.socialite.callback', ['provider' => 'github']));
+
+        $this->assertSame(0, $user->socialAccounts()->count());
+        $this->assertSame(trans('auth::socialite.account_already_linked', ['provider' => 'Github']), session('toast')['message']);
+    }
+
+    public function test_an_unexpected_linking_failure_is_reported_and_shown_generically(): void
+    {
+        Exceptions::fake();
+        $this->enableGithub();
+        Socialite::shouldReceive('driver')->with('github')->andThrow(new \RuntimeException('provider down'));
+
+        $this->actingAs($this->createUser())->get(route('auth.socialite.callback', ['provider' => 'github']));
+
+        Exceptions::assertReported(fn (\RuntimeException $e) => $e->getMessage() === 'provider down');
+        $this->assertSame(trans('auth::socialite.error'), session('toast')['message']);
+    }
+
+    public function test_a_provider_user_without_an_email_is_refused(): void
+    {
+        $this->enableGithub();
+        $this->mockSocialiteDriver($this->makeSocialiteUser(email: ''));
+
+        $this->get(route('auth.socialite.callback', ['provider' => 'github']))
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
+        $this->assertSame(trans('auth::socialite.invalid_user'), session('toast')['message']);
+    }
+
+    public function test_a_provider_user_without_an_email_cannot_be_linked(): void
+    {
+        $this->enableGithub();
+        $user = $this->createUser();
+        $this->mockSocialiteDriver($this->makeSocialiteUser(email: 'not-an-email'));
+
+        $this->actingAs($user)->get(route('auth.socialite.callback', ['provider' => 'github']));
+
+        $this->assertSame(0, $user->socialAccounts()->count());
+        $this->assertSame(trans('auth::socialite.invalid_user'), session('toast')['message']);
+    }
+
+    public function test_a_new_social_user_is_signed_in_on_a_fresh_session_and_welcomed(): void
+    {
+        $this->enableGithub();
+        $this->mockSocialiteDriver($this->makeSocialiteUser(name: 'Jane Social'));
+        $this->startSession();
+        $sessionBefore = session()->getId();
+
+        $this->get(route('auth.socialite.callback', ['provider' => 'github']));
+
+        $this->assertAuthenticatedAs(User::where('email', 'socialuser@example.com')->firstOrFail());
+        $this->assertNotSame($sessionBefore, session()->getId(), 'Session regenerated against fixation');
+        $this->assertSame(__('auth::auth.welcome', ['name' => 'Jane Social']), session('toast')['message']);
+    }
+
+    public function test_a_new_social_user_stores_the_refresh_token(): void
+    {
+        $this->enableGithub();
+        $this->mockSocialiteDriver($this->makeSocialiteUser(id: 'gh-7'));
+
+        $this->get(route('auth.socialite.callback', ['provider' => 'github']));
+
+        $this->assertDatabaseHas('social_accounts', ['provider_id' => 'gh-7', 'provider_refresh_token' => 'refresh-token']);
     }
 }
