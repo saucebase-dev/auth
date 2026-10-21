@@ -278,6 +278,46 @@ class MagicLinkTest extends TestCase
         $response->assertRedirect(route('dashboard'));
     }
 
+    /** Not the dashboard: that is also where a link without one lands. */
+    public function test_a_same_host_intended_page_is_where_the_link_lands(): void
+    {
+        $user = $this->createUser();
+        $plainToken = Str::random(64);
+        MagicLinkToken::create(['user_id' => $user->id, 'token' => hash('sha256', $plainToken), 'expires_at' => now()->addMinutes(15)]);
+
+        $response = $this->get(route('magic-link.authenticate', $plainToken).'?intended='.urlencode(config('app.url').'/reports/42'));
+
+        $response->assertRedirect(config('app.url').'/reports/42');
+    }
+
+    public function test_the_emailed_link_carries_the_page_the_user_was_going_to(): void
+    {
+        Notification::fake();
+        $user = $this->createUser();
+
+        $this->withSession(['url.intended' => 'https://localhost/reports/42'])
+            ->post(route('magic-link.store'), ['email' => $user->email]);
+
+        Notification::assertSentTo($user, MagicLinkNotification::class, fn (MagicLinkNotification $n) => str_ends_with($n->url, '?intended='.urlencode('https://localhost/reports/42')));
+    }
+
+    public function test_the_emailed_link_has_no_intended_page_when_there_is_none(): void
+    {
+        Notification::fake();
+        $user = $this->createUser();
+
+        $this->post(route('magic-link.store'), ['email' => $user->email]);
+
+        Notification::assertSentTo($user, MagicLinkNotification::class, fn (MagicLinkNotification $n) => ! str_contains($n->url, 'intended'));
+    }
+
+    public function test_the_page_shows_the_sent_status(): void
+    {
+        $this->withSession(['status' => 'Check your inbox'])
+            ->get(route('magic-link.create'))
+            ->assertInertia(fn ($page) => $page->where('status', 'Check your inbox'));
+    }
+
     public function test_magic_link_is_disabled_by_auth_settings(): void
     {
         $settings = app(AuthSettings::class);

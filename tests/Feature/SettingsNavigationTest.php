@@ -2,6 +2,7 @@
 
 namespace Modules\Auth\Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Auth\Settings\ProfileSection;
 use Tests\TestCase;
@@ -82,5 +83,26 @@ class SettingsNavigationTest extends TestCase
         $this->assertArrayNotHasKey('available_providers', $props);
         $this->assertArrayNotHasKey('has_password', $props['user']);
         $this->assertArrayNotHasKey('social_accounts', $props['user']);
+    }
+
+    public function test_the_profile_section_describes_the_signed_in_user(): void
+    {
+        $user = User::factory()->create(['name' => 'Ada', 'email' => 'ada@example.com']);
+        $this->actingAs($user);
+
+        $this->assertSame([
+            'id' => $user->id,
+            'name' => 'Ada',
+            'email' => 'ada@example.com',
+            'avatar' => $user->avatar,
+            'last_login_at' => $user->last_login_at,
+            'has_uploaded_avatar' => false,
+        ], app(ProfileSection::class)->props()['user']);
+    }
+
+    /** Ten leaves room on both sides for other modules' sections. */
+    public function test_the_profile_section_sorts_at_ten(): void
+    {
+        $this->assertSame(10, app(ProfileSection::class)->order());
     }
 }
