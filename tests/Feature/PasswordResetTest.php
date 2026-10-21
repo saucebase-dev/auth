@@ -5,6 +5,7 @@ namespace Modules\Auth\Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
@@ -109,5 +110,34 @@ class PasswordResetTest extends TestCase
         ]);
 
         $response->assertInvalid('password');
+    }
+
+    public function test_reset_password_page_receives_the_email_and_token(): void
+    {
+        $this->get(route('password.reset', ['token' => 'abc123', 'email' => 'jane@example.com']))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('email', 'jane@example.com')
+                ->where('token', 'abc123'));
+    }
+
+    public function test_reset_password_requires_a_token(): void
+    {
+        $user = $this->createUser();
+
+        $this->post(route('password.store'), [
+            'email' => $user->email,
+            'password' => 'newpassword123',
+            'password_confirmation' => 'newpassword123',
+        ])->assertInvalid('token');
+    }
+
+    public function test_reset_password_requires_a_password(): void
+    {
+        $user = $this->createUser();
+
+        $this->post(route('password.store'), [
+            'token' => Password::createToken($user),
+            'email' => $user->email,
+        ])->assertInvalid('password');
     }
 }

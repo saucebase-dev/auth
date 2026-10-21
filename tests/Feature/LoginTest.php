@@ -199,6 +199,23 @@ class LoginTest extends TestCase
         Event::assertDispatched(Lockout::class);
     }
 
+    /** The lockout key includes the IP: otherwise anyone could lock a user out from anywhere. */
+    public function test_a_lockout_from_one_ip_does_not_lock_out_another(): void
+    {
+        $user = $this->createUser();
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.1'])
+                ->post(route('login'), ['email' => $user->email, 'password' => 'wrong-password']);
+        }
+
+        $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.2'])
+            ->post(route('login'), ['email' => $user->email, 'password' => 'password'])
+            ->assertValid();
+
+        $this->assertAuthenticatedAs($user);
+    }
+
     public function test_successful_login_resets_the_failed_attempt_count(): void
     {
         $user = $this->createUser();
