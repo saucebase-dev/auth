@@ -298,7 +298,8 @@ class MagicLinkTest extends TestCase
         $this->withSession(['url.intended' => 'https://localhost/reports/42'])
             ->post(route('magic-link.store'), ['email' => $user->email]);
 
-        Notification::assertSentTo($user, MagicLinkNotification::class, fn (MagicLinkNotification $n) => str_ends_with($n->url, '?intended='.urlencode('https://localhost/reports/42')));
+        Notification::assertSentTo($user, MagicLinkNotification::class, fn (MagicLinkNotification $n) => str_starts_with($n->url, url('/auth/magic-link/'))
+            && str_ends_with($n->url, '?intended='.urlencode('https://localhost/reports/42')));
     }
 
     public function test_the_emailed_link_has_no_intended_page_when_there_is_none(): void
