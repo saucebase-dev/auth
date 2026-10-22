@@ -16,7 +16,7 @@ export function setup() {
     registerIcon('profile', IconUserCircle);
     registerIcon('security', IconShieldCheck);
     registerAuthActions();
-    registerGlobalComponent('top', ImpersonationAlert);
+    registerGlobalComponent('app::page.before', ImpersonationAlert);
 }
 
 function registerAuthActions() {
