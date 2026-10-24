@@ -38,11 +38,8 @@ It installs PHP and Composer if they're missing. With the CLI already installed,
 **Already have a Saucebase app?** Add it with:
 
 ```bash
-composer require saucebase/auth
-git apply modules/auth/patches/user.patch
-php artisan migrate
-php artisan modules:seed --module=auth
-npm run build
+php artisan saucebase:module-install auth
+npm install && npm run build
 ```
 
 Then make yourself an admin with `php artisan auth:make-admin`.
