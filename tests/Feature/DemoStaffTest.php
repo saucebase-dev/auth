@@ -27,6 +27,13 @@ class DemoStaffTest extends TestCase
         $this->assertEqualsCanonicalizing(['access admin panel', 'manage users', 'impersonate users'], $staff->getAllPermissions()->pluck('name')->all());
     }
 
+    public function test_the_demo_has_one_full_admin_to_sign_in_with(): void
+    {
+        $this->seed([DatabaseSeeder::class, DemoAuthDatabaseSeeder::class]);
+
+        $this->assertSame(['admin'], User::where('email', 'chef@saucebase.dev')->firstOrFail()->getRoleNames()->all());
+    }
+
     public function test_demo_accounts_use_the_configured_demo_password(): void
     {
         config(['saucebase.demo_password' => 'not-the-old-default']);

@@ -27,7 +27,8 @@ class DemoAuthDatabaseSeeder extends Seeder
         );
         $staff->syncRoles('support');
 
-        $user = User::firstOrCreate(
+        // The one account that sees everything: the installer names it in its summary.
+        $admin = User::firstOrCreate(
             ['email' => 'chef@saucebase.dev'],
             [
                 'name' => 'Admin Chef',
@@ -35,6 +36,6 @@ class DemoAuthDatabaseSeeder extends Seeder
             ]
         );
 
-        $user->assignRole('user');
+        $admin->syncRoles(Role::findOrCreate('admin'));
     }
 }
