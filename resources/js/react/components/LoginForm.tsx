@@ -9,10 +9,12 @@ import { useT } from '@saucebase/react/i18n';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import AuthLink from './AuthLink';
+import PasskeyLoginButton from './PasskeyLoginButton';
 import SocialiteProviders from './SocialiteProviders';
 
 type AuthProps = {
     magic_link_enabled?: boolean;
+    passkeys_enabled?: boolean;
     registration_enabled?: boolean;
 };
 
@@ -172,6 +174,10 @@ export default function LoginForm({ modal }: LoginFormProps) {
                 >
                     {t('Log in')}
                 </Button>
+
+                {auth.passkeys_enabled && (
+                    <PasskeyLoginButton remember={data.remember} />
+                )}
 
                 <p className="mt-2 text-center text-sm">
                     {auth.magic_link_enabled && (

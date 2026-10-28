@@ -7,6 +7,7 @@ use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use Laravel\Passkeys\Passkeys;
 use Modules\Auth\Policies\UserPolicy;
 use Modules\Auth\Services\SocialiteService;
 use Modules\Auth\Settings\AuthSettings;
@@ -17,6 +18,16 @@ use STS\FilamentImpersonate\ImpersonateManager;
 
 class AuthServiceProvider extends ModuleServiceProvider
 {
+    public function register(): void
+    {
+        parent::register();
+
+        // The module registers its own passkey routes (routes/web.php), behind the
+        // setting and through the same sign-in as every other method. Set during
+        // register so it lands before the package's provider boots.
+        Passkeys::ignoreRoutes();
+    }
+
     public function boot(): void
     {
         parent::boot();
@@ -40,6 +51,7 @@ class AuthServiceProvider extends ModuleServiceProvider
             'auth.registration_enabled' => fn (): bool => $this->app->make(AuthSettings::class)->registration_enabled,
             'auth.modal_enabled' => fn (): bool => $this->app->make(AuthSettings::class)->modal_enabled,
             'auth.magic_link_enabled' => fn (): bool => $this->app->make(AuthSettings::class)->magic_link_enabled,
+            'auth.passkeys_enabled' => fn (): bool => $this->app->make(AuthSettings::class)->passkeys_enabled,
         ]);
 
         Inertia::share('impersonation', function () {

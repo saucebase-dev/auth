@@ -39,7 +39,8 @@
   "require": {
     "saucebase/core": "^2.0",
     "laravel/socialite": "^5.31",
-    "stechstudio/filament-impersonate": "^5.6.1"
+    "stechstudio/filament-impersonate": "^5.6.1",
+    "laravel/passkeys": "^0.2.1"
   },
   "minimum-stability": "stable"
 }

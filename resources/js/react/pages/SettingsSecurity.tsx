@@ -3,16 +3,25 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Form, router, usePage } from '@inertiajs/react';
+import { usePasskeyRegister } from '@laravel/passkeys/react';
 import { formatDateTime } from '@saucebase/core/lib/dates';
 import { useDialog } from '@saucebase/react/hooks/useDialog';
 import { useT, useTranslation } from '@saucebase/react/i18n';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, KeyRound, Loader2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { providerIcons } from '../components/providerIcons';
 
 type SocialiteProvider = {
     name: string;
     label: string;
+};
+
+type Passkey = {
+    id: number;
+    name: string;
+    authenticator: string | null;
+    last_used_at: string | null;
+    created_at: string;
 };
 
 type SocialAccount = {
@@ -27,6 +36,8 @@ interface SettingsSecurityProps {
         social_accounts?: SocialAccount[];
     };
     available_providers?: SocialiteProvider[];
+    passkeys?: Passkey[];
+    can_add_passkeys?: boolean;
 }
 
 /**
@@ -93,8 +104,8 @@ function PasswordField({
 }
 
 /**
- * How the signed-in user proves who they are: their password, and the social
- * accounts that can sign them in without one.
+ * How the signed-in user proves who they are: their password, their passkeys,
+ * and the social accounts that can sign them in without one.
  *
  * Split out of the profile panel because these are credentials rather than a
  * description of a person — a different question to answer, in a different frame
@@ -103,12 +114,92 @@ function PasswordField({
 export default function SettingsSecurity({
     user,
     available_providers,
+    passkeys = [],
+    can_add_passkeys,
 }: SettingsSecurityProps) {
     const { t, locale } = useTranslation();
     const page = usePage();
     const { confirm } = useDialog();
 
     const [isDisconnecting, setIsDisconnecting] = useState<string | null>(null);
+    const [passkeyName, setPasskeyName] = useState('');
+    const [isRemovingPasskey, setIsRemovingPasskey] = useState<number | null>(
+        null,
+    );
+
+    const passkeysEnabled = !!(
+        page.props.auth as { passkeys_enabled?: boolean }
+    )?.passkeys_enabled;
+
+    /**
+     * The ceremony runs over `fetch`, outside Inertia, so nothing reloads the
+     * panel by itself. A page reload does: the modal refreshes the active
+     * section after any Inertia visit, and the reload also delivers the toast.
+     */
+    const {
+        register,
+        isLoading: isAddingPasskey,
+        errorInstance: addPasskeyError,
+        isSupported: passkeysSupported,
+    } = usePasskeyRegister({
+        routes: {
+            options: route('settings.passkeys.options'),
+            submit: route('settings.passkeys.store'),
+        },
+        onSuccess: () => {
+            setPasskeyName('');
+            router.reload();
+        },
+    });
+
+    // Closing the browser's own prompt is a choice, not something to report.
+    const addPasskeyErrorMessage =
+        addPasskeyError?.name === 'UserCancelledError'
+            ? null
+            : addPasskeyError?.message;
+
+    /**
+     * Shown while the feature is on, and also while the user still holds
+     * passkeys after it was switched off — otherwise they could never remove
+     * them.
+     */
+    const showPasskeys = passkeysEnabled || passkeys.length > 0;
+
+    const canAddPasskey =
+        passkeysEnabled && passkeysSupported && can_add_passkeys !== false;
+
+    const addPasskey = (event: React.FormEvent) => {
+        event.preventDefault();
+
+        const name = passkeyName.trim();
+
+        if (name === '') return;
+
+        void register(name);
+    };
+
+    const removePasskey = async (passkey: Passkey) => {
+        const confirmed = await confirm({
+            title: t('Remove Passkey'),
+            description: t(
+                'You will no longer be able to sign in with ":name". If it is your only way in, you will need to reset your password to get back into your account.',
+                { name: passkey.name },
+            ),
+            confirmLabel: t('Remove'),
+            cancelLabel: t('Cancel'),
+            variant: 'destructive',
+            align: 'left',
+        });
+
+        if (!confirmed) return;
+
+        setIsRemovingPasskey(passkey.id);
+
+        router.delete(route('settings.passkeys.destroy', passkey.id), {
+            preserveUrl: true,
+            onFinish: () => setIsRemovingPasskey(null),
+        });
+    };
 
     const enabledProviders = useMemo<SocialiteProvider[]>(() => {
         const auth = page.props.auth as {
@@ -191,7 +282,9 @@ export default function SettingsSecurity({
     return (
         <div className="space-y-8" data-testid="settings-security-panel">
             <p className="text-muted-foreground text-sm">
-                {t('Your password and the accounts that can sign you in')}
+                {t(
+                    'Your password, passkeys and the accounts that can sign you in',
+                )}
             </p>
 
             {/* Password */}
@@ -251,6 +344,124 @@ export default function SettingsSecurity({
                     )}
                 </Form>
             </div>
+
+            {/* Passkeys */}
+            {showPasskeys && (
+                <>
+                    <Separator />
+
+                    <div className="space-y-4" data-testid="passkeys-section">
+                        <div className="space-y-1">
+                            <h3 className="font-medium">{t('Passkeys')}</h3>
+                            <p className="text-muted-foreground text-sm">
+                                {t(
+                                    'Sign in with your fingerprint, face or screen lock instead of a password.',
+                                )}
+                            </p>
+                        </div>
+
+                        {passkeys.length > 0 ? (
+                            <div className="space-y-3">
+                                {passkeys.map((passkey) => (
+                                    <div
+                                        key={passkey.id}
+                                        className="flex items-center justify-between gap-4 rounded-lg border p-4"
+                                        data-testid="passkey"
+                                    >
+                                        <div className="flex min-w-0 items-center gap-4">
+                                            <KeyRound className="size-6 shrink-0" />
+                                            <div className="min-w-0">
+                                                <p
+                                                    className="truncate font-medium"
+                                                    data-testid="passkey-name"
+                                                >
+                                                    {passkey.name}
+                                                </p>
+                                                <p className="text-muted-foreground text-sm">
+                                                    {passkey.authenticator &&
+                                                        `${passkey.authenticator} · `}
+                                                    {t('Last used')}:{' '}
+                                                    {passkey.last_used_at
+                                                        ? formatDateTime(
+                                                              passkey.last_used_at,
+                                                              locale,
+                                                          )
+                                                        : t('Never')}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            data-testid="remove-passkey"
+                                            disabled={
+                                                isRemovingPasskey === passkey.id
+                                            }
+                                            onClick={() =>
+                                                removePasskey(passkey)
+                                            }
+                                        >
+                                            {isRemovingPasskey ===
+                                                passkey.id && (
+                                                <Loader2 className="mr-2 size-4 animate-spin" />
+                                            )}
+                                            {t('Remove')}
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p
+                                className="text-muted-foreground text-sm"
+                                data-testid="passkeys-empty"
+                            >
+                                {t('No passkeys yet.')}
+                            </p>
+                        )}
+
+                        {canAddPasskey && (
+                            <form
+                                className="space-y-2"
+                                data-testid="add-passkey-form"
+                                onSubmit={addPasskey}
+                            >
+                                <div className="flex gap-2">
+                                    <Input
+                                        name="passkey_name"
+                                        aria-label={t('Passkey name')}
+                                        placeholder={t(
+                                            'Name this passkey, e.g. Work laptop',
+                                        )}
+                                        maxLength={255}
+                                        required
+                                        data-testid="passkey-name-input"
+                                        value={passkeyName}
+                                        onChange={(event) =>
+                                            setPasskeyName(event.target.value)
+                                        }
+                                    />
+                                    <Button
+                                        type="submit"
+                                        disabled={isAddingPasskey}
+                                        data-testid="add-passkey"
+                                    >
+                                        {isAddingPasskey && (
+                                            <Loader2 className="mr-2 size-4 animate-spin" />
+                                        )}
+                                        {t('Add passkey')}
+                                    </Button>
+                                </div>
+                                {addPasskeyErrorMessage && (
+                                    <FieldError data-testid="add-passkey-error">
+                                        {addPasskeyErrorMessage}
+                                    </FieldError>
+                                )}
+                            </form>
+                        )}
+                    </div>
+                </>
+            )}
 
             {/* Connected accounts */}
             {hasSocialiteProviders && (

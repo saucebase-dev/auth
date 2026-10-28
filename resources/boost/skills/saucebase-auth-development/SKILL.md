@@ -7,28 +7,28 @@ description: Work on the Auth module (modules/auth) — login, registration, mag
 
 Paths are relative to `modules/auth/` unless they say otherwise. Commands run from the application root.
 
-Authentication, registration, magic link (passwordless), password reset, email verification, OAuth (Socialite), and user impersonation.
+Authentication, registration, magic link (passwordless), passkeys (WebAuthn, via `laravel/passkeys`), password reset, email verification, OAuth (Socialite), and user impersonation.
 
 ## Key Files
 
 | Layer | Files |
 |-------|-------|
-| Controllers | `LoginController`, `RegisterController`, `SocialiteController`, `ForgotPasswordController`, `ResetPasswordController`, `VerifyEmailController`, `EmailVerificationNotificationController`, `EmailVerificationPromptController`, `PasswordController`, `ProfileController`, `ReimpersonateController`, `MagicLinkController` |
-| Models | `SocialAccount` (provider, tokens, avatar, last_login_at), `MagicLinkToken` (hashed token, expires_at, used_at) |
+| Controllers | `LoginController`, `RegisterController`, `SocialiteController`, `ForgotPasswordController`, `ResetPasswordController`, `VerifyEmailController`, `EmailVerificationNotificationController`, `EmailVerificationPromptController`, `PasswordController`, `ProfileController`, `ReimpersonateController`, `MagicLinkController`, `PasskeyLoginController`, `PasskeyController` |
+| Models | `SocialAccount` (provider, tokens, avatar, last_login_at), `MagicLinkToken` (hashed token, expires_at, used_at), `Laravel\Passkeys\Passkey` (the package's; table shipped by this module) |
 | Service | `SocialiteService` — all OAuth logic (find/create user, link/disconnect accounts) |
 | Requests | `LoginRequest` (credential validation + rate limiting), `RegisterRequest` (password hashing in `passedValidation`), `UpdateProfileInfoRequest`, `UpdateProfileAvatarRequest`, `UpdatePasswordRequest` |
 | Exceptions | `AuthException` (credentials, throttle), `SocialiteException` (disconnect, account linking, provider validation, registration disabled) |
 | Listeners | `AssignUserRole` (Registered), `UpdateUserLastLogin` (Login), `Impersonation` (`EnterImpersonation` — session history), `SendLoginNotification` (`ReturningUserAuthenticated`), `SendWelcomeNotification` (Registered) |
-| Notifications | `WelcomeNotification` (Registered), `MagicLinkNotification` (passwordless login link with configured expiry), `LoginNotification` (new sign-in, only when `login_notification_enabled`) |
+| Notifications | `WelcomeNotification` (Registered), `MagicLinkNotification` (passwordless login link with configured expiry), `LoginNotification` (new sign-in, only when `login_notification_enabled`), `PasskeyAddedNotification` (always, when a passkey is added) |
 | Events | `ReturningUserAuthenticated` — dispatched by password, magic-link and social sign-in, not by registration |
-| Middleware | `EnsureRegistrationEnabled`, `EnsureMagicLinkEnabled`, `EnsureSocialiteProviderEnabled` — each 404s its routes while the setting is off |
-| Settings | `AuthSettings` (`registration_enabled`, `modal_enabled`, `magic_link_enabled`, `magic_link_expiry`, `login_notification_enabled`, `enabled_socialite_providers`) |
+| Middleware | `EnsureRegistrationEnabled`, `EnsureMagicLinkEnabled`, `EnsurePasskeysEnabled`, `EnsureSocialiteProviderEnabled` — each 404s its routes while the setting is off |
+| Settings | `AuthSettings` (`registration_enabled`, `modal_enabled`, `magic_link_enabled`, `magic_link_expiry`, `login_notification_enabled`, `passkeys_enabled`, `enabled_socialite_providers`) |
 | Settings sections | `ProfileSection` (order 10, `Auth::SettingsProfile`), `SecuritySection` (order 15, `Auth::SettingsSecurity`) — panels in core's settings modal |
-| Trait | `Sociable` — added to User model (socialAccounts relation, connected_providers, disconnect) |
+| Trait | `Sociable` — added to User model (socialAccounts relation, connected_providers, disconnect); `user.patch` also adds the package's `PasskeyAuthenticatable` + `PasskeyUser` |
 | Filament | `AuthPlugin`, `AuthenticationSettings`, `UserResource` (list, create, view, edit), `UserForm`, `UsersTable` |
 | Pages | `Login`, `Register`, `ForgotPassword`, `ResetPassword`, `VerifyEmail`, `MagicLink`, `SettingsProfile` + `SettingsSecurity` (settings modal panels) |
 | Layout | `AuthCardLayout` — card with logo, status alerts, page transitions |
-| Component | `SocialiteProviders` — Google/GitHub buttons with divider, `PageHeader` — title with optional back link |
+| Component | `SocialiteProviders` — Google/GitHub buttons with divider, `PasskeyLoginButton` — passkey sign-in under the login form, `PageHeader` — title with optional back link |
 
 ## Frontend
 
@@ -36,7 +36,7 @@ Pages, layouts and components live under `resources/js/`. The module's `resource
 
 ## Routes
 
-**Guest routes** (`/auth/*`): login (GET/POST), register (GET/POST), forgot-password (GET/POST, throttle:6,1), reset-password/{token} (GET, signed), reset-password (POST, throttle:6,1), magic-link (GET/POST, throttle:5,1)
+**Guest routes** (`/auth/*`): login (GET/POST), register (GET/POST), forgot-password (GET/POST, throttle:6,1), reset-password/{token} (GET, signed), reset-password (POST, throttle:6,1), magic-link (GET/POST, throttle:5,1), `auth.passkeys.options` — passkeys/options (GET) and `auth.passkeys.login` — passkeys/login (POST), both JSON, throttle:6,1
 
 **Auth routes** (`/auth/*`): logout (POST — a GET logout is reachable from any other site's markup), verify-email (GET), verify-email/{id}/{hash} (GET, signed), email/verification-notification (POST, throttle:6,1), password (PUT)
 
@@ -44,7 +44,7 @@ Pages, layouts and components live under `resources/js/`. The module's `resource
 
 **Magic Link** (outside guest/auth groups): `magic-link.authenticate` — `/auth/magic-link/{token}` (GET) — must be accessible from email clients
 
-**Account settings** (`/settings/*`, middleware `auth`, `verified`): `settings.profile` (redirects to the `#settings/profile` fragment), `settings.profile.update-info` (PATCH), `settings.profile.update-avatar` (POST), `settings.profile.delete-avatar` (DELETE), `settings.profile.password.update` (PUT)
+**Account settings** (`/settings/*`, middleware `auth`, `verified`): `settings.profile` (redirects to the `#settings/profile` fragment), `settings.profile.update-info` (PATCH), `settings.profile.update-avatar` (POST), `settings.profile.delete-avatar` (DELETE), `settings.profile.password.update` (PUT), `settings.passkeys.options` (GET, JSON) and `settings.passkeys.store` (POST, JSON) behind the setting and throttle:6,1, `settings.passkeys.destroy` — `/settings/passkeys/{passkeyId}` (DELETE, not behind the setting)
 
 The routes are grouped under `settings.profile.*` for history; password and
 socialite disconnect are rendered by the **Security** panel, not Profile.
@@ -83,6 +83,34 @@ Login, register, magic link, socialite and verification redirect to
 `registered` (a new account, including a first social sign-in) or `verified`, so the app
 can send a new account to onboarding. The welcome email links to `route('home')`, which is
 resolved when clicked.
+
+### Passkeys
+Built on `laravel/passkeys` (server) and `@laravel/passkeys` (browser client, Vue and React hooks).
+Both are pre-1.0, so pin and expect upgrade work. The module calls `Passkeys::ignoreRoutes()`
+in `AuthServiceProvider::register()` and registers its own routes, so they sit behind
+`passkeys_enabled` (off by default) and sign in through `Controller::signIn()` like every
+other method — the login notification and welcome-back toast included — then answer
+`{redirect: intended(Home::url(..., login))}`. The client calls them with `fetch`, so they
+answer JSON and the login button follows the redirect with a full page load (the session was
+regenerated). The package's own Actions (`GenerateVerificationOptions`, `VerifyPasskey`,
+`GenerateRegistrationOptions`, `StorePasskey`, `DeletePasskey`) and FormRequests do the
+WebAuthn work; tests stub `VerifyPasskey`/`StorePasskey`.
+
+- The sign-in challenge names no account, so it reveals nothing about which emails exist.
+- **Adding** a passkey is refused (403) while impersonating, and the panel hides the form
+  (`can_add_passkeys`): it would outlive the impersonation as a way back into the account.
+- Adding one always emails the owner (`PasskeyAddedNotification`), the mitigation for a
+  passkey planted from a hijacked session. There is no re-authentication step before adding
+  one: many users have no password to confirm.
+- **Removing** is not behind the setting, and the Security panel lists passkeys while the user
+  still has some, so a passkey added before the feature was switched off can still be removed.
+  Removal is scoped to the user's own relation (404 otherwise). The route parameter is
+  `passkeyId`, not `passkey`: the package binds `{passkey}` globally to any user's passkey.
+- Passkeys don't count as a login method for `SocialiteService::disconnectProvider()`, and
+  nothing stops a user removing their last passkey; forgot-password is the way back in.
+- The `passkeys` table migration is shipped by this module (the package only publishes one).
+- Passkeys are bound to the relying party ID (the host in `APP_URL`) and need HTTPS or
+  `localhost`. Changing the domain invalidates every passkey.
 
 ### Rate Limiting
 `LoginRequest::ensureIsNotRateLimited()` — 5 attempts per `email|ip` key. Fires `Lockout` event, throws `AuthException::throttle($seconds)`. Cleared on success. Covered in PHP (`LoginTest`), not e2e: Playwright workers share one IP, so a lockout there leaks into other login tests.
@@ -184,7 +212,7 @@ php artisan test --testsuite=Modules --filter='^Modules\\Auth\\Tests'  # PHPUnit
 npx playwright test --project="@auth*"                 # E2E
 ```
 
-**E2E coverage**: login (basic, errors, security (CSRF), social, modal, logout), register (basic, errors), forgot-password (basic, errors), verify-email, profile (avatar, socialite settings under the Security panel). Page objects in `tests/e2e/pages/`; specs import the shared `test` fixture from `@e2e/fixtures`.
+**E2E coverage**: login (basic, errors, security (CSRF), social, modal, logout), register (basic, errors), forgot-password (basic, errors), verify-email, profile (avatar, socialite settings under the Security panel), passkeys (add, sign in, remove — Chromium's virtual authenticator, so Chromium only). Page objects in `tests/e2e/pages/`; specs import the shared `test` fixture from `@e2e/fixtures`.
 
 ## Gotchas
 

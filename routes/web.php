@@ -6,6 +6,8 @@ use Modules\Auth\Http\Controllers\EmailVerificationPromptController;
 use Modules\Auth\Http\Controllers\ForgotPasswordController;
 use Modules\Auth\Http\Controllers\LoginController;
 use Modules\Auth\Http\Controllers\MagicLinkController;
+use Modules\Auth\Http\Controllers\PasskeyController;
+use Modules\Auth\Http\Controllers\PasskeyLoginController;
 use Modules\Auth\Http\Controllers\PasswordController;
 use Modules\Auth\Http\Controllers\ProfileController;
 use Modules\Auth\Http\Controllers\RegisterController;
@@ -13,6 +15,7 @@ use Modules\Auth\Http\Controllers\ReimpersonateController;
 use Modules\Auth\Http\Controllers\ResetPasswordController;
 use Modules\Auth\Http\Controllers\SocialiteController;
 use Modules\Auth\Http\Controllers\VerifyEmailController;
+use Modules\Auth\Http\Middleware\EnsurePasskeysEnabled;
 use Modules\Auth\Http\Middleware\EnsureRegistrationEnabled;
 use Modules\Auth\Http\Middleware\EnsureSocialiteProviderEnabled;
 
@@ -55,6 +58,18 @@ Route::middleware('web')->group(function (): void {
             Route::post('magic-link', [MagicLinkController::class, 'store'])
                 ->middleware('throttle:5,1')
                 ->name('magic-link.store');
+
+            /*
+             * Passkey sign-in. Called with `fetch` by `@laravel/passkeys`, so
+             * both answer JSON. Throttled like the other credential endpoints.
+             */
+            Route::middleware([EnsurePasskeysEnabled::class, 'throttle:6,1'])->group(function (): void {
+                Route::get('passkeys/options', [PasskeyLoginController::class, 'options'])
+                    ->name('auth.passkeys.options');
+
+                Route::post('passkeys/login', [PasskeyLoginController::class, 'store'])
+                    ->name('auth.passkeys.login');
+            });
         });
 
         Route::middleware('auth')->group(function (): void {
@@ -141,6 +156,20 @@ Route::middleware('web')->group(function (): void {
 
             Route::put('profile/password', [PasswordController::class, 'update'])
                 ->name('settings.profile.password.update');
+
+            Route::middleware([EnsurePasskeysEnabled::class, 'throttle:6,1'])->group(function (): void {
+                Route::get('passkeys/options', [PasskeyController::class, 'options'])
+                    ->name('settings.passkeys.options');
+
+                Route::post('passkeys', [PasskeyController::class, 'store'])
+                    ->name('settings.passkeys.store');
+            });
+
+            // Not behind the setting: a passkey added before the feature was
+            // switched off can still be removed, like a disabled social provider.
+            Route::delete('passkeys/{passkeyId}', [PasskeyController::class, 'destroy'])
+                ->whereNumber('passkeyId')
+                ->name('settings.passkeys.destroy');
         });
     });
 });

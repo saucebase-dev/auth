@@ -30,6 +30,23 @@ return [
         'enabled' => 'Open sign-in and sign-up in a modal',
         'help' => 'Links on the site open sign-in and registration over the current page. Their URLs still work on their own, so a typed, bookmarked or shared link lands on the full page.',
     ],
+    'passkeys' => [
+        'title' => 'Passkeys',
+        'description' => 'Let users sign in with a passkey stored on their device or password manager.',
+        'enabled' => 'Enable passkeys',
+        'help' => 'Users add passkeys from their Security settings. The site must be served over HTTPS from the host in APP_URL; changing that host invalidates every passkey.',
+        'added' => 'Passkey added.',
+        'removed' => 'Passkey removed.',
+        'impersonating' => 'Passkeys cannot be added while impersonating a user.',
+    ],
+    'passkey-added-notification' => [
+        'subject' => 'A passkey was added to your :app account',
+        'greeting' => 'Hello :name,',
+        'notice' => 'A passkey named ":passkey" was just added to your :app account. It can be used to sign in without a password.',
+        'recognized' => 'If this was you, no action is needed.',
+        'action' => 'Review your passkeys',
+        'unrecognized' => "If you don't recognize this passkey, remove it and reset your password immediately.",
+    ],
     'notifications' => [
         'title' => 'Notifications',
         'description' => 'Configure security notifications sent to users.',

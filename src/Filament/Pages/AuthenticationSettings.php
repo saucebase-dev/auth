@@ -82,6 +82,16 @@ class AuthenticationSettings extends SettingsPage
                         ->suffix(__('minutes')),
                 ])
                 ->columns(1),
+            Section::make(__('auth::auth.passkeys.title'))
+                ->description(__('auth::auth.passkeys.description'))
+                ->icon(Heroicon::OutlinedFingerPrint)
+                ->schema([
+                    Toggle::make('passkeys_enabled')
+                        ->label(__('auth::auth.passkeys.enabled'))
+                        ->helperText(__('auth::auth.passkeys.help'))
+                        ->extraAttributes(['data-testid' => 'admin-passkeys-enabled']),
+                ])
+                ->columns(1),
             Section::make(__('auth::auth.notifications.title'))
                 ->description(__('auth::auth.notifications.description'))
                 ->icon(Heroicon::OutlinedBellAlert)

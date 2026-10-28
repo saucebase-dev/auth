@@ -6,6 +6,7 @@ declare module '@inertiajs/core' {
             user: User | null;
             last_social_provider?: string | null;
             magic_link_enabled?: boolean;
+            passkeys_enabled?: boolean;
             registration_enabled?: boolean;
             modal_enabled?: boolean;
             socialite_providers?: Array<{
