@@ -172,13 +172,17 @@ Route::middleware('web')->group(function (): void {
                 ->middleware('throttle:6,1')
                 ->name('password.confirm.store');
 
-            Route::middleware([EnsurePasskeysEnabled::class, 'throttle:passkeys'])->group(function (): void {
+            // Not behind the setting, like removal below: with the feature off, a
+            // user with no password can still prove it's them to remove a passkey.
+            Route::middleware('throttle:passkeys')->group(function (): void {
                 Route::get('passkeys/confirm/options', [PasskeyConfirmationController::class, 'index'])
                     ->name('settings.passkeys.confirm.options');
 
                 Route::post('passkeys/confirm', [PasskeyConfirmationController::class, 'store'])
                     ->name('settings.passkeys.confirm');
+            });
 
+            Route::middleware([EnsurePasskeysEnabled::class, 'throttle:passkeys'])->group(function (): void {
                 Route::get('passkeys/options', [PasskeyController::class, 'options'])
                     ->middleware('password.confirm')
                     ->name('settings.passkeys.options');

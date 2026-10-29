@@ -13,7 +13,7 @@ Authentication, registration, magic link (passwordless), passkeys (WebAuthn, via
 
 | Layer | Files |
 |-------|-------|
-| Controllers | `LoginController`, `RegisterController`, `SocialiteController`, `ForgotPasswordController`, `ResetPasswordController`, `VerifyEmailController`, `EmailVerificationNotificationController`, `EmailVerificationPromptController`, `PasswordController`, `ProfileController`, `ReimpersonateController`, `MagicLinkController`, `PasskeyLoginController`, `PasskeyController` |
+| Controllers | `LoginController`, `RegisterController`, `SocialiteController`, `ForgotPasswordController`, `ResetPasswordController`, `VerifyEmailController`, `EmailVerificationNotificationController`, `EmailVerificationPromptController`, `PasswordController`, `ProfileController`, `ReimpersonateController`, `MagicLinkController`, `PasskeyLoginController`, `PasskeyController`, `ConfirmPasswordController` |
 | Models | `SocialAccount` (provider, tokens, avatar, last_login_at), `MagicLinkToken` (hashed token, expires_at, used_at), `Laravel\Passkeys\Passkey` (the package's; table shipped by this module) |
 | Service | `SocialiteService` — all OAuth logic (find/create user, link/disconnect accounts) |
 | Requests | `LoginRequest` (credential validation + rate limiting), `RegisterRequest` (password hashing in `passedValidation`), `UpdateProfileInfoRequest`, `UpdateProfileAvatarRequest`, `UpdatePasswordRequest` |
@@ -44,7 +44,7 @@ Pages, layouts and components live under `resources/js/`. The module's `resource
 
 **Magic Link** (outside guest/auth groups): `magic-link.authenticate` — `/auth/magic-link/{token}` (GET) — must be accessible from email clients
 
-**Account settings** (`/settings/*`, middleware `auth`, `verified`): `settings.profile` (redirects to the `#settings/profile` fragment), `settings.profile.update-info` (PATCH), `settings.profile.update-avatar` (POST), `settings.profile.delete-avatar` (DELETE), `settings.profile.password.update` (PUT), `settings.passkeys.options` (GET, JSON) and `settings.passkeys.store` (POST, JSON) behind the setting and `throttle:passkeys`, `settings.passkeys.destroy` — `/settings/passkeys/{passkeyId}` (DELETE, not behind the setting)
+**Account settings** (`/settings/*`, middleware `auth`, `verified`): `settings.profile` (redirects to the `#settings/profile` fragment), `settings.profile.update-info` (PATCH), `settings.profile.update-avatar` (POST), `settings.profile.delete-avatar` (DELETE), `settings.profile.password.update` (PUT), `password.confirm` — `/settings/confirm-password` (GET, where Laravel's `password.confirm` middleware sends what it stops) and `password.confirm.store` (POST, `throttle:6,1`), `settings.passkeys.confirm.options` (GET) and `settings.passkeys.confirm` (POST) — confirm with a passkey, `throttle:passkeys`, not behind the setting, `settings.passkeys.options` (GET, JSON) and `settings.passkeys.store` (POST, JSON) behind the setting, `throttle:passkeys` and `password.confirm`, `settings.passkeys.destroy` — `/settings/passkeys/{passkeyId}` (DELETE, `password.confirm`, not behind the setting)
 
 The routes are grouped under `settings.profile.*` for history; password and
 socialite disconnect are rendered by the **Security** panel, not Profile.
@@ -99,11 +99,12 @@ WebAuthn work; tests stub `VerifyPasskey`/`StorePasskey`.
 - The sign-in challenge names no account, so it reveals nothing about which emails exist.
 - **Adding** a passkey is refused (403) while impersonating, and the panel hides the form
   (`can_add_passkeys`): it would outlive the impersonation as a way back into the account.
-- Adding one always emails the owner (`PasskeyAddedNotification`), the mitigation for a
-  passkey planted from a hijacked session. There is no re-authentication step before adding
-  one: many users have no password to confirm.
-- **Removing** is not behind the setting, and the Security panel lists passkeys while the user
-  still has some, so a passkey added before the feature was switched off can still be removed.
+- Adding or removing one needs a recent confirmation (`password.confirm`); see below. Adding
+  one also emails the owner (`PasskeyAddedNotification`), queued with `beforeCommit()` in the
+  same transaction as the passkey, so a queue failure keeps no passkey.
+- **Removing** is not behind the setting, nor is confirming with a passkey, and the Security
+  panel lists passkeys while the user still has some: a passkey added before the feature was
+  switched off can still be removed, by a user with no password too.
   Removal is scoped to the user's own relation (404 otherwise). The route parameter is
   `passkeyId`, not `passkey`: the package binds `{passkey}` globally to any user's passkey.
 - Passkeys don't count as a login method for `SocialiteService::disconnectProvider()`, and
@@ -111,6 +112,24 @@ WebAuthn work; tests stub `VerifyPasskey`/`StorePasskey`.
 - The `passkeys` table migration is shipped by this module (the package only publishes one).
 - Passkeys are bound to the relying party ID (the host in `APP_URL`) and need HTTPS or
   `localhost`. Changing the domain invalidates every passkey.
+
+### Confirming it's you
+Adding or removing a passkey, and changing the email, need fresh proof: Laravel's
+`password.confirm` and `auth.password_timeout`, the same `auth.password_confirmed_at` session key.
+
+- `ConfirmIdentityDialog` (Vue and React) takes the password (`password.confirm.store`) or a
+  passkey (the package's `PasskeyConfirmationController`). It posts over JSON through core's
+  `useHttp`, never as an Inertia visit: a visit reloads the panel and overwrites the passkey
+  challenge in the session.
+- The panels get `password_confirmed_until` and `password_timeout` (`PasswordConfirmation::props()`),
+  never a boolean, and ask again 30s early (`lib/passwordConfirmation.ts`). An email change is
+  checked in `ProfileController`, since a route middleware can't tell it from a name change.
+- When the server still refuses: `confirm_identity` comes back as a validation error (email
+  change, and `ConfirmPasswordController::show()` for a stopped Inertia visit), and the panel
+  reopens the dialog and retries. A failed add only marks the session unconfirmed: the
+  passkeys client keeps no status code.
+- `ForgetPasswordConfirmation` drops the confirmation on entering and leaving impersonation,
+  so one account's password never vouches for another.
 
 ### Rate Limiting
 `LoginRequest::ensureIsNotRateLimited()` — 5 attempts per `email|ip` key. Fires `Lockout` event, throws `AuthException::throttle($seconds)`. Cleared on success. Covered in PHP (`LoginTest`), not e2e: Playwright workers share one IP, so a lockout there leaks into other login tests.
@@ -212,7 +231,7 @@ php artisan test --testsuite=Modules --filter='^Modules\\Auth\\Tests'  # PHPUnit
 npx playwright test --project="@auth*"                 # E2E
 ```
 
-**E2E coverage**: login (basic, errors, security (CSRF), social, modal, logout), register (basic, errors), forgot-password (basic, errors), verify-email, profile (avatar, socialite settings under the Security panel), passkeys (add, sign in, remove — Chromium's virtual authenticator, so Chromium only). Page objects in `tests/e2e/pages/`; specs import the shared `test` fixture from `@e2e/fixtures`.
+**E2E coverage**: login (basic, errors, security (CSRF), social, modal, logout), register (basic, errors), forgot-password (basic, errors), verify-email, profile (avatar, socialite settings under the Security panel), passkeys (add, sign in, remove, each confirmed — Chromium's virtual authenticator, so Chromium only), confirm-identity (email change). Page objects in `tests/e2e/pages/`; specs import the shared `test` fixture from `@e2e/fixtures`.
 
 ## Gotchas
 

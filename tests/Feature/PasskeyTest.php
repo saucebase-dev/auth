@@ -411,6 +411,22 @@ class PasskeyTest extends TestCase
         $this->assertModelMissing($passkey);
     }
 
+    /**
+     * Removing still needs fresh proof after the feature is off, and a user with no
+     * password can only give it with a passkey.
+     */
+    public function test_a_passkey_still_confirms_the_session_after_the_feature_is_switched_off(): void
+    {
+        $user = $this->createUser();
+        $this->createPasskey($user);
+
+        $this->setPasskeysEnabled(false);
+
+        $this->actingAs($user)
+            ->getJson(route('settings.passkeys.confirm.options'))
+            ->assertOk();
+    }
+
     public function test_a_user_cannot_remove_another_users_passkey(): void
     {
         $passkey = $this->createPasskey($this->createUser());
