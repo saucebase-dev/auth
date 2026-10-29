@@ -9,10 +9,13 @@ import { useLocalization } from '@saucebase/vue/composables/useLocalization';
 import { formatDateTime } from '@saucebase/core/lib/dates';
 import { Form, router, usePage } from '@inertiajs/vue3';
 import { usePasskeyRegister } from '@laravel/passkeys/vue';
-import { KeyRound, Loader2 } from '@lucide/vue';
+import { KeyRound, Loader2, Trash2 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import ConfirmIdentityDialog from '../components/ConfirmIdentityDialog.vue';
 import { providerIcons } from '../components/providerIcons';
+import { deviceName } from '../../lib/deviceName';
+import { confirmedFor, isConfirmed } from '../../lib/passwordConfirmation';
 
 type SocialiteProvider = {
     name: string;
@@ -47,6 +50,8 @@ const props = defineProps<{
     available_providers?: SocialiteProvider[];
     passkeys?: Passkey[];
     can_add_passkeys?: boolean;
+    password_confirmed_until?: number | null;
+    password_timeout: number;
 }>();
 
 const page = usePage();
@@ -126,13 +131,39 @@ const passkeyName = ref('');
 const isRemovingPasskey = ref<number | null>(null);
 
 /**
+ * Adding or removing a passkey needs fresh proof (`password.confirm` on the routes).
+ * Ask first when the session has none, then run the action the user chose.
+ */
+const confirmedUntil = ref(props.password_confirmed_until ?? null);
+const confirmingIdentity = ref(false);
+let afterConfirmation: (() => void) | null = null;
+
+watch(
+    () => props.password_confirmed_until,
+    (until) => (confirmedUntil.value = until ?? null),
+);
+
+const withConfirmation = (action: () => void) => {
+    if (isConfirmed(confirmedUntil.value)) return action();
+
+    afterConfirmation = action;
+    confirmingIdentity.value = true;
+};
+
+const onIdentityConfirmed = () => {
+    confirmedUntil.value = confirmedFor(props.password_timeout);
+    afterConfirmation?.();
+    afterConfirmation = null;
+};
+
+/**
  * The ceremony runs over `fetch`, outside Inertia, so nothing reloads the panel
  * by itself. A page reload does: the modal refreshes the active section after
  * any Inertia visit, and the reload also delivers the success toast.
  */
 const {
     register,
-    isLoading: isAddingPasskey,
+    isLoading: isRegistering,
     errorInstance: addPasskeyError,
     isSupported: passkeysSupported,
 } = usePasskeyRegister({
@@ -141,9 +172,39 @@ const {
         submit: route('settings.passkeys.store'),
     },
     onSuccess: () => {
-        passkeyName.value = '';
+        isRefreshingPasskeys.value = true;
         router.reload();
     },
+});
+
+/**
+ * The toast lands with the reload, but the list only with the section refresh
+ * after it, a moment later. Stay busy until the new list arrives, so the gap
+ * doesn't read as a failure.
+ */
+const isRefreshingPasskeys = ref(false);
+
+watch(
+    () => props.passkeys,
+    () => {
+        if (!isRefreshingPasskeys.value) return;
+
+        isRefreshingPasskeys.value = false;
+        passkeyName.value = '';
+    },
+);
+
+const isAddingPasskey = computed(
+    () => isRegistering.value || isRefreshingPasskeys.value,
+);
+
+/**
+ * A plain `Error` is a failed request, a 423 among them when the confirmation ran
+ * out early: ask again next time rather than keep trusting it. The package's own
+ * errors (cancelled, already registered) say nothing about the confirmation.
+ */
+watch(addPasskeyError, (error) => {
+    if (error?.name === 'Error') confirmedUntil.value = null;
 });
 
 /** Closing the browser's own prompt is a choice, not something to report. */
@@ -160,12 +221,16 @@ const canAddPasskey = computed(
         props.can_add_passkeys !== false,
 );
 
+/** "Chrome on macOS": the placeholder, and the name when the field is left empty. */
+const defaultPasskeyName =
+    typeof navigator === 'undefined' ? null : deviceName(navigator.userAgent);
+
 const addPasskey = () => {
-    const name = passkeyName.value.trim();
+    const name = passkeyName.value.trim() || defaultPasskeyName;
 
-    if (name === '') return;
+    if (!name) return;
 
-    void register(name);
+    withConfirmation(() => void register(name));
 };
 
 const removePasskey = async (passkey: Passkey) => {
@@ -176,6 +241,7 @@ const removePasskey = async (passkey: Passkey) => {
             { name: passkey.name },
         ),
         confirmLabel: trans('Remove'),
+        icon: Trash2,
         cancelLabel: trans('Cancel'),
         variant: 'destructive',
         align: 'left',
@@ -183,10 +249,21 @@ const removePasskey = async (passkey: Passkey) => {
 
     if (!confirmed) return;
 
+    withConfirmation(() => deletePasskey(passkey));
+};
+
+const deletePasskey = (passkey: Passkey) => {
     isRemovingPasskey.value = passkey.id;
 
     router.delete(route('settings.passkeys.destroy', passkey.id), {
         preserveUrl: true,
+        // The confirmation ran out on the server first: ask, then try again.
+        onError: (errors) => {
+            if (!errors.confirm_identity) return;
+
+            confirmedUntil.value = null;
+            withConfirmation(() => deletePasskey(passkey));
+        },
         onFinish: () => {
             isRemovingPasskey.value = null;
         },
@@ -310,62 +387,6 @@ const initiateDisconnect = async (provider: string) => {
                     </p>
                 </div>
 
-                <div v-if="passkeys?.length" class="space-y-3">
-                    <div
-                        v-for="passkey in passkeys"
-                        :key="passkey.id"
-                        class="flex items-center justify-between gap-4 rounded-lg border p-4"
-                        data-testid="passkey"
-                    >
-                        <div class="flex min-w-0 items-center gap-4">
-                            <KeyRound class="size-6 shrink-0" />
-                            <div class="min-w-0">
-                                <p
-                                    class="truncate font-medium"
-                                    data-testid="passkey-name"
-                                >
-                                    {{ passkey.name }}
-                                </p>
-                                <p class="text-muted-foreground text-sm">
-                                    <template v-if="passkey.authenticator">
-                                        {{ passkey.authenticator }} ·
-                                    </template>
-                                    {{ $t('Last used') }}:
-                                    {{
-                                        passkey.last_used_at
-                                            ? formatDateTime(
-                                                  passkey.last_used_at,
-                                                  language,
-                                              )
-                                            : $t('Never')
-                                    }}
-                                </p>
-                            </div>
-                        </div>
-
-                        <Button
-                            variant="destructive"
-                            size="sm"
-                            data-testid="remove-passkey"
-                            :disabled="isRemovingPasskey === passkey.id"
-                            @click="removePasskey(passkey)"
-                        >
-                            <Loader2
-                                v-if="isRemovingPasskey === passkey.id"
-                                class="mr-2 size-4 animate-spin"
-                            />
-                            {{ $t('Remove') }}
-                        </Button>
-                    </div>
-                </div>
-                <p
-                    v-else
-                    class="text-muted-foreground text-sm"
-                    data-testid="passkeys-empty"
-                >
-                    {{ $t('No passkeys yet.') }}
-                </p>
-
                 <form
                     v-if="canAddPasskey"
                     class="space-y-2"
@@ -378,10 +399,11 @@ const initiateDisconnect = async (provider: string) => {
                             name="passkey_name"
                             :aria-label="$t('Passkey name')"
                             :placeholder="
+                                defaultPasskeyName ??
                                 $t('Name this passkey, e.g. Work laptop')
                             "
                             maxlength="255"
-                            required
+                            :required="!defaultPasskeyName"
                             data-testid="passkey-name-input"
                         />
                         <Button
@@ -403,6 +425,81 @@ const initiateDisconnect = async (provider: string) => {
                         {{ addPasskeyErrorMessage }}
                     </FieldError>
                 </form>
+
+                <div
+                    v-if="!passkeys?.length"
+                    class="flex flex-col items-center gap-2 rounded-lg border border-dashed px-6 py-10 text-center"
+                    data-testid="passkeys-empty"
+                >
+                    <div
+                        class="bg-muted flex size-10 items-center justify-center rounded-full"
+                    >
+                        <KeyRound class="text-muted-foreground size-5" />
+                    </div>
+                    <p class="font-medium">{{ $t('No passkeys yet.') }}</p>
+                </div>
+
+                <div v-else class="space-y-3">
+                    <div
+                        v-for="passkey in passkeys"
+                        :key="passkey.id"
+                        class="bg-card flex items-center gap-4 rounded-lg border px-4 py-3"
+                        data-testid="passkey"
+                    >
+                        <div
+                            class="bg-background grid size-10 shrink-0 place-items-center rounded-lg border"
+                        >
+                            <KeyRound class="size-4" />
+                        </div>
+
+                        <div class="min-w-0 flex-1">
+                            <p
+                                class="truncate font-medium"
+                                data-testid="passkey-name"
+                            >
+                                {{ passkey.name }}
+                            </p>
+                            <p
+                                class="text-muted-foreground mt-1 flex flex-wrap gap-x-2 text-xs"
+                            >
+                                <span v-if="passkey.authenticator">{{
+                                    passkey.authenticator
+                                }}</span>
+                                <span>
+                                    {{ $t('Last used') }}:
+                                    <span
+                                        :class="{
+                                            'text-foreground font-medium':
+                                                !passkey.last_used_at,
+                                        }"
+                                        >{{
+                                            passkey.last_used_at
+                                                ? formatDateTime(
+                                                      passkey.last_used_at,
+                                                      language,
+                                                  )
+                                                : $t('Never')
+                                        }}</span
+                                    >
+                                </span>
+                            </p>
+                        </div>
+
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            data-testid="remove-passkey"
+                            :disabled="isRemovingPasskey === passkey.id"
+                            @click="removePasskey(passkey)"
+                        >
+                            <Loader2
+                                v-if="isRemovingPasskey === passkey.id"
+                                class="size-4 animate-spin"
+                            />
+                            {{ $t('Remove') }}
+                        </Button>
+                    </div>
+                </div>
             </div>
         </template>
 
@@ -491,5 +588,11 @@ const initiateDisconnect = async (provider: string) => {
                 </div>
             </div>
         </template>
+
+        <ConfirmIdentityDialog
+            v-model:open="confirmingIdentity"
+            :has-passkeys="(passkeys?.length ?? 0) > 0"
+            @confirmed="onIdentityConfirmed"
+        />
     </div>
 </template>

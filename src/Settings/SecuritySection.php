@@ -2,6 +2,7 @@
 
 namespace Modules\Auth\Settings;
 
+use Modules\Auth\Support\PasswordConfirmation;
 use Saucebase\Core\Settings\SettingsSection;
 use STS\FilamentImpersonate\ImpersonateManager;
 
@@ -69,6 +70,7 @@ class SecuritySection extends SettingsSection
                 ])
                 ->all(),
             'can_add_passkeys' => ! app(ImpersonateManager::class)->isImpersonating(),
+            ...PasswordConfirmation::props(),
         ];
     }
 }

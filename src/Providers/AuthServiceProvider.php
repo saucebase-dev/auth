@@ -4,8 +4,11 @@ namespace Modules\Auth\Providers;
 
 use App\Models\User;
 use Filament\Facades\Filament;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Inertia;
 use Laravel\Passkeys\Passkeys;
 use Modules\Auth\Policies\UserPolicy;
@@ -33,6 +36,12 @@ class AuthServiceProvider extends ModuleServiceProvider
         parent::boot();
 
         Gate::policy(User::class, UserPolicy::class);
+
+        // `throttle:passkeys`: its own counter, so a sign-in (two requests) does not
+        // share the per-address budget of password and magic-link sign-in. Keyed by
+        // user, falling back to the address for guests.
+        RateLimiter::for('passkeys', fn (Request $request): Limit => Limit::perMinute(10)
+            ->by((string) ($request->user()?->getAuthIdentifier() ?? $request->ip())));
 
         // Every impersonate button asks the same question the controllers do.
         Impersonate::configureUsing(fn (Impersonate $action) => $action

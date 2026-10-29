@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Laravel\Passkeys\Http\Controllers\PasskeyConfirmationController;
+use Modules\Auth\Http\Controllers\ConfirmPasswordController;
 use Modules\Auth\Http\Controllers\EmailVerificationNotificationController;
 use Modules\Auth\Http\Controllers\EmailVerificationPromptController;
 use Modules\Auth\Http\Controllers\ForgotPasswordController;
@@ -63,7 +65,7 @@ Route::middleware('web')->group(function (): void {
              * Passkey sign-in. Called with `fetch` by `@laravel/passkeys`, so
              * both answer JSON. Throttled like the other credential endpoints.
              */
-            Route::middleware([EnsurePasskeysEnabled::class, 'throttle:6,1'])->group(function (): void {
+            Route::middleware([EnsurePasskeysEnabled::class, 'throttle:passkeys'])->group(function (): void {
                 Route::get('passkeys/options', [PasskeyLoginController::class, 'options'])
                     ->name('auth.passkeys.options');
 
@@ -157,17 +159,39 @@ Route::middleware('web')->group(function (): void {
             Route::put('profile/password', [PasswordController::class, 'update'])
                 ->name('settings.profile.password.update');
 
-            Route::middleware([EnsurePasskeysEnabled::class, 'throttle:6,1'])->group(function (): void {
+            /*
+             * Fresh proof before adding or removing a passkey or changing the email:
+             * the password, or one of the user's passkeys (the package's own
+             * confirmation controller). `password.confirm` sends anything it stops
+             * here, which opens the Security panel where the dialog lives.
+             */
+            Route::get('confirm-password', [ConfirmPasswordController::class, 'show'])
+                ->name('password.confirm');
+
+            Route::post('confirm-password', [ConfirmPasswordController::class, 'store'])
+                ->middleware('throttle:6,1')
+                ->name('password.confirm.store');
+
+            Route::middleware([EnsurePasskeysEnabled::class, 'throttle:passkeys'])->group(function (): void {
+                Route::get('passkeys/confirm/options', [PasskeyConfirmationController::class, 'index'])
+                    ->name('settings.passkeys.confirm.options');
+
+                Route::post('passkeys/confirm', [PasskeyConfirmationController::class, 'store'])
+                    ->name('settings.passkeys.confirm');
+
                 Route::get('passkeys/options', [PasskeyController::class, 'options'])
+                    ->middleware('password.confirm')
                     ->name('settings.passkeys.options');
 
                 Route::post('passkeys', [PasskeyController::class, 'store'])
+                    ->middleware('password.confirm')
                     ->name('settings.passkeys.store');
             });
 
             // Not behind the setting: a passkey added before the feature was
             // switched off can still be removed, like a disabled social provider.
             Route::delete('passkeys/{passkeyId}', [PasskeyController::class, 'destroy'])
+                ->middleware('password.confirm')
                 ->whereNumber('passkeyId')
                 ->name('settings.passkeys.destroy');
         });

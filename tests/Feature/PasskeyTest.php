@@ -6,10 +6,14 @@ use App\Models\User;
 use CBOR\ByteStringObject;
 use CBOR\MapObject;
 use CBOR\TextStringObject;
+use Illuminate\Contracts\Notifications\Dispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Queue\Connectors\ConnectorInterface;
+use Illuminate\Queue\SyncQueue;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Passkeys\Actions\StorePasskey;
 use Laravel\Passkeys\Actions\VerifyPasskey;
 use Laravel\Passkeys\Exceptions\InvalidPasskeyException;
@@ -20,6 +24,7 @@ use Modules\Auth\Notifications\PasskeyAddedNotification;
 use Modules\Auth\Settings\AuthSettings;
 use Modules\Auth\Settings\SecuritySection;
 use ParagonIE\ConstantTime\Base64UrlSafe;
+use RuntimeException;
 use Saucebase\Core\Facades\Home;
 use STS\FilamentImpersonate\ImpersonateManager;
 use Tests\TestCase;
@@ -46,6 +51,9 @@ class PasskeyTest extends TestCase
         parent::setUp();
 
         $this->setPasskeysEnabled(true);
+
+        // Managing passkeys needs a recent confirmation; the gate has its own tests.
+        $this->withSession(['auth.password_confirmed_at' => time()]);
     }
 
     public function test_passkey_routes_return_404_while_the_feature_is_off(): void
@@ -59,6 +67,19 @@ class PasskeyTest extends TestCase
 
         $this->getJson(route('settings.passkeys.options'))->assertNotFound();
         $this->postJson(route('settings.passkeys.store'))->assertNotFound();
+    }
+
+    public function test_passkey_sign_in_has_its_own_rate_limit(): void
+    {
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            $this->getJson(route('auth.passkeys.options'))->assertOk();
+        }
+
+        $this->getJson(route('auth.passkeys.options'))->assertTooManyRequests();
+
+        // Its own counter: a run of passkey attempts leaves other sign-in routes alone.
+        $this->post(route('password.email'), ['email' => 'nobody@example.com'])
+            ->assertStatus(302);
     }
 
     public function test_the_package_routes_are_not_registered(): void
@@ -227,6 +248,117 @@ class PasskeyTest extends TestCase
             PasskeyAddedNotification::class,
             fn (PasskeyAddedNotification $notification): bool => $notification->passkeyName === 'Work laptop',
         );
+    }
+
+    public function test_managing_passkeys_needs_a_recent_confirmation(): void
+    {
+        session()->forget('auth.password_confirmed_at');
+
+        $user = $this->createUser();
+        $passkey = $this->createPasskey($user);
+
+        $this->actingAs($user)->getJson(route('settings.passkeys.options'))->assertStatus(423);
+        $this->actingAs($user)->postJson(route('settings.passkeys.store'))->assertStatus(423);
+        $this->actingAs($user)
+            ->delete(route('settings.passkeys.destroy', $passkey->id))
+            ->assertRedirect(route('password.confirm'));
+
+        $this->assertModelExists($passkey);
+    }
+
+    public function test_one_of_the_users_passkeys_confirms_the_session(): void
+    {
+        session()->forget('auth.password_confirmed_at');
+
+        $user = $this->createUser();
+        $passkey = $this->createPasskey($user);
+
+        $this->actingAs($user)
+            ->getJson(route('settings.passkeys.confirm.options'))
+            ->assertOk()
+            ->assertJsonStructure(['options' => ['challenge', 'allowCredentials']]);
+
+        $this->mock(VerifyPasskey::class)
+            ->shouldReceive('__invoke')
+            ->once()
+            ->withArgs(fn ($credential, $options, $owner): bool => $owner->is($user))
+            ->andReturn($passkey);
+
+        $this->withSession(['passkey.verification_options' => WebAuthn::toJson($this->requestOptions())])
+            ->postJson(route('settings.passkeys.confirm'), ['credential' => $this->assertionCredential()])
+            ->assertSuccessful();
+
+        $this->assertNotNull(session('auth.password_confirmed_at'));
+    }
+
+    public function test_a_failed_alert_leaves_no_passkey_behind(): void
+    {
+        $user = $this->createUser();
+
+        $this->mock(StorePasskey::class)
+            ->shouldReceive('__invoke')
+            ->andReturnUsing(fn (User $owner, string $name): Passkey => $this->createPasskey($owner, $name));
+
+        $this->mock(Dispatcher::class)
+            ->shouldReceive('send')
+            ->andThrow(new RuntimeException('Queue is down'));
+
+        $this->actingAs($user)
+            ->withSession(['passkey.registration_options' => WebAuthn::toJson($this->creationOptions($user))])
+            ->postJson(route('settings.passkeys.store'), [
+                'name' => 'Work laptop',
+                'credential' => $this->attestationCredential(),
+            ])
+            ->assertServerError();
+
+        $this->assertSame(0, $user->passkeys()->count());
+    }
+
+    /**
+     * With `after_commit` on the queue connection the alert would be pushed only after
+     * the passkey had committed, so a queue failure there left a passkey behind.
+     */
+    public function test_a_failed_alert_leaves_no_passkey_behind_when_queues_wait_for_commit(): void
+    {
+        $user = $this->createUser();
+
+        $this->mock(StorePasskey::class)
+            ->shouldReceive('__invoke')
+            ->andReturnUsing(fn (User $owner, string $name): Passkey => $this->createPasskey($owner, $name));
+
+        Queue::extend('failing', fn () => new class implements ConnectorInterface
+        {
+            public function connect(array $config)
+            {
+                return new class($config['after_commit']) extends SyncQueue
+                {
+                    protected function executeJob($job, $data = '', $queue = null)
+                    {
+                        throw new RuntimeException('Queue is down');
+                    }
+                };
+            }
+        });
+        config()->set('queue.connections.failing', ['driver' => 'failing', 'after_commit' => true]);
+        config()->set('queue.default', 'failing');
+
+        $this->actingAs($user)
+            ->withSession(['passkey.registration_options' => WebAuthn::toJson($this->creationOptions($user))])
+            ->postJson(route('settings.passkeys.store'), [
+                'name' => 'Work laptop',
+                'credential' => $this->attestationCredential(),
+            ])
+            ->assertServerError();
+
+        $this->assertSame(0, $user->passkeys()->count());
+    }
+
+    public function test_the_alert_retries_with_backoff(): void
+    {
+        $notification = new PasskeyAddedNotification('Work laptop');
+
+        $this->assertSame(3, $notification->tries);
+        $this->assertSame([60, 300], $notification->backoff());
     }
 
     public function test_a_passkey_cannot_be_added_while_impersonating(): void

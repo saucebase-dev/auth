@@ -22,18 +22,43 @@ async function addVirtualAuthenticator(page: Page) {
     });
 }
 
-/** Passkeys ship switched off, so the disabled cases need no setup. */
+/** The password step, asked before a passkey is added or removed. */
+async function confirmIdentity(page: Page, password: string) {
+    const dialog = page.getByTestId('confirm-identity-dialog');
+
+    await expect(dialog).toBeVisible();
+    await page.getByTestId('confirm-identity-password').fill(password);
+    await page.getByTestId('confirm-identity-submit').click();
+    await expect(dialog).toBeHidden();
+}
+
+/** Passkeys ship switched on; the disabled case switches them off and back. */
 test.describe('Passkeys', () => {
     test.describe.configure({ mode: 'serial' });
 
     test('the passkey button is hidden while the feature is off', async ({
         page,
+        laravel,
     }) => {
-        const loginPage = new LoginPage(page);
-        await loginPage.goto();
-        await loginPage.expectToBeVisible();
+        await laravel.query('UPDATE settings SET payload = ? WHERE name = ?', [
+            'false',
+            'passkeys_enabled',
+        ]);
 
-        await expect(page.getByTestId('passkey-login-button')).toHaveCount(0);
+        try {
+            const loginPage = new LoginPage(page);
+            await loginPage.goto();
+            await loginPage.expectToBeVisible();
+
+            await expect(page.getByTestId('passkey-login-button')).toHaveCount(
+                0,
+            );
+        } finally {
+            await laravel.query(
+                'UPDATE settings SET payload = ? WHERE name = ?',
+                ['true', 'passkeys_enabled'],
+            );
+        }
     });
 
     test('adds a passkey, signs in with it and removes it', async ({
@@ -44,11 +69,6 @@ test.describe('Passkeys', () => {
     }) => {
         const name = `E2E passkey ${Date.now()}`;
 
-        await laravel.query('UPDATE settings SET payload = ? WHERE name = ?', [
-            'true',
-            'passkeys_enabled',
-        ]);
-
         try {
             await addVirtualAuthenticator(page);
 
@@ -58,6 +78,7 @@ test.describe('Passkeys', () => {
 
             await page.getByTestId('passkey-name-input').fill(name);
             await page.getByTestId('add-passkey').click();
+            await confirmIdentity(page, credentials.user.password);
 
             // The ceremony, the store and the panel reload are three round trips.
             await expect(
@@ -80,14 +101,12 @@ test.describe('Passkeys', () => {
                 .filter({ hasText: name });
             await passkey.getByTestId('remove-passkey').click();
             await page.getByTestId('confirm-dialog-confirm').click();
+            // A passkey sign-in is a new session: removing asks again.
+            await confirmIdentity(page, credentials.user.password);
 
             await expect(passkey).toHaveCount(0, { timeout: 15_000 });
         } finally {
             await laravel.query('DELETE FROM passkeys WHERE name = ?', [name]);
-            await laravel.query(
-                'UPDATE settings SET payload = ? WHERE name = ?',
-                ['false', 'passkeys_enabled'],
-            );
         }
     });
 });

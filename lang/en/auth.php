@@ -34,7 +34,7 @@ return [
         'title' => 'Passkeys',
         'description' => 'Let users sign in with a passkey stored on their device or password manager.',
         'enabled' => 'Enable passkeys',
-        'help' => 'Users add passkeys from their Security settings. The site must be served over HTTPS from the host in APP_URL; changing that host invalidates every passkey.',
+        'help' => 'Users add passkeys in Settings → Security. Requires HTTPS on the APP_URL domain. Moving to another domain breaks every existing passkey.',
         'added' => 'Passkey added.',
         'removed' => 'Passkey removed.',
         'impersonating' => 'Passkeys cannot be added while impersonating a user.',

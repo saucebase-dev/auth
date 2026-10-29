@@ -3,23 +3,76 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import type { User } from '@/types';
+import type { FormComponentRef, PendingVisit } from '@inertiajs/core';
 import { Form, router, usePage } from '@inertiajs/react';
 import { getInitials } from '@saucebase/core/lib/initials';
 import { useDialog } from '@saucebase/react/hooks/useDialog';
 import { useT } from '@saucebase/react/i18n';
 import { Camera, Loader2, Trash2 } from 'lucide-react';
-import { useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { confirmedFor, isConfirmed } from '../../lib/passwordConfirmation';
+import { ConfirmIdentityDialog } from '../components/ConfirmIdentityDialog';
 
 interface SettingsProfileProps {
     user: User & {
         has_uploaded_avatar?: boolean;
     };
+    password_confirmed_until?: number | null;
+    password_timeout: number;
+    has_passkeys?: boolean;
 }
 
-export default function SettingsProfile({ user }: SettingsProfileProps) {
+export default function SettingsProfile({
+    user,
+    password_confirmed_until = null,
+    password_timeout,
+    has_passkeys = false,
+}: SettingsProfileProps) {
     const t = useT();
     const page = usePage();
     const { confirm } = useDialog();
+
+    /**
+     * Every security alert goes to the email, so moving it needs fresh proof; the
+     * name does not. When the session has none, the save waits for the dialog,
+     * then resends.
+     */
+    const profileForm = useRef<FormComponentRef>(null);
+    // A ref, not state: the resend below runs before a state update would land.
+    const confirmedUntil = useRef(password_confirmed_until);
+    const [confirmingIdentity, setConfirmingIdentity] = useState(false);
+
+    useEffect(() => {
+        confirmedUntil.current = password_confirmed_until;
+    }, [password_confirmed_until]);
+
+    const beforeProfileSave = (visit: PendingVisit) => {
+        const email =
+            visit.data instanceof FormData
+                ? visit.data.get('email')
+                : visit.data.email;
+
+        if (isConfirmed(confirmedUntil.current) || email === user?.email) {
+            return true;
+        }
+
+        setConfirmingIdentity(true);
+
+        return false;
+    };
+
+    const onIdentityConfirmed = () => {
+        confirmedUntil.current = confirmedFor(password_timeout);
+        profileForm.current?.submit();
+    };
+
+    /** The confirmation ran out on the server first: ask, then the dialog resends. */
+    const onProfileError = (errors: Record<string, string>) => {
+        if (!errors.confirm_identity) return;
+
+        confirmedUntil.current = null;
+        setConfirmingIdentity(true);
+    };
 
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
@@ -153,11 +206,14 @@ export default function SettingsProfile({ user }: SettingsProfileProps) {
                 </div>
 
                 <Form
+                    ref={profileForm}
                     action={route('settings.profile.update-info')}
                     method="patch"
                     className="flex-1 space-y-4"
                     disableWhileProcessing
                     options={{ preserveUrl: true }}
+                    onBefore={beforeProfileSave}
+                    onError={onProfileError}
                 >
                     {({ errors }) => (
                         <>
@@ -223,6 +279,13 @@ export default function SettingsProfile({ user }: SettingsProfileProps) {
                     )}
                 </Form>
             </div>
+
+            <ConfirmIdentityDialog
+                open={confirmingIdentity}
+                onOpenChange={setConfirmingIdentity}
+                hasPasskeys={has_passkeys}
+                onConfirmed={onIdentityConfirmed}
+            />
         </div>
     );
 }

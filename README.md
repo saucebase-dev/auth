@@ -68,11 +68,12 @@ class User extends Authenticatable implements PasskeyUser
 
 Most settings are in the admin panel, under **Settings → Authentication**: open or close registration, login as a modal, magic links and how long they last, passkeys, login alerts, and which social providers are on.
 
-**Passkeys** are off by default. They are bound to the host in `APP_URL` and only work over HTTPS (or on `localhost`):
+**Passkeys** are on by default. They are bound to the host in `APP_URL` and only work over HTTPS (or on `localhost`):
 
 - Changing the app's domain makes every passkey stop working, and users have to add new ones.
 - Serving the app on several subdomains? Publish the package config (`php artisan vendor:publish --tag=passkeys-config`), set `relying_party_id` to the parent domain and list every origin in `allowed_origins`.
 - Passkeys derive a user handle from `APP_KEY`. Set `PASSKEYS_USER_HANDLE_SECRET` before rotating the key.
+- Resetting a password keeps the account's passkeys, as most services do. Users are emailed whenever one is added, and after a suspected compromise they should review the list under **Settings → Security** and remove any they don't recognize.
 
 Social login needs keys from [Google](https://console.cloud.google.com/apis/credentials) or [GitHub](https://github.com/settings/developers). Add them to `.env`:
 

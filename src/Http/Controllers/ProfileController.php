@@ -3,8 +3,10 @@
 namespace Modules\Auth\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\ValidationException;
 use Modules\Auth\Http\Requests\UpdateProfileAvatarRequest;
 use Modules\Auth\Http\Requests\UpdateProfileInfoRequest;
+use Modules\Auth\Support\PasswordConfirmation;
 use Saucebase\Core\Settings\SettingsSection;
 use Saucebase\Core\Toast;
 
@@ -29,6 +31,16 @@ class ProfileController extends Controller
     public function updateInfo(UpdateProfileInfoRequest $request): RedirectResponse
     {
         $user = auth()->user();
+
+        // The email is where every security alert goes, so moving it needs the same
+        // fresh proof as adding a passkey. The name does not.
+        if ($request->validated('email') !== $user->email && ! PasswordConfirmation::isRecent()) {
+            throw ValidationException::withMessages([
+                'email' => __('Confirm it\'s you before changing your email.'),
+                // The panel reopens its dialog on this one.
+                'confirm_identity' => __('Confirm it\'s you to continue.'),
+            ]);
+        }
 
         $user->update($request->validated());
 

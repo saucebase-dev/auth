@@ -3,9 +3,11 @@
 namespace Modules\Auth\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Saucebase\Core\Settings\SettingsSection;
+use Saucebase\Core\Support\Markdown;
 
 /**
  * Tells the owner a passkey was added to their account.
@@ -14,13 +16,24 @@ use Saucebase\Core\Settings\SettingsSection;
  * planted from a hijacked session would otherwise be a silent, standing way in.
  * Always sent; there is no setting to turn it off.
  */
-class PasskeyAddedNotification extends Notification
+class PasskeyAddedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
+
+    /** A mail server hiccup should not cost the owner the alert. */
+    public int $tries = 3;
 
     public function __construct(
         public string $passkeyName,
     ) {}
+
+    /**
+     * @return list<int>
+     */
+    public function backoff(): array
+    {
+        return [60, 300];
+    }
 
     /**
      * Get the notification's delivery channels.
@@ -42,7 +55,7 @@ class PasskeyAddedNotification extends Notification
         return (new MailMessage)
             ->subject(__('auth::auth.passkey-added-notification.subject', ['app' => $appName]))
             ->greeting(__('auth::auth.passkey-added-notification.greeting', ['name' => $notifiable->name]))
-            ->line(__('auth::auth.passkey-added-notification.notice', ['app' => $appName, 'passkey' => $this->passkeyName]))
+            ->line(__('auth::auth.passkey-added-notification.notice', ['app' => $appName, 'passkey' => Markdown::escape($this->passkeyName)]))
             ->line(__('auth::auth.passkey-added-notification.recognized'))
             ->action(__('auth::auth.passkey-added-notification.action'), SettingsSection::url('security'))
             ->line(__('auth::auth.passkey-added-notification.unrecognized'));

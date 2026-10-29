@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
+use Saucebase\Core\Support\Markdown;
 
 class LoginNotification extends Notification implements ShouldQueue
 {
@@ -58,7 +59,7 @@ class LoginNotification extends Notification implements ShouldQueue
                 'ip' => $this->ipAddress ?? $unknown,
             ]))
             ->line(__('auth::auth.login-notification.device-details', [
-                'device' => $this->userAgent ?? $unknown,
+                'device' => $this->userAgent !== null ? Markdown::escape($this->userAgent) : $unknown,
             ]))
             ->line(__('auth::auth.login-notification.recognized'))
             ->action(__('auth::auth.login-notification.action'), route('password.request'))

@@ -5,19 +5,66 @@ import InputField from '@/components/ui/input/InputField.vue';
 import { useDialog } from '@saucebase/vue/composables/useDialog';
 import type { User } from '@/types';
 import { getInitials } from '@saucebase/core/lib/initials';
+import type { PendingVisit } from '@inertiajs/core';
 import { Form, router, usePage } from '@inertiajs/vue3';
 import { Camera, Loader2, Trash2 } from '@lucide/vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed, ref, watch } from 'vue';
+import ConfirmIdentityDialog from '../components/ConfirmIdentityDialog.vue';
+import { confirmedFor, isConfirmed } from '../../lib/passwordConfirmation';
 
 const props = defineProps<{
     user: User & {
         has_uploaded_avatar?: boolean;
     };
+    password_confirmed_until?: number | null;
+    password_timeout: number;
+    has_passkeys?: boolean;
 }>();
 
 const page = usePage();
 const { confirm } = useDialog();
+
+/**
+ * Every security alert goes to the email, so moving it needs fresh proof; the name
+ * does not. When the session has none, the save waits for the dialog, then resends.
+ */
+const profileForm = ref<{ submit: () => void } | null>(null);
+const confirmedUntil = ref(props.password_confirmed_until ?? null);
+
+watch(
+    () => props.password_confirmed_until,
+    (until) => (confirmedUntil.value = until ?? null),
+);
+const confirmingIdentity = ref(false);
+
+const beforeProfileSave = (visit: PendingVisit) => {
+    const email =
+        visit.data instanceof FormData
+            ? visit.data.get('email')
+            : visit.data.email;
+
+    if (isConfirmed(confirmedUntil.value) || email === props.user?.email) {
+        return true;
+    }
+
+    confirmingIdentity.value = true;
+
+    return false;
+};
+
+const onIdentityConfirmed = () => {
+    confirmedUntil.value = confirmedFor(props.password_timeout);
+    profileForm.value?.submit();
+};
+
+/** The confirmation ran out on the server first: ask, then the dialog resends. */
+const onProfileError = (errors: Record<string, string>) => {
+    if (!errors.confirm_identity) return;
+
+    confirmedUntil.value = null;
+    confirmingIdentity.value = true;
+};
 
 const avatarFile = ref<File | null>(null);
 const isUpdatingAvatar = ref(false);
@@ -176,11 +223,14 @@ const removeAvatar = async () => {
             </div>
 
             <Form
+                ref="profileForm"
                 :action="route('settings.profile.update-info')"
                 method="patch"
                 class="flex-1 space-y-4"
                 disable-while-processing
                 preserve-url
+                :on-before="beforeProfileSave"
+                :on-error="onProfileError"
             >
                 <InputField
                     name="name"
@@ -209,5 +259,11 @@ const removeAvatar = async () => {
                 </div>
             </Form>
         </div>
+
+        <ConfirmIdentityDialog
+            v-model:open="confirmingIdentity"
+            :has-passkeys="has_passkeys"
+            @confirmed="onIdentityConfirmed"
+        />
     </div>
 </template>

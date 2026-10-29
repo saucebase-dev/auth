@@ -36,7 +36,7 @@ Pages, layouts and components live under `resources/js/`. The module's `resource
 
 ## Routes
 
-**Guest routes** (`/auth/*`): login (GET/POST), register (GET/POST), forgot-password (GET/POST, throttle:6,1), reset-password/{token} (GET, signed), reset-password (POST, throttle:6,1), magic-link (GET/POST, throttle:5,1), `auth.passkeys.options` — passkeys/options (GET) and `auth.passkeys.login` — passkeys/login (POST), both JSON, throttle:6,1
+**Guest routes** (`/auth/*`): login (GET/POST), register (GET/POST), forgot-password (GET/POST, throttle:6,1), reset-password/{token} (GET, signed), reset-password (POST, throttle:6,1), magic-link (GET/POST, throttle:5,1), `auth.passkeys.options` — passkeys/options (GET) and `auth.passkeys.login` — passkeys/login (POST), both JSON, `throttle:passkeys` (10/min, own counter)
 
 **Auth routes** (`/auth/*`): logout (POST — a GET logout is reachable from any other site's markup), verify-email (GET), verify-email/{id}/{hash} (GET, signed), email/verification-notification (POST, throttle:6,1), password (PUT)
 
@@ -44,7 +44,7 @@ Pages, layouts and components live under `resources/js/`. The module's `resource
 
 **Magic Link** (outside guest/auth groups): `magic-link.authenticate` — `/auth/magic-link/{token}` (GET) — must be accessible from email clients
 
-**Account settings** (`/settings/*`, middleware `auth`, `verified`): `settings.profile` (redirects to the `#settings/profile` fragment), `settings.profile.update-info` (PATCH), `settings.profile.update-avatar` (POST), `settings.profile.delete-avatar` (DELETE), `settings.profile.password.update` (PUT), `settings.passkeys.options` (GET, JSON) and `settings.passkeys.store` (POST, JSON) behind the setting and throttle:6,1, `settings.passkeys.destroy` — `/settings/passkeys/{passkeyId}` (DELETE, not behind the setting)
+**Account settings** (`/settings/*`, middleware `auth`, `verified`): `settings.profile` (redirects to the `#settings/profile` fragment), `settings.profile.update-info` (PATCH), `settings.profile.update-avatar` (POST), `settings.profile.delete-avatar` (DELETE), `settings.profile.password.update` (PUT), `settings.passkeys.options` (GET, JSON) and `settings.passkeys.store` (POST, JSON) behind the setting and `throttle:passkeys`, `settings.passkeys.destroy` — `/settings/passkeys/{passkeyId}` (DELETE, not behind the setting)
 
 The routes are grouped under `settings.profile.*` for history; password and
 socialite disconnect are rendered by the **Security** panel, not Profile.
@@ -88,7 +88,7 @@ resolved when clicked.
 Built on `laravel/passkeys` (server) and `@laravel/passkeys` (browser client, Vue and React hooks).
 Both are pre-1.0, so pin and expect upgrade work. The module calls `Passkeys::ignoreRoutes()`
 in `AuthServiceProvider::register()` and registers its own routes, so they sit behind
-`passkeys_enabled` (off by default) and sign in through `Controller::signIn()` like every
+`passkeys_enabled` (on by default) and sign in through `Controller::signIn()` like every
 other method — the login notification and welcome-back toast included — then answer
 `{redirect: intended(Home::url(..., login))}`. The client calls them with `fetch`, so they
 answer JSON and the login button follows the redirect with a full page load (the session was

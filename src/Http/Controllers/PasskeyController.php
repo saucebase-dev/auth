@@ -5,6 +5,7 @@ namespace Modules\Auth\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Laravel\Passkeys\Actions\DeletePasskey;
 use Laravel\Passkeys\Actions\GenerateRegistrationOptions;
 use Laravel\Passkeys\Actions\StorePasskey;
@@ -55,18 +56,25 @@ class PasskeyController extends Controller
 
         $user = $request->user();
 
-        try {
-            $passkey = $store(
-                $user,
-                $request->string('name')->toString(),
-                $request->credential(),
-                $request->registrationOptions(),
-            );
-        } catch (WebauthnException) {
-            throw InvalidPasskeyException::make('Unable to register passkey. Please try again.');
-        }
+        // One transaction: if the alert can't be queued, the passkey is not kept
+        // either, so a passkey never exists without its owner being told. Queued
+        // before the commit, even on a connection set to wait for it.
+        $passkey = DB::transaction(function () use ($request, $store, $user) {
+            try {
+                $passkey = $store(
+                    $user,
+                    $request->string('name')->toString(),
+                    $request->credential(),
+                    $request->registrationOptions(),
+                );
+            } catch (WebauthnException) {
+                throw InvalidPasskeyException::make('Unable to register passkey. Please try again.');
+            }
 
-        $user->notify(new PasskeyAddedNotification($passkey->name));
+            $user->notify((new PasskeyAddedNotification($passkey->name))->beforeCommit());
+
+            return $passkey;
+        });
 
         Toast::success(__('auth::auth.passkeys.added'));
 
