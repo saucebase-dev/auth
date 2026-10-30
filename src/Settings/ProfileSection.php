@@ -2,6 +2,7 @@
 
 namespace Modules\Auth\Settings;
 
+use Modules\Auth\Support\PasswordConfirmation;
 use Saucebase\Core\Settings\SettingsSection;
 
 /**
@@ -55,6 +56,8 @@ class ProfileSection extends SettingsSection
                 'last_login_at' => $user->last_login_at,
                 'has_uploaded_avatar' => $user->hasMedia('avatars'),
             ],
+            ...PasswordConfirmation::props(),
+            'has_passkeys' => $user->passkeys()->exists(),
         ];
     }
 }

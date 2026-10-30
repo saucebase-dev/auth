@@ -2,11 +2,13 @@
 
 namespace Modules\Auth\Settings;
 
+use Modules\Auth\Support\PasswordConfirmation;
 use Saucebase\Core\Settings\SettingsSection;
+use STS\FilamentImpersonate\ImpersonateManager;
 
 /**
- * How the signed-in user proves who they are: their password and their
- * connected social logins.
+ * How the signed-in user proves who they are: their password, their passkeys and
+ * their connected social logins.
  *
  * Separate from Profile because these are not descriptions of a person, they are
  * the credentials that let somebody in — a different question, asked in a
@@ -54,6 +56,21 @@ class SecuritySection extends SettingsSection
                 'social_accounts' => $user->connected_providers,
             ],
             'available_providers' => config('services.socialite_providers', []),
+            // Never the `credential` column: it is the stored public key and
+            // signature counter, and nothing the panel needs.
+            'passkeys' => $user->passkeys()
+                ->latest()
+                ->get(['id', 'name', 'credential', 'last_used_at', 'created_at'])
+                ->map(fn ($passkey): array => [
+                    'id' => $passkey->id,
+                    'name' => $passkey->name,
+                    'authenticator' => $passkey->authenticator,
+                    'last_used_at' => $passkey->last_used_at,
+                    'created_at' => $passkey->created_at,
+                ])
+                ->all(),
+            'can_add_passkeys' => ! app(ImpersonateManager::class)->isImpersonating(),
+            ...PasswordConfirmation::props(),
         ];
     }
 }

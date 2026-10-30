@@ -1,11 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Laravel\Passkeys\Http\Controllers\PasskeyConfirmationController;
+use Modules\Auth\Http\Controllers\ConfirmPasswordController;
 use Modules\Auth\Http\Controllers\EmailVerificationNotificationController;
 use Modules\Auth\Http\Controllers\EmailVerificationPromptController;
 use Modules\Auth\Http\Controllers\ForgotPasswordController;
 use Modules\Auth\Http\Controllers\LoginController;
 use Modules\Auth\Http\Controllers\MagicLinkController;
+use Modules\Auth\Http\Controllers\PasskeyController;
+use Modules\Auth\Http\Controllers\PasskeyLoginController;
 use Modules\Auth\Http\Controllers\PasswordController;
 use Modules\Auth\Http\Controllers\ProfileController;
 use Modules\Auth\Http\Controllers\RegisterController;
@@ -13,6 +17,7 @@ use Modules\Auth\Http\Controllers\ReimpersonateController;
 use Modules\Auth\Http\Controllers\ResetPasswordController;
 use Modules\Auth\Http\Controllers\SocialiteController;
 use Modules\Auth\Http\Controllers\VerifyEmailController;
+use Modules\Auth\Http\Middleware\EnsurePasskeysEnabled;
 use Modules\Auth\Http\Middleware\EnsureRegistrationEnabled;
 use Modules\Auth\Http\Middleware\EnsureSocialiteProviderEnabled;
 
@@ -55,6 +60,18 @@ Route::middleware('web')->group(function (): void {
             Route::post('magic-link', [MagicLinkController::class, 'store'])
                 ->middleware('throttle:5,1')
                 ->name('magic-link.store');
+
+            /*
+             * Passkey sign-in. Called with `fetch` by `@laravel/passkeys`, so
+             * both answer JSON. Throttled like the other credential endpoints.
+             */
+            Route::middleware([EnsurePasskeysEnabled::class, 'throttle:passkeys'])->group(function (): void {
+                Route::get('passkeys/options', [PasskeyLoginController::class, 'options'])
+                    ->name('auth.passkeys.options');
+
+                Route::post('passkeys/login', [PasskeyLoginController::class, 'store'])
+                    ->name('auth.passkeys.login');
+            });
         });
 
         Route::middleware('auth')->group(function (): void {
@@ -141,6 +158,46 @@ Route::middleware('web')->group(function (): void {
 
             Route::put('profile/password', [PasswordController::class, 'update'])
                 ->name('settings.profile.password.update');
+
+            /*
+             * Fresh proof before adding or removing a passkey or changing the email:
+             * the password, or one of the user's passkeys (the package's own
+             * confirmation controller). `password.confirm` sends anything it stops
+             * here, which opens the Security panel where the dialog lives.
+             */
+            Route::get('confirm-password', [ConfirmPasswordController::class, 'show'])
+                ->name('password.confirm');
+
+            Route::post('confirm-password', [ConfirmPasswordController::class, 'store'])
+                ->middleware('throttle:6,1')
+                ->name('password.confirm.store');
+
+            // Not behind the setting, like removal below: with the feature off, a
+            // user with no password can still prove it's them to remove a passkey.
+            Route::middleware('throttle:passkeys')->group(function (): void {
+                Route::get('passkeys/confirm/options', [PasskeyConfirmationController::class, 'index'])
+                    ->name('settings.passkeys.confirm.options');
+
+                Route::post('passkeys/confirm', [PasskeyConfirmationController::class, 'store'])
+                    ->name('settings.passkeys.confirm');
+            });
+
+            Route::middleware([EnsurePasskeysEnabled::class, 'throttle:passkeys'])->group(function (): void {
+                Route::get('passkeys/options', [PasskeyController::class, 'options'])
+                    ->middleware('password.confirm')
+                    ->name('settings.passkeys.options');
+
+                Route::post('passkeys', [PasskeyController::class, 'store'])
+                    ->middleware('password.confirm')
+                    ->name('settings.passkeys.store');
+            });
+
+            // Not behind the setting: a passkey added before the feature was
+            // switched off can still be removed, like a disabled social provider.
+            Route::delete('passkeys/{passkeyId}', [PasskeyController::class, 'destroy'])
+                ->middleware('password.confirm')
+                ->whereNumber('passkeyId')
+                ->name('settings.passkeys.destroy');
         });
     });
 });

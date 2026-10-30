@@ -20,6 +20,9 @@ class AuthSettings extends Settings
 
     public bool $login_notification_enabled;
 
+    /** Whether users can register passkeys and sign in with them. */
+    public bool $passkeys_enabled;
+
     public static function group(): string
     {
         return 'auth';

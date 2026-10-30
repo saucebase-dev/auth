@@ -1,10 +1,18 @@
 --- a/app/Models/User.php
 +++ b/app/Models/User.php
-@@ -11,2 +11,3 @@
+@@ -10,2 +10,5 @@
  use Illuminate\Notifications\Notifiable;
++use Laravel\Passkeys\Contracts\PasskeyUser;
++use Laravel\Passkeys\PasskeyAuthenticatable;
 +use Modules\Auth\Traits\Sociable;
  use Saucebase\Core\Settings\LocalizationSettings;
-@@ -25,2 +26,3 @@
+@@ -17,3 +20,3 @@
+ 
+-class User extends Authenticatable implements FilamentUser, HasLocalePreference, HasMedia
++class User extends Authenticatable implements FilamentUser, HasLocalePreference, HasMedia, PasskeyUser
+     // , MustVerifyEmail
+@@ -24,2 +27,4 @@
      use Notifiable;
++    use PasskeyAuthenticatable;
 +    use Sociable;
  

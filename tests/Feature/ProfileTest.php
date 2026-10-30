@@ -10,6 +10,14 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Changing the email needs a recent confirmation; `ConfirmIdentityTest` covers the gate. */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->withSession(['auth.password_confirmed_at' => time()]);
+    }
+
     public function test_profile_route_sends_the_user_to_the_settings_fragment(): void
     {
         $user = $this->createUser();

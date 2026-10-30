@@ -3,16 +3,28 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Form, router, usePage } from '@inertiajs/react';
+import { usePasskeyRegister } from '@laravel/passkeys/react';
 import { formatDateTime } from '@saucebase/core/lib/dates';
 import { useDialog } from '@saucebase/react/hooks/useDialog';
 import { useT, useTranslation } from '@saucebase/react/i18n';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Eye, EyeOff, KeyRound, Loader2, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { deviceName } from '../../lib/deviceName';
+import { confirmedFor, isConfirmed } from '../../lib/passwordConfirmation';
+import { ConfirmIdentityDialog } from '../components/ConfirmIdentityDialog';
 import { providerIcons } from '../components/providerIcons';
 
 type SocialiteProvider = {
     name: string;
     label: string;
+};
+
+type Passkey = {
+    id: number;
+    name: string;
+    authenticator: string | null;
+    last_used_at: string | null;
+    created_at: string;
 };
 
 type SocialAccount = {
@@ -27,6 +39,10 @@ interface SettingsSecurityProps {
         social_accounts?: SocialAccount[];
     };
     available_providers?: SocialiteProvider[];
+    passkeys?: Passkey[];
+    can_add_passkeys?: boolean;
+    password_confirmed_until?: number | null;
+    password_timeout: number;
 }
 
 /**
@@ -93,8 +109,8 @@ function PasswordField({
 }
 
 /**
- * How the signed-in user proves who they are: their password, and the social
- * accounts that can sign them in without one.
+ * How the signed-in user proves who they are: their password, their passkeys,
+ * and the social accounts that can sign them in without one.
  *
  * Split out of the profile panel because these are credentials rather than a
  * description of a person — a different question to answer, in a different frame
@@ -103,12 +119,164 @@ function PasswordField({
 export default function SettingsSecurity({
     user,
     available_providers,
+    passkeys = [],
+    can_add_passkeys,
+    password_confirmed_until = null,
+    password_timeout,
 }: SettingsSecurityProps) {
     const { t, locale } = useTranslation();
     const page = usePage();
     const { confirm } = useDialog();
 
     const [isDisconnecting, setIsDisconnecting] = useState<string | null>(null);
+    const [passkeyName, setPasskeyName] = useState('');
+    const [isRemovingPasskey, setIsRemovingPasskey] = useState<number | null>(
+        null,
+    );
+
+    /**
+     * Adding or removing a passkey needs fresh proof (`password.confirm` on the
+     * routes). Ask first when the session has none, then run the chosen action.
+     */
+    // A ref, not state: a retry runs inside the handler that just cleared it.
+    const confirmedUntil = useRef(password_confirmed_until);
+    const [confirmingIdentity, setConfirmingIdentity] = useState(false);
+    const afterConfirmation = useRef<(() => void) | null>(null);
+
+    useEffect(() => {
+        confirmedUntil.current = password_confirmed_until;
+    }, [password_confirmed_until]);
+
+    const withConfirmation = (action: () => void) => {
+        if (isConfirmed(confirmedUntil.current)) return action();
+
+        afterConfirmation.current = action;
+        setConfirmingIdentity(true);
+    };
+
+    const onIdentityConfirmed = () => {
+        confirmedUntil.current = confirmedFor(password_timeout);
+        afterConfirmation.current?.();
+        afterConfirmation.current = null;
+    };
+
+    /**
+     * The toast lands with the reload, but the list only with the section
+     * refresh after it, a moment later. Stay busy until the new list arrives,
+     * so the gap doesn't read as a failure.
+     */
+    const [isRefreshingPasskeys, setIsRefreshingPasskeys] = useState(false);
+
+    useEffect(() => {
+        setIsRefreshingPasskeys((refreshing) => {
+            if (refreshing) setPasskeyName('');
+
+            return false;
+        });
+    }, [passkeys]);
+
+    const passkeysEnabled = !!(
+        page.props.auth as { passkeys_enabled?: boolean }
+    )?.passkeys_enabled;
+
+    /**
+     * The ceremony runs over `fetch`, outside Inertia, so nothing reloads the
+     * panel by itself. A page reload does: the modal refreshes the active
+     * section after any Inertia visit, and the reload also delivers the toast.
+     */
+    const {
+        register,
+        isLoading: isRegistering,
+        errorInstance: addPasskeyError,
+        isSupported: passkeysSupported,
+    } = usePasskeyRegister({
+        routes: {
+            options: route('settings.passkeys.options'),
+            submit: route('settings.passkeys.store'),
+        },
+        onSuccess: () => {
+            setIsRefreshingPasskeys(true);
+            router.reload();
+        },
+    });
+
+    /**
+     * A plain `Error` is a failed request, a 423 among them when the confirmation
+     * ran out early: ask again next time rather than keep trusting it. The
+     * package's own errors (cancelled, already registered) say nothing about it.
+     */
+    useEffect(() => {
+        if (addPasskeyError?.name === 'Error') confirmedUntil.current = null;
+    }, [addPasskeyError]);
+
+    // Closing the browser's own prompt is a choice, not something to report.
+    const addPasskeyErrorMessage =
+        addPasskeyError?.name === 'UserCancelledError'
+            ? null
+            : addPasskeyError?.message;
+
+    /**
+     * Shown while the feature is on, and also while the user still holds
+     * passkeys after it was switched off — otherwise they could never remove
+     * them.
+     */
+    const showPasskeys = passkeysEnabled || passkeys.length > 0;
+
+    const canAddPasskey =
+        passkeysEnabled && passkeysSupported && can_add_passkeys !== false;
+
+    const isAddingPasskey = isRegistering || isRefreshingPasskeys;
+
+    /** "Chrome on macOS": the placeholder, and the name when the field is left empty. */
+    const defaultPasskeyName =
+        typeof navigator === 'undefined'
+            ? null
+            : deviceName(navigator.userAgent);
+
+    const addPasskey = (event: React.FormEvent) => {
+        event.preventDefault();
+
+        const name = passkeyName.trim() || defaultPasskeyName;
+
+        if (!name) return;
+
+        withConfirmation(() => void register(name));
+    };
+
+    const removePasskey = async (passkey: Passkey) => {
+        const confirmed = await confirm({
+            title: t('Remove Passkey'),
+            description: t(
+                'You will no longer be able to sign in with ":name". If it is your only way in, you will need to reset your password to get back into your account.',
+                { name: passkey.name },
+            ),
+            confirmLabel: t('Remove'),
+            icon: Trash2,
+            cancelLabel: t('Cancel'),
+            variant: 'destructive',
+            align: 'left',
+        });
+
+        if (!confirmed) return;
+
+        withConfirmation(() => deletePasskey(passkey));
+    };
+
+    const deletePasskey = (passkey: Passkey) => {
+        setIsRemovingPasskey(passkey.id);
+
+        router.delete(route('settings.passkeys.destroy', passkey.id), {
+            preserveUrl: true,
+            // The confirmation ran out on the server first: ask, then try again.
+            onError: (errors) => {
+                if (!errors.confirm_identity) return;
+
+                confirmedUntil.current = null;
+                withConfirmation(() => deletePasskey(passkey));
+            },
+            onFinish: () => setIsRemovingPasskey(null),
+        });
+    };
 
     const enabledProviders = useMemo<SocialiteProvider[]>(() => {
         const auth = page.props.auth as {
@@ -191,7 +359,9 @@ export default function SettingsSecurity({
     return (
         <div className="space-y-8" data-testid="settings-security-panel">
             <p className="text-muted-foreground text-sm">
-                {t('Your password and the accounts that can sign you in')}
+                {t(
+                    'Your password, passkeys and the accounts that can sign you in',
+                )}
             </p>
 
             {/* Password */}
@@ -251,6 +421,146 @@ export default function SettingsSecurity({
                     )}
                 </Form>
             </div>
+
+            {/* Passkeys */}
+            {showPasskeys && (
+                <>
+                    <Separator />
+
+                    <div className="space-y-4" data-testid="passkeys-section">
+                        <div className="space-y-1">
+                            <h3 className="font-medium">{t('Passkeys')}</h3>
+                            <p className="text-muted-foreground text-sm">
+                                {t(
+                                    'Sign in with your fingerprint, face or screen lock instead of a password.',
+                                )}
+                            </p>
+                        </div>
+
+                        {canAddPasskey && (
+                            <form
+                                className="space-y-2"
+                                data-testid="add-passkey-form"
+                                onSubmit={addPasskey}
+                            >
+                                <div className="flex gap-2">
+                                    <Input
+                                        name="passkey_name"
+                                        aria-label={t('Passkey name')}
+                                        placeholder={
+                                            defaultPasskeyName ??
+                                            t(
+                                                'Name this passkey, e.g. Work laptop',
+                                            )
+                                        }
+                                        maxLength={255}
+                                        required={!defaultPasskeyName}
+                                        data-testid="passkey-name-input"
+                                        value={passkeyName}
+                                        onChange={(event) =>
+                                            setPasskeyName(event.target.value)
+                                        }
+                                    />
+                                    <Button
+                                        type="submit"
+                                        disabled={isAddingPasskey}
+                                        data-testid="add-passkey"
+                                    >
+                                        {isAddingPasskey && (
+                                            <Loader2 className="mr-2 size-4 animate-spin" />
+                                        )}
+                                        {t('Add passkey')}
+                                    </Button>
+                                </div>
+                                {addPasskeyErrorMessage && (
+                                    <FieldError data-testid="add-passkey-error">
+                                        {addPasskeyErrorMessage}
+                                    </FieldError>
+                                )}
+                            </form>
+                        )}
+
+                        {passkeys.length > 0 ? (
+                            <div className="space-y-3">
+                                {passkeys.map((passkey) => (
+                                    <div
+                                        key={passkey.id}
+                                        className="bg-card flex items-center gap-4 rounded-lg border px-4 py-3"
+                                        data-testid="passkey"
+                                    >
+                                        <div className="bg-background grid size-10 shrink-0 place-items-center rounded-lg border">
+                                            <KeyRound className="size-4" />
+                                        </div>
+
+                                        <div className="min-w-0 flex-1">
+                                            <p
+                                                className="truncate font-medium"
+                                                data-testid="passkey-name"
+                                            >
+                                                {passkey.name}
+                                            </p>
+                                            <p className="text-muted-foreground mt-1 flex flex-wrap gap-x-2 text-xs">
+                                                {passkey.authenticator && (
+                                                    <span>
+                                                        {passkey.authenticator}
+                                                    </span>
+                                                )}
+                                                <span>
+                                                    {t('Last used')}:{' '}
+                                                    <span
+                                                        className={
+                                                            passkey.last_used_at
+                                                                ? undefined
+                                                                : 'text-foreground font-medium'
+                                                        }
+                                                    >
+                                                        {passkey.last_used_at
+                                                            ? formatDateTime(
+                                                                  passkey.last_used_at,
+                                                                  locale,
+                                                              )
+                                                            : t('Never')}
+                                                    </span>
+                                                </span>
+                                            </p>
+                                        </div>
+
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            data-testid="remove-passkey"
+                                            disabled={
+                                                isRemovingPasskey === passkey.id
+                                            }
+                                            onClick={() =>
+                                                removePasskey(passkey)
+                                            }
+                                        >
+                                            {isRemovingPasskey ===
+                                                passkey.id && (
+                                                <Loader2 className="size-4 animate-spin" />
+                                            )}
+                                            {t('Remove')}
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div
+                                className="flex flex-col items-center gap-2 rounded-lg border border-dashed px-6 py-10 text-center"
+                                data-testid="passkeys-empty"
+                            >
+                                <div className="bg-muted flex size-10 items-center justify-center rounded-full">
+                                    <KeyRound className="text-muted-foreground size-5" />
+                                </div>
+                                <p className="font-medium">
+                                    {t('No passkeys yet.')}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
 
             {/* Connected accounts */}
             {hasSocialiteProviders && (
@@ -367,6 +677,13 @@ export default function SettingsSecurity({
                     </div>
                 </>
             )}
+
+            <ConfirmIdentityDialog
+                open={confirmingIdentity}
+                onOpenChange={setConfirmingIdentity}
+                hasPasskeys={passkeys.length > 0}
+                onConfirmed={onIdentityConfirmed}
+            />
         </div>
     );
 }

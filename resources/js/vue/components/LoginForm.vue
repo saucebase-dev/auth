@@ -7,6 +7,7 @@ import { Form } from '@inertiajs/vue3';
 import { useModal } from '@inertiaui/modal-vue';
 import { computed, ref } from 'vue';
 import AuthLink from './AuthLink.vue';
+import PasskeyLoginButton from './PasskeyLoginButton.vue';
 import SocialiteProviders from './SocialiteProviders.vue';
 
 const props = defineProps<{
@@ -27,6 +28,9 @@ function handleSuccess(): void {
 }
 
 const emailRef = ref('');
+
+// Bound only so the passkey button can read it; the form still posts the box.
+const remember = ref<boolean | 'indeterminate'>(false);
 
 // compute forgot password url so the link updates as user types
 const forgotUrl = computed(() =>
@@ -74,6 +78,7 @@ const forgotUrl = computed(() =>
                     <Field orientation="horizontal">
                         <Checkbox
                             id="remember"
+                            v-model="remember"
                             name="remember"
                             data-testid="remember-me"
                         />
@@ -104,6 +109,11 @@ const forgotUrl = computed(() =>
         <Button type="submit" class="mt-3 w-full" data-testid="login-button">
             {{ $t('Log in') }}
         </Button>
+
+        <PasskeyLoginButton
+            v-if="$page.props.auth.passkeys_enabled"
+            :remember="remember === true"
+        />
 
         <p class="mt-2 text-center text-sm">
             <AuthLink

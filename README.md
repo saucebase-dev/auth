@@ -9,7 +9,7 @@
 
 </div>
 
-Sign-in for Saucebase: login, registration, social login, magic links, password reset and user admin.
+Sign-in for Saucebase: login, registration, social login, magic links, passkeys, password reset and user admin.
 
 A module for [Saucebase](https://github.com/saucebase-dev/saucebase), the AI-ready Laravel SaaS kit. Modules are Composer packages you add to a Saucebase app; once installed, the code is yours to change.
 
@@ -18,6 +18,7 @@ A module for [Saucebase](https://github.com/saucebase-dev/saucebase), the AI-rea
 - **Login and registration**, as a page or a modal over the current page
 - **Social login** with Google and GitHub built in, and any other Socialite provider you add; users link and unlink accounts themselves
 - **Magic links**: sign in from an emailed link, no password
+- **Passkeys**: sign in with a fingerprint, face or screen lock, through [Laravel Passkeys](https://github.com/laravel/passkeys)
 - **Password reset and email verification**
 - **Profile and security settings** in the settings modal
 - **Login alerts**: an email when someone signs in to the account
@@ -48,21 +49,31 @@ Then make yourself an admin with `php artisan auth:make-admin`.
 
 If a patch doesn't apply, because your file has changed, make its change by hand:
 
-**`user.patch`** adds the `Sociable` trait to your user model, for social login and connected accounts:
+**`user.patch`** adds the `Sociable` trait to your user model, for social login and connected accounts, and the `PasskeyAuthenticatable` trait with its `PasskeyUser` contract, for passkeys:
 
 ```php
 // app/Models/User.php
+use Laravel\Passkeys\Contracts\PasskeyUser;
+use Laravel\Passkeys\PasskeyAuthenticatable;
 use Modules\Auth\Traits\Sociable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements PasskeyUser
 {
+    use PasskeyAuthenticatable;
     use Sociable;
 }
 ```
 
 ## Configuration
 
-Most settings are in the admin panel, under **Settings → Authentication**: open or close registration, login as a modal, magic links and how long they last, login alerts, and which social providers are on.
+Most settings are in the admin panel, under **Settings → Authentication**: open or close registration, login as a modal, magic links and how long they last, passkeys, login alerts, and which social providers are on.
+
+**Passkeys** are on by default. They are bound to the host in `APP_URL` and only work over HTTPS (or on `localhost`):
+
+- Changing the app's domain makes every passkey stop working, and users have to add new ones.
+- Serving the app on several subdomains? Publish the package config (`php artisan vendor:publish --tag=passkeys-config`), set `relying_party_id` to the parent domain and list every origin in `allowed_origins`.
+- Passkeys derive a user handle from `APP_KEY`. Set `PASSKEYS_USER_HANDLE_SECRET` before rotating the key.
+- Resetting a password keeps the account's passkeys, as most services do. Users are emailed whenever one is added, and after a suspected compromise they should review the list under **Settings → Security** and remove any they don't recognize.
 
 Social login needs keys from [Google](https://console.cloud.google.com/apis/credentials) or [GitHub](https://github.com/settings/developers). Add them to `.env`:
 

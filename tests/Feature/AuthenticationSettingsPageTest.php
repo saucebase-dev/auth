@@ -27,11 +27,13 @@ class AuthenticationSettingsPageTest extends TestCase
         Livewire::test(AuthenticationSettings::class)
             ->assertFormFieldExists('enabled_socialite_providers')
             ->assertFormFieldExists('login_notification_enabled')
+            ->assertFormFieldExists('passkeys_enabled')
             ->assertSchemaStateSet([
                 'enabled_socialite_providers' => [],
                 'magic_link_enabled' => false,
                 'magic_link_expiry' => 15,
                 'login_notification_enabled' => false,
+                'passkeys_enabled' => true,
             ]);
     }
 
@@ -48,6 +50,7 @@ class AuthenticationSettingsPageTest extends TestCase
                 'magic_link_enabled' => false,
                 'magic_link_expiry' => 30,
                 'login_notification_enabled' => true,
+                'passkeys_enabled' => false,
             ])
             ->call('save')
             ->assertHasNoFormErrors()
@@ -59,6 +62,7 @@ class AuthenticationSettingsPageTest extends TestCase
         $this->assertFalse($settings->magic_link_enabled);
         $this->assertSame(30, $settings->magic_link_expiry);
         $this->assertTrue($settings->login_notification_enabled);
+        $this->assertFalse($settings->passkeys_enabled);
     }
 
     public function test_administrator_can_disable_all_socialite_providers(): void

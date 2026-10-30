@@ -4,9 +4,13 @@ namespace Modules\Auth\Providers;
 
 use App\Models\User;
 use Filament\Facades\Filament;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Inertia;
+use Laravel\Passkeys\Passkeys;
 use Modules\Auth\Policies\UserPolicy;
 use Modules\Auth\Services\SocialiteService;
 use Modules\Auth\Settings\AuthSettings;
@@ -17,11 +21,27 @@ use STS\FilamentImpersonate\ImpersonateManager;
 
 class AuthServiceProvider extends ModuleServiceProvider
 {
+    public function register(): void
+    {
+        parent::register();
+
+        // The module registers its own passkey routes (routes/web.php), behind the
+        // setting and through the same sign-in as every other method. Set during
+        // register so it lands before the package's provider boots.
+        Passkeys::ignoreRoutes();
+    }
+
     public function boot(): void
     {
         parent::boot();
 
         Gate::policy(User::class, UserPolicy::class);
+
+        // `throttle:passkeys`: its own counter, so a sign-in (two requests) does not
+        // share the per-address budget of password and magic-link sign-in. Keyed by
+        // user, falling back to the address for guests.
+        RateLimiter::for('passkeys', fn (Request $request): Limit => Limit::perMinute(10)
+            ->by((string) ($request->user()?->getAuthIdentifier() ?? $request->ip())));
 
         // Every impersonate button asks the same question the controllers do.
         Impersonate::configureUsing(fn (Impersonate $action) => $action
@@ -40,6 +60,7 @@ class AuthServiceProvider extends ModuleServiceProvider
             'auth.registration_enabled' => fn (): bool => $this->app->make(AuthSettings::class)->registration_enabled,
             'auth.modal_enabled' => fn (): bool => $this->app->make(AuthSettings::class)->modal_enabled,
             'auth.magic_link_enabled' => fn (): bool => $this->app->make(AuthSettings::class)->magic_link_enabled,
+            'auth.passkeys_enabled' => fn (): bool => $this->app->make(AuthSettings::class)->passkeys_enabled,
         ]);
 
         Inertia::share('impersonation', function () {

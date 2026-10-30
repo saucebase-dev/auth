@@ -19,5 +19,6 @@ class AuthSettingsTest extends TestCase
         $this->assertFalse($settings->magic_link_enabled);
         $this->assertSame(15, $settings->magic_link_expiry);
         $this->assertFalse($settings->login_notification_enabled);
+        $this->assertTrue($settings->passkeys_enabled);
     }
 }

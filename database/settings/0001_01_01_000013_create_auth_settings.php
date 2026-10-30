@@ -12,6 +12,7 @@ return new class extends SettingsMigration
             'auth.magic_link_enabled' => false,
             'auth.magic_link_expiry' => 15,
             'auth.login_notification_enabled' => false,
+            'auth.passkeys_enabled' => true,
             'auth.enabled_socialite_providers' => [],
         ];
 
