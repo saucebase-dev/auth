@@ -1,7 +1,7 @@
-import { EmptyState } from '@/components/ui/saucebase';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { EmptyState } from '@/components/ui/saucebase';
 import { Separator } from '@/components/ui/separator';
 import { Form, router, usePage } from '@inertiajs/react';
 import { usePasskeyRegister } from '@laravel/passkeys/react';
@@ -11,6 +11,7 @@ import { useT, useTranslation } from '@saucebase/react/i18n';
 import { Eye, EyeOff, KeyRound, Loader2, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { deviceName } from '../../lib/deviceName';
+import { passkeyErrorMessage } from '../../lib/passkeyError';
 import { confirmedFor, isConfirmed } from '../../lib/passwordConfirmation';
 import { ConfirmIdentityDialog } from '../components/ConfirmIdentityDialog';
 import { providerIcons } from '../components/providerIcons';
@@ -210,11 +211,7 @@ export default function SettingsSecurity({
         if (addPasskeyError?.name === 'Error') confirmedUntil.current = null;
     }, [addPasskeyError]);
 
-    // Closing the browser's own prompt is a choice, not something to report.
-    const addPasskeyErrorMessage =
-        addPasskeyError?.name === 'UserCancelledError'
-            ? null
-            : addPasskeyError?.message;
+    const addPasskeyErrorMessage = passkeyErrorMessage(addPasskeyError, t);
 
     /**
      * Shown while the feature is on, and also while the user still holds
