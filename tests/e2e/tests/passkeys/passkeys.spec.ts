@@ -75,6 +75,19 @@ test.describe('Passkeys', () => {
             await loginAs(credentials.user);
             await page.goto('/dashboard#settings/security');
             await expect(page.getByTestId('passkeys-section')).toBeVisible();
+            expect(
+                await page
+                    .getByTestId('passkeys-section')
+                    .evaluate((section) =>
+                        Boolean(
+                            section.compareDocumentPosition(
+                                document.querySelector(
+                                    '[data-testid="submit-change-password"]',
+                                )!,
+                            ) & Node.DOCUMENT_POSITION_FOLLOWING,
+                        ),
+                    ),
+            ).toBe(true);
 
             await page.getByTestId('passkey-name-input').fill(name);
             await page.getByTestId('add-passkey').click();

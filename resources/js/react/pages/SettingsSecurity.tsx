@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { EmptyState } from '@/components/ui/saucebase';
 import { Separator } from '@/components/ui/separator';
 import { Form, router, usePage } from '@inertiajs/react';
 import { usePasskeyRegister } from '@laravel/passkeys/react';
@@ -10,6 +11,7 @@ import { useT, useTranslation } from '@saucebase/react/i18n';
 import { Eye, EyeOff, KeyRound, Loader2, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { deviceName } from '../../lib/deviceName';
+import { passkeyErrorMessage } from '../../lib/passkeyError';
 import { confirmedFor, isConfirmed } from '../../lib/passwordConfirmation';
 import { ConfirmIdentityDialog } from '../components/ConfirmIdentityDialog';
 import { providerIcons } from '../components/providerIcons';
@@ -209,11 +211,7 @@ export default function SettingsSecurity({
         if (addPasskeyError?.name === 'Error') confirmedUntil.current = null;
     }, [addPasskeyError]);
 
-    // Closing the browser's own prompt is a choice, not something to report.
-    const addPasskeyErrorMessage =
-        addPasskeyError?.name === 'UserCancelledError'
-            ? null
-            : addPasskeyError?.message;
+    const addPasskeyErrorMessage = passkeyErrorMessage(addPasskeyError, t);
 
     /**
      * Shown while the feature is on, and also while the user still holds
@@ -364,69 +362,9 @@ export default function SettingsSecurity({
                 )}
             </p>
 
-            {/* Password */}
-            <div className="space-y-4">
-                <div className="space-y-1">
-                    <h3 className="font-medium">{t('Update Password')}</h3>
-                    <p className="text-muted-foreground text-sm">
-                        {t(
-                            'Ensure your account is using a long, random password to stay secure.',
-                        )}
-                    </p>
-                </div>
-
-                <Form
-                    action={route('settings.profile.password.update')}
-                    method="put"
-                    className="space-y-4"
-                    disableWhileProcessing
-                    resetOnSuccess
-                    options={{ preserveUrl: true }}
-                >
-                    {({ errors }) => (
-                        <>
-                            <PasswordField
-                                name="current_password"
-                                label={t('Current Password')}
-                                placeholder={t('Enter your current password')}
-                                autoComplete="current-password"
-                                error={errors.current_password}
-                            />
-
-                            <PasswordField
-                                name="password"
-                                label={t('New Password')}
-                                placeholder={t('Enter your new password')}
-                                autoComplete="new-password"
-                                error={errors.password}
-                            />
-
-                            <PasswordField
-                                name="password_confirmation"
-                                label={t('Confirm Password')}
-                                placeholder={t('Confirm your new password')}
-                                autoComplete="new-password"
-                                error={errors.password_confirmation}
-                            />
-
-                            <div className="flex justify-end pt-2">
-                                <Button
-                                    type="submit"
-                                    data-testid="submit-change-password"
-                                >
-                                    {t('Update Password')}
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </Form>
-            </div>
-
             {/* Passkeys */}
             {showPasskeys && (
                 <>
-                    <Separator />
-
                     <div className="space-y-4" data-testid="passkeys-section">
                         <div className="space-y-1">
                             <h3 className="font-medium">{t('Passkeys')}</h3>
@@ -546,21 +484,75 @@ export default function SettingsSecurity({
                                 ))}
                             </div>
                         ) : (
-                            <div
-                                className="flex flex-col items-center gap-2 rounded-lg border border-dashed px-6 py-10 text-center"
+                            <EmptyState
+                                title={t('No passkeys yet.')}
+                                icon={<KeyRound />}
                                 data-testid="passkeys-empty"
-                            >
-                                <div className="bg-muted flex size-10 items-center justify-center rounded-full">
-                                    <KeyRound className="text-muted-foreground size-5" />
-                                </div>
-                                <p className="font-medium">
-                                    {t('No passkeys yet.')}
-                                </p>
-                            </div>
+                            />
                         )}
                     </div>
+
+                    <Separator />
                 </>
             )}
+
+            {/* Password */}
+            <div className="space-y-4">
+                <div className="space-y-1">
+                    <h3 className="font-medium">{t('Update Password')}</h3>
+                    <p className="text-muted-foreground text-sm">
+                        {t(
+                            'Ensure your account is using a long, random password to stay secure.',
+                        )}
+                    </p>
+                </div>
+
+                <Form
+                    action={route('settings.profile.password.update')}
+                    method="put"
+                    className="space-y-4"
+                    disableWhileProcessing
+                    resetOnSuccess
+                    options={{ preserveUrl: true }}
+                >
+                    {({ errors }) => (
+                        <>
+                            <PasswordField
+                                name="current_password"
+                                label={t('Current Password')}
+                                placeholder={t('Enter your current password')}
+                                autoComplete="current-password"
+                                error={errors.current_password}
+                            />
+
+                            <PasswordField
+                                name="password"
+                                label={t('New Password')}
+                                placeholder={t('Enter your new password')}
+                                autoComplete="new-password"
+                                error={errors.password}
+                            />
+
+                            <PasswordField
+                                name="password_confirmation"
+                                label={t('Confirm Password')}
+                                placeholder={t('Confirm your new password')}
+                                autoComplete="new-password"
+                                error={errors.password_confirmation}
+                            />
+
+                            <div className="flex justify-end pt-2">
+                                <Button
+                                    type="submit"
+                                    data-testid="submit-change-password"
+                                >
+                                    {t('Update Password')}
+                                </Button>
+                            </div>
+                        </>
+                    )}
+                </Form>
+            </div>
 
             {/* Connected accounts */}
             {hasSocialiteProviders && (
