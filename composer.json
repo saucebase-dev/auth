@@ -3,7 +3,7 @@
   "description": "Sign-in for Saucebase: login, registration, social login, magic links, password reset and user admin.",
   "type": "saucebase-module",
   "license": "MIT",
-  "version": "v3.6.0",
+  "version": "v3.7.0",
   "authors": [
     {
       "name": "Saucebase",
