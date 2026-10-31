@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { EmptyState } from '@/components/ui/saucebase';
 import { Button } from '@/components/ui/button';
 import { FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ import { computed, ref, watch } from 'vue';
 import ConfirmIdentityDialog from '../components/ConfirmIdentityDialog.vue';
 import { providerIcons } from '../components/providerIcons';
 import { deviceName } from '../../lib/deviceName';
+import { passkeyErrorMessage } from '../../lib/passkeyError';
 import { confirmedFor, isConfirmed } from '../../lib/passwordConfirmation';
 
 type SocialiteProvider = {
@@ -207,11 +209,8 @@ watch(addPasskeyError, (error) => {
     if (error?.name === 'Error') confirmedUntil.value = null;
 });
 
-/** Closing the browser's own prompt is a choice, not something to report. */
 const addPasskeyErrorMessage = computed(() =>
-    addPasskeyError.value?.name === 'UserCancelledError'
-        ? null
-        : addPasskeyError.value?.message,
+    passkeyErrorMessage(addPasskeyError.value, trans),
 );
 
 const canAddPasskey = computed(
@@ -315,66 +314,8 @@ const initiateDisconnect = async (provider: string) => {
             }}
         </p>
 
-        <!-- Password -->
-        <div class="space-y-4">
-            <div class="space-y-1">
-                <h3 class="font-medium">{{ $t('Update Password') }}</h3>
-                <p class="text-muted-foreground text-sm">
-                    {{
-                        $t(
-                            'Ensure your account is using a long, random password to stay secure.',
-                        )
-                    }}
-                </p>
-            </div>
-
-            <Form
-                :action="route('settings.profile.password.update')"
-                method="put"
-                class="space-y-4"
-                disable-while-processing
-                preserve-url
-                :reset-on-success="true"
-            >
-                <InputField
-                    name="current_password"
-                    type="password"
-                    :label="$t('Current Password')"
-                    :placeholder="$t('Enter your current password')"
-                    autocomplete="current-password"
-                    required
-                />
-
-                <InputField
-                    name="password"
-                    type="password"
-                    :label="$t('New Password')"
-                    :placeholder="$t('Enter your new password')"
-                    autocomplete="new-password"
-                    required
-                />
-
-                <InputField
-                    name="password_confirmation"
-                    type="password"
-                    :label="$t('Confirm Password')"
-                    :placeholder="$t('Confirm your new password')"
-                    autocomplete="new-password"
-                    required
-                />
-
-                <div class="flex justify-end pt-2">
-                    <Button type="submit" data-testid="submit-change-password">
-                        {{ $t('Update Password') }}
-                    </Button>
-                </div>
-            </Form>
-        </div>
-
         <!-- Passkeys -->
         <template v-if="showPasskeys">
-            <Separator />
-
             <div class="space-y-4" data-testid="passkeys-section">
                 <div class="space-y-1">
                     <h3 class="font-medium">{{ $t('Passkeys') }}</h3>
@@ -426,18 +367,13 @@ const initiateDisconnect = async (provider: string) => {
                     </FieldError>
                 </form>
 
-                <div
+                <EmptyState
                     v-if="!passkeys?.length"
-                    class="flex flex-col items-center gap-2 rounded-lg border border-dashed px-6 py-10 text-center"
+                    :title="$t('No passkeys yet.')"
                     data-testid="passkeys-empty"
                 >
-                    <div
-                        class="bg-muted flex size-10 items-center justify-center rounded-full"
-                    >
-                        <KeyRound class="text-muted-foreground size-5" />
-                    </div>
-                    <p class="font-medium">{{ $t('No passkeys yet.') }}</p>
-                </div>
+                    <template #icon><KeyRound /></template>
+                </EmptyState>
 
                 <div v-else class="space-y-3">
                     <div
@@ -501,7 +437,65 @@ const initiateDisconnect = async (provider: string) => {
                     </div>
                 </div>
             </div>
+
+            <Separator />
         </template>
+
+        <!-- Password -->
+        <div class="space-y-4">
+            <div class="space-y-1">
+                <h3 class="font-medium">{{ $t('Update Password') }}</h3>
+                <p class="text-muted-foreground text-sm">
+                    {{
+                        $t(
+                            'Ensure your account is using a long, random password to stay secure.',
+                        )
+                    }}
+                </p>
+            </div>
+
+            <Form
+                :action="route('settings.profile.password.update')"
+                method="put"
+                class="space-y-4"
+                disable-while-processing
+                preserve-url
+                :reset-on-success="true"
+            >
+                <InputField
+                    name="current_password"
+                    type="password"
+                    :label="$t('Current Password')"
+                    :placeholder="$t('Enter your current password')"
+                    autocomplete="current-password"
+                    required
+                />
+
+                <InputField
+                    name="password"
+                    type="password"
+                    :label="$t('New Password')"
+                    :placeholder="$t('Enter your new password')"
+                    autocomplete="new-password"
+                    required
+                />
+
+                <InputField
+                    name="password_confirmation"
+                    type="password"
+                    :label="$t('Confirm Password')"
+                    :placeholder="$t('Confirm your new password')"
+                    autocomplete="new-password"
+                    required
+                />
+
+                <div class="flex justify-end pt-2">
+                    <Button type="submit" data-testid="submit-change-password">
+                        {{ $t('Update Password') }}
+                    </Button>
+                </div>
+            </Form>
+        </div>
 
         <!-- Connected accounts -->
         <template v-if="hasSocialiteProviders">
