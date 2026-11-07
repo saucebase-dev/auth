@@ -237,6 +237,7 @@ npx playwright test --project="@auth*"                 # E2E
 
 - `LoginRequest::validateCredentials()` validates without logging in — the controller handles `Auth::login()` separately
 - Social users get a random password and are **not** marked verified — signing in with a provider is not proof of the address, and nobody has confirmed it (sc-713)
+- A guest's social sign-in never links to an existing **unverified** account with the same email (`SocialiteException::unverifiedAccount()`): anyone can register with someone else's address, and linking would hand that account, and whoever knows its password, to the provider's owner. They sign in as before and connect the provider from Settings (sc-1130)
 - Socialite redirect/callback routes are outside both guest and auth middleware groups
 - `RegisterRequest::passedValidation()` hashes the password before the controller sees it
 - Filament UserResource enforces single role (maxItems: 1) despite multi-select UI
