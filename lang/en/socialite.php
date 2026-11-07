@@ -25,4 +25,5 @@ return [
     'account_already_linked' => 'This :provider account is already linked to another user',
     'unsupported_provider' => 'The social provider :provider is not supported',
     'registration_disabled' => 'New account registration is currently disabled',
+    'unverified_account' => 'An account with this email already exists. Sign in the way you did before, then connect this provider from your settings.',
 ];

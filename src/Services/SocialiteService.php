@@ -5,8 +5,6 @@ namespace Modules\Auth\Services;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Modules\Auth\Exceptions\SocialiteException;
@@ -100,6 +98,10 @@ class SocialiteService
                 }
 
                 $user = $this->createNewUser($socialiteUser, $avatarUrl);
+            } elseif (! $user->hasVerifiedEmail()) {
+                // Anyone can sign up with someone else's address; linking would hand this
+                // account to the provider's owner while its password may be another's.
+                throw SocialiteException::unverifiedAccount();
             } else {
                 $this->updateUserAvatar($user, $avatarUrl);
             }
@@ -198,7 +200,9 @@ class SocialiteService
         $user = User::create([
             'name' => $socialiteUser->getName() ?: $socialiteUser->getNickname(),
             'email' => $socialiteUser->getEmail(),
-            'password' => Hash::make(Str::random(32)), // Random password
+            // None: the provider is their way in until they add one, which is what stops
+            // them disconnecting it (disconnectProvider) and locking themselves out.
+            'password' => null,
             'avatar' => $avatarUrl,
         ]);
 

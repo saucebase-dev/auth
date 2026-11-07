@@ -133,8 +133,8 @@ class SocialiteServiceTest extends TestCase
             'user_id' => $user->id,
             'provider' => 'google',
             'provider_id' => 'provider-123',
-            'provider_token' => 'new-token',
         ]);
+        $this->assertSame('new-token', SocialAccount::where('provider_id', 'provider-123')->sole()->provider_token);
         $this->assertDatabaseCount('social_accounts', 1);
     }
 
@@ -261,8 +261,8 @@ class SocialiteServiceTest extends TestCase
         $this->assertEquals($existingUser->id, $user->id);
         $this->assertDatabaseHas('social_accounts', [
             'provider_id' => 'existing-provider-id',
-            'provider_token' => 'updated-token',
         ]);
+        $this->assertSame('updated-token', SocialAccount::where('provider_id', 'existing-provider-id')->sole()->provider_token);
         Event::assertNotDispatched(Registered::class);
     }
 

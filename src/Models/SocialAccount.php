@@ -13,8 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property string $provider
  * @property string $provider_id
- * @property string $provider_token
- * @property string $provider_refresh_token
+ * @property string|null $provider_token
+ * @property string|null $provider_refresh_token
  * @property Carbon|null $provider_token_expires_at
  * @property string|null $provider_avatar_url
  * @property Carbon|null $last_login_at
@@ -36,9 +36,17 @@ class SocialAccount extends Model
         'last_login_at',
     ];
 
+    /** They let the app act on the provider as the user. */
+    protected $hidden = [
+        'provider_token',
+        'provider_refresh_token',
+    ];
+
     protected function casts(): array
     {
         return [
+            'provider_token' => 'encrypted',
+            'provider_refresh_token' => 'encrypted',
             'provider_token_expires_at' => 'datetime',
             'last_login_at' => 'datetime',
         ];
