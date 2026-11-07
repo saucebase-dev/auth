@@ -100,6 +100,10 @@ class SocialiteService
                 }
 
                 $user = $this->createNewUser($socialiteUser, $avatarUrl);
+            } elseif (! $user->hasVerifiedEmail()) {
+                // Anyone can sign up with someone else's address; linking would hand this
+                // account to the provider's owner while its password may be another's.
+                throw SocialiteException::unverifiedAccount();
             } else {
                 $this->updateUserAvatar($user, $avatarUrl);
             }

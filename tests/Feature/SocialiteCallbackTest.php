@@ -104,6 +104,25 @@ class SocialiteCallbackTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    /**
+     * An unconfirmed address proves nothing about who made the account: anyone can sign up
+     * with someone else's email. Linking would hand the provider's owner an account whose
+     * password someone else may know.
+     */
+    public function test_social_callback_does_not_link_to_an_unverified_account(): void
+    {
+        $this->enableGithub();
+
+        $user = User::factory()->unverified()->create();
+        $this->mockSocialiteDriver($this->makeSocialiteUser(email: $user->email));
+
+        $this->get(route('auth.socialite.callback', ['provider' => 'github']))
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
+        $this->assertDatabaseMissing('social_accounts', ['user_id' => $user->id]);
+    }
+
     public function test_callback_sets_last_social_provider_cookie(): void
     {
         $this->enableGithub();
