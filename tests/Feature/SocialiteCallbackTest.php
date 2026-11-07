@@ -6,12 +6,15 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\AbstractProvider;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Mockery\MockInterface;
+use Modules\Auth\Models\SocialAccount;
 use Modules\Auth\Notifications\LoginNotification;
 use Modules\Auth\Settings\AuthSettings;
 use Saucebase\Core\Facades\Home;
@@ -225,8 +228,8 @@ class SocialiteCallbackTest extends TestCase
             'user_id' => $user->id,
             'provider' => 'github',
             'provider_id' => 'gh-42',
-            'provider_refresh_token' => 'refresh-token',
         ]);
+        $this->assertSame('refresh-token', SocialAccount::where('provider_id', 'gh-42')->sole()->provider_refresh_token);
         $this->assertSame(trans('auth::socialite.account_connected', ['provider' => 'Github']), session('toast')['message']);
     }
 
@@ -301,6 +304,45 @@ class SocialiteCallbackTest extends TestCase
 
         $this->get(route('auth.socialite.callback', ['provider' => 'github']));
 
-        $this->assertDatabaseHas('social_accounts', ['provider_id' => 'gh-7', 'provider_refresh_token' => 'refresh-token']);
+        $account = SocialAccount::where('provider_id', 'gh-7')->sole();
+        $this->assertSame('refresh-token', $account->provider_refresh_token);
+        $this->assertSame('access-token', $account->provider_token);
+    }
+
+    /** They let the app act on the provider as the user: never stored readable, never serialised. */
+    public function test_provider_tokens_are_encrypted_at_rest_and_hidden(): void
+    {
+        $this->enableGithub();
+        $this->mockSocialiteDriver($this->makeSocialiteUser(id: 'gh-8'));
+
+        $this->get(route('auth.socialite.callback', ['provider' => 'github']));
+
+        $row = DB::table('social_accounts')->where('provider_id', 'gh-8')->sole();
+        $this->assertNotSame('access-token', $row->provider_token);
+        $this->assertNotSame('refresh-token', $row->provider_refresh_token);
+        $this->assertSame('access-token', Crypt::decryptString($row->provider_token));
+
+        $serialised = SocialAccount::where('provider_id', 'gh-8')->sole()->toArray();
+        $this->assertArrayNotHasKey('provider_token', $serialised);
+        $this->assertArrayNotHasKey('provider_refresh_token', $serialised);
+    }
+
+    /**
+     * A provider sign-up sets no password, so the provider stays its only way in until the
+     * user adds one: a made-up password would let them disconnect it and lock themselves out.
+     */
+    public function test_a_social_sign_up_has_no_password_and_cannot_drop_its_only_sign_in(): void
+    {
+        $this->enableGithub();
+        $this->mockSocialiteDriver($this->makeSocialiteUser(id: 'gh-9', email: 'only@example.com'));
+
+        $this->get(route('auth.socialite.callback', ['provider' => 'github']));
+
+        $user = User::where('email', 'only@example.com')->sole();
+        $this->assertNull($user->password);
+
+        $this->actingAs($user)->delete(route('auth.socialite.disconnect', ['provider' => 'github']));
+
+        $this->assertDatabaseHas('social_accounts', ['user_id' => $user->id, 'provider' => 'github']);
     }
 }
