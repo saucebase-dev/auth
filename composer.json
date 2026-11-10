@@ -22,6 +22,9 @@
         "Modules\\Auth\\Providers\\AuthServiceProvider"
       ],
       "aliases": {}
+    },
+    "branch-alias": {
+      "dev-dev": "3.9.x-dev"
     }
   },
   "autoload": {
