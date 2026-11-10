@@ -51,7 +51,7 @@ test.describe('Theme persistence', () => {
         // Select dark via the UI — this writes localStorage + cookie
         await page.getByTestId('user-menu-trigger').click();
         await page.getByTestId('theme-selector-trigger').click();
-        await page.getByRole('menuitem', { name: 'Dark' }).click();
+        await page.getByTestId('color-mode-dark').click();
 
         await expect(page.locator('html')).toHaveClass(/dark/);
 
@@ -73,7 +73,7 @@ test.describe('Theme persistence', () => {
         // Select light via the UI
         await page.getByTestId('user-menu-trigger').click();
         await page.getByTestId('theme-selector-trigger').click();
-        await page.getByRole('menuitem', { name: 'Light' }).click();
+        await page.getByTestId('color-mode-light').click();
 
         await expect(page.locator('html')).not.toHaveClass(/dark/);
 
