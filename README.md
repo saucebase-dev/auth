@@ -99,7 +99,7 @@ Emails (reset, verification, magic links, alerts) need a working mail setup.
 ## Demo data
 
 ```bash
-php artisan modules:seed --module=auth --demo
+php artisan modules:seed --module=auth --state=showcase
 ```
 
 Adds a user (`chef@saucebase.dev`) and a support staff account (`support@saucebase.dev`) that only sees user admin. Both use the `DEMO_PASSWORD` from `.env`.

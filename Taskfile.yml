@@ -14,9 +14,9 @@ tasks:
 
     # ── Database ──────────────────────────────────────────────────
 
-    db:seed:demo:
+    db:seed:showcase:
         desc: Seed the Auth module with sample content
-        cmd: '{{.APP}} php artisan modules:seed --module=auth --demo'
+        cmd: '{{.APP}} php artisan modules:seed --module=auth --state=showcase'
     
     make-admin:
         desc: Promote an user to Admin
