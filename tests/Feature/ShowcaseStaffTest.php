@@ -6,20 +6,20 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Modules\Auth\Database\Seeders\DatabaseSeeder;
-use Modules\Auth\Database\Seeders\DemoAuthDatabaseSeeder;
+use Modules\Auth\Database\Seeders\ShowcaseAuthDatabaseSeeder;
 use Tests\TestCase;
 
 /**
  * The demo ships a staff account for this module's admin area, so visitors can try a
  * role that sees only part of the panel.
  */
-class DemoStaffTest extends TestCase
+class ShowcaseStaffTest extends TestCase
 {
     use RefreshDatabase;
 
     public function test_the_demo_adds_a_staff_account_for_this_module_only(): void
     {
-        $this->seed([DatabaseSeeder::class, DemoAuthDatabaseSeeder::class]);
+        $this->seed([DatabaseSeeder::class, ShowcaseAuthDatabaseSeeder::class]);
 
         $staff = User::where('email', 'support@saucebase.dev')->firstOrFail();
 
@@ -29,7 +29,7 @@ class DemoStaffTest extends TestCase
 
     public function test_the_demo_has_one_full_admin_to_sign_in_with(): void
     {
-        $this->seed([DatabaseSeeder::class, DemoAuthDatabaseSeeder::class]);
+        $this->seed([DatabaseSeeder::class, ShowcaseAuthDatabaseSeeder::class]);
 
         $this->assertSame(['admin'], User::where('email', 'chef@saucebase.dev')->firstOrFail()->getRoleNames()->all());
     }
@@ -38,7 +38,7 @@ class DemoStaffTest extends TestCase
     {
         config(['saucebase.demo_password' => 'not-the-old-default']);
 
-        $this->seed([DatabaseSeeder::class, DemoAuthDatabaseSeeder::class]);
+        $this->seed([DatabaseSeeder::class, ShowcaseAuthDatabaseSeeder::class]);
 
         $this->assertTrue(Hash::check('not-the-old-default', User::where('email', 'support@saucebase.dev')->value('password')));
     }
