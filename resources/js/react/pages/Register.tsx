@@ -1,4 +1,5 @@
 import { Modal } from '@inertiaui/modal-react';
+import { useSettings } from '@saucebase/react/hooks/useSettings';
 import { useT } from '@saucebase/react/i18n';
 import RegisterForm from '../components/RegisterForm';
 import AuthCardLayout from '../layouts/AuthCardLayout';
@@ -10,14 +11,15 @@ interface RegisterProps {
 /** Registration, as a page or a modal. See `Login.tsx` for the reasoning. */
 export default function Register({ modal }: RegisterProps) {
     const t = useT();
+    const settings = useSettings();
 
     if (!modal) {
         return (
             <AuthCardLayout
                 title={t('Create your account')}
-                description={t(
-                    'Sign up for Saucebase to start building your SaaS',
-                )}
+                description={t('Sign up for :app to get started', {
+                    app: settings.general.site_name,
+                })}
             >
                 <RegisterForm />
             </AuthCardLayout>
@@ -32,7 +34,9 @@ export default function Register({ modal }: RegisterProps) {
                         {t('Create your account')}
                     </h2>
                     <p className="text-muted-foreground text-sm">
-                        {t('Sign up for Saucebase to start building your SaaS')}
+                        {t('Sign up for :app to get started', {
+                            app: settings.general.site_name,
+                        })}
                     </p>
                 </div>
 
