@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import { useSettings } from '@saucebase/vue/composables/useSettings';
 import AlertMessage from '@/components/AlertMessage.vue';
 import { Modal } from '@inertiaui/modal-vue';
 import LoginForm from '../components/LoginForm.vue';
 import AuthCardLayout from '../layouts/AuthCardLayout.vue';
+
+const settings = useSettings();
 
 /**
  * Signing in, as a page or as a modal over whatever the visitor was reading.
@@ -25,7 +28,11 @@ defineProps<{
             <div class="space-y-1.5 text-center">
                 <h2 class="text-2xl font-semibold">{{ $t('Welcome back') }}</h2>
                 <p class="text-muted-foreground text-sm">
-                    {{ $t('Login to your Saucebase account to continue') }}
+                    {{
+                        $t('Login to your :app account to continue', {
+                            app: settings.general.site_name,
+                        })
+                    }}
                 </p>
             </div>
 
@@ -44,7 +51,11 @@ defineProps<{
     <AuthCardLayout
         v-else
         :title="$t('Welcome back')"
-        :description="$t('Login to your Saucebase account to continue')"
+        :description="
+            $t('Login to your :app account to continue', {
+                app: settings.general.site_name,
+            })
+        "
     >
         <LoginForm />
     </AuthCardLayout>

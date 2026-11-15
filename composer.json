@@ -22,6 +22,9 @@
         "Modules\\Auth\\Providers\\AuthServiceProvider"
       ],
       "aliases": {}
+    },
+    "branch-alias": {
+      "dev-dev": "3.9.x-dev"
     }
   },
   "autoload": {
@@ -37,7 +40,7 @@
     }
   },
   "require": {
-    "saucebase/core": "^2.8.1",
+    "saucebase/core": "^3.0",
     "laravel/socialite": "^5.31",
     "stechstudio/filament-impersonate": "^5.6.1",
     "laravel/passkeys": "^0.2.1"

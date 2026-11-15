@@ -1,5 +1,6 @@
 import AlertMessage from '@/components/AlertMessage';
 import { Modal } from '@inertiaui/modal-react';
+import { useSettings } from '@saucebase/react/hooks/useSettings';
 import { useT } from '@saucebase/react/i18n';
 import LoginForm from '../components/LoginForm';
 import AuthCardLayout from '../layouts/AuthCardLayout';
@@ -20,12 +21,15 @@ interface LoginProps {
  */
 export default function Login({ status, error, modal }: LoginProps) {
     const t = useT();
+    const settings = useSettings();
 
     if (!modal) {
         return (
             <AuthCardLayout
                 title={t('Welcome back')}
-                description={t('Login to your Saucebase account to continue')}
+                description={t('Login to your :app account to continue', {
+                    app: settings.general.site_name,
+                })}
             >
                 <LoginForm />
             </AuthCardLayout>
@@ -40,7 +44,9 @@ export default function Login({ status, error, modal }: LoginProps) {
                         {t('Welcome back')}
                     </h2>
                     <p className="text-muted-foreground text-sm">
-                        {t('Login to your Saucebase account to continue')}
+                        {t('Login to your :app account to continue', {
+                            app: settings.general.site_name,
+                        })}
                     </p>
                 </div>
 
