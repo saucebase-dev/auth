@@ -4,8 +4,11 @@ namespace Modules\Auth\Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Saucebase\Core\Attributes\DemoAccount;
 use Spatie\Permission\Models\Role;
 
+#[DemoAccount('chef@saucebase.dev', 'admin, sees everything', featured: true)]
+#[DemoAccount('support@saucebase.dev', 'support staff: users and impersonation')]
 class ShowcaseAuthDatabaseSeeder extends Seeder
 {
     /**
