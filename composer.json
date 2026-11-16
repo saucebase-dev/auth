@@ -12,7 +12,6 @@
   ],
   "extra": {
     "saucebase": {
-      "demo_account": "chef@saucebase.dev (admin)",
       "frameworks": [
         "vue",
         "react"
