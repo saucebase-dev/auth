@@ -25,7 +25,7 @@
       "aliases": {}
     },
     "branch-alias": {
-      "dev-dev": "3.10.x-dev"
+      "dev-dev": "3.x-dev"
     }
   },
   "autoload": {
