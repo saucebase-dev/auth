@@ -152,6 +152,8 @@ Uses `stechstudio/filament-impersonate`. Session stores history at `impersonatio
 
 `MagicLinkController::authenticate()` hashes the incoming token and consumes it in one atomic `UPDATE` (unused and unexpired only), so a link works once even under concurrent clicks, then logs in the user and redirects to the intended URL or home.
 
+The link proves the inbox, so a magic sign-in to an **unverified** account marks it verified and clears its password and remember token. Anyone can register someone else's address with a password of their own (pre-hijack), and that password must not outlive the owner's proof. A verified account keeps its password. The attacker's open sessions end only once sc-714 adds `AuthenticateSession`. Changing a user's email (any writer: `User::updated` in `AuthServiceProvider`) deletes their outstanding magic links, since a link proves only the inbox it reached.
+
 `AuthSettings` is auto-discovered from `src/Settings`, with defaults installed
 from `database/settings`. Magic links are disabled by default, with a 15-minute
 expiry once switched on. Administrators manage both values through the `AuthenticationSettings`
@@ -245,3 +247,4 @@ npx playwright test --project="@auth*"                 # E2E
 - Magic link authenticate route is outside both guest and auth middleware groups (link is clicked from email client)
 - `modal_enabled` is presentation only. Turning it off does not change what the routes do, only how they are reached — the canonical URLs work either way, which is why there is no separate modal route.
 - `registration_enabled` closes both signup paths: `EnsureRegistrationEnabled` 404s the register routes, and `SocialiteService::handleCallback()` throws `registrationDisabled()` rather than creating a new user (existing users still sign in). Login is deliberately not toggleable — disabling it would lock out admins.
+- **An invitation opens closed sign-up for one address.** Core's `RegistrationInvite` (session) is set by the inviting module (tenancy's invitation page). While it holds an address, `EnsureRegistrationEnabled` lets the register routes through, the page gets `by_invitation: {email}` and passes it to `RegisterForm` as `invitedEmail` (a modal's props are not `usePage()`'s; email fixed, providers hidden), `RegisterRequest` refuses any other address while sign-up is closed, and the account starts verified (the invitation reached that inbox). Registering forgets it. Social sign-up for invitees is not covered (`registrationDisabled()` still applies).

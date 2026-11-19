@@ -21,14 +21,19 @@ interface RegisterFormProps {
      * modal sitting on top of wherever the visitor just landed.
      */
     modal?: boolean;
+    /** Arrived from an invitation: the account is for this address, fixed. */
+    invitedEmail?: string;
 }
 
-export default function RegisterForm({ modal }: RegisterFormProps) {
+export default function RegisterForm({
+    modal,
+    invitedEmail,
+}: RegisterFormProps) {
     const t = useT();
     const [showPassword, setShowPassword] = useState(false);
     const { data, setData, post, processing, errors } = useForm({
         name: '',
-        email: '',
+        email: invitedEmail ?? '',
         password: '',
         password_confirmation: '',
         terms: false,
@@ -58,7 +63,17 @@ export default function RegisterForm({ modal }: RegisterFormProps) {
 
     return (
         <>
-            <SocialiteProviders />
+            {/* An invitation is for its address; a provider could sign up another one. */}
+            {invitedEmail ? (
+                <p
+                    className="text-muted-foreground text-center text-sm"
+                    data-testid="register-invited"
+                >
+                    {t('You were invited as :email.', { email: invitedEmail })}
+                </p>
+            ) : (
+                <SocialiteProviders />
+            )}
 
             <form
                 onSubmit={handleSubmit}
@@ -93,6 +108,7 @@ export default function RegisterForm({ modal }: RegisterFormProps) {
                         placeholder={t('Enter your email')}
                         autoComplete="email"
                         data-testid="email"
+                        readOnly={!!invitedEmail}
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
                     />
