@@ -444,7 +444,14 @@ const initiateDisconnect = async (provider: string) => {
         <!-- Password -->
         <div class="space-y-4">
             <div class="space-y-1">
-                <h3 class="font-medium">{{ $t('Update Password') }}</h3>
+                <!-- Signed up through a provider: there is no password yet to give. -->
+                <h3 class="font-medium">
+                    {{
+                        props.user.has_password
+                            ? $t('Update Password')
+                            : $t('Set a password')
+                    }}
+                </h3>
                 <p class="text-muted-foreground text-sm">
                     {{
                         $t(
@@ -463,6 +470,7 @@ const initiateDisconnect = async (provider: string) => {
                 :reset-on-success="true"
             >
                 <InputField
+                    v-if="props.user.has_password"
                     name="current_password"
                     type="password"
                     :label="$t('Current Password')"
@@ -491,7 +499,11 @@ const initiateDisconnect = async (provider: string) => {
 
                 <div class="flex justify-end pt-2">
                     <Button type="submit" data-testid="submit-change-password">
-                        {{ $t('Update Password') }}
+                        {{
+                            props.user.has_password
+                                ? $t('Update Password')
+                                : $t('Set a password')
+                        }}
                     </Button>
                 </div>
             </Form>
