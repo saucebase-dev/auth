@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\AbstractProvider;
+use Laravel\Socialite\Two\InvalidStateException;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Mockery\MockInterface;
 use Modules\Auth\Models\SocialAccount;
@@ -60,6 +61,19 @@ class SocialiteCallbackTest extends TestCase
                     $mock->shouldReceive('user')->andReturn($abstractUser);
                 }),
             );
+    }
+
+    /** A cancelled sign-in or a stale state comes back as an error from Socialite: the guest is told, not shown a 500. */
+    public function test_a_failed_provider_callback_sends_the_guest_back_to_login(): void
+    {
+        $this->enableGithub();
+        Socialite::shouldReceive('driver')->with('github')->andReturn(
+            \Mockery::mock(AbstractProvider::class, fn (MockInterface $mock) => $mock->shouldReceive('user')->andThrow(new InvalidStateException)),
+        );
+
+        $this->get(route('auth.socialite.callback', ['provider' => 'github']))->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 
     public function test_social_callback_does_not_create_user_when_registration_is_disabled(): void
