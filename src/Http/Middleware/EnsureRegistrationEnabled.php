@@ -5,6 +5,7 @@ namespace Modules\Auth\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Modules\Auth\Settings\AuthSettings;
+use Saucebase\Core\RegistrationInvite;
 
 class EnsureRegistrationEnabled
 {
@@ -12,7 +13,8 @@ class EnsureRegistrationEnabled
 
     public function handle(Request $request, Closure $next): mixed
     {
-        abort_unless($this->settings->registration_enabled, 404);
+        // Closed sign-up still lets an invited address in; RegisterRequest holds it to that address.
+        abort_unless($this->settings->registration_enabled || RegistrationInvite::email() !== null, 404);
 
         return $next($request);
     }

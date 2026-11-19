@@ -47,6 +47,12 @@ class SocialiteController extends Controller
             Toast::error($e->getMessage());
 
             return redirect()->route('login');
+        } catch (\Exception $e) {
+            // A cancelled sign-in, a stale state or the provider failing: as in the linking flow above.
+            Toast::error(trans('auth::socialite.error'));
+            report($e);
+
+            return redirect()->route('login');
         }
 
         if ($user->wasRecentlyCreated) {

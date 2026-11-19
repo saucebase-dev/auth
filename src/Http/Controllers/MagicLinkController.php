@@ -101,6 +101,17 @@ class MagicLinkController extends Controller implements HasMiddleware
             return redirect()->route('login')->with('error', __('auth::auth.magic-link-expired'));
         }
 
+        // The link proves the inbox. An unverified account may have been registered by someone
+        // else with this address (pre-hijack): it becomes the inbox owner's, and nothing set
+        // before that proof still opens it. Their other sessions end with sc-714.
+        if ($user->email_verified_at === null) {
+            $user->forceFill([
+                'email_verified_at' => now(),
+                'password' => null,
+                'remember_token' => Str::random(60),
+            ])->save();
+        }
+
         $this->signIn($request, $user);
 
         $intended = $request->query('intended');

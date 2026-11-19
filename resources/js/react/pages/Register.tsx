@@ -6,10 +6,13 @@ import AuthCardLayout from '../layouts/AuthCardLayout';
 
 interface RegisterProps {
     modal?: boolean;
+    /** Reached from an invitation: the address the account is for. */
+    by_invitation?: { email: string } | null;
 }
 
 /** Registration, as a page or a modal. See `Login.tsx` for the reasoning. */
-export default function Register({ modal }: RegisterProps) {
+export default function Register({ modal, by_invitation }: RegisterProps) {
+    const invitedEmail = by_invitation?.email;
     const t = useT();
     const settings = useSettings();
 
@@ -21,7 +24,7 @@ export default function Register({ modal }: RegisterProps) {
                     app: settings.general.site_name,
                 })}
             >
-                <RegisterForm />
+                <RegisterForm invitedEmail={invitedEmail} />
             </AuthCardLayout>
         );
     }
@@ -40,7 +43,7 @@ export default function Register({ modal }: RegisterProps) {
                     </p>
                 </div>
 
-                <RegisterForm modal />
+                <RegisterForm modal invitedEmail={invitedEmail} />
             </div>
         </Modal>
     );

@@ -7,6 +7,8 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Modules\Auth\Settings\AuthSettings;
+use Saucebase\Core\RegistrationInvite;
 
 class RegisterRequest extends FormRequest
 {
@@ -27,7 +29,12 @@ class RegisterRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:'.User::class,
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class, function (string $attribute, string $email, \Closure $fail): void {
+                // Sign-up is closed: only the address the invitation was sent to.
+                if (! app(AuthSettings::class)->registration_enabled && ! RegistrationInvite::allows($email)) {
+                    $fail(__('Use the address the invitation was sent to.'));
+                }
+            }],
             'password' => ['required', Rules\Password::defaults()],
             'terms' => ['accepted'],
         ];

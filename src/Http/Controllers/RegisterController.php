@@ -11,6 +11,7 @@ use Inertia\Response;
 use InertiaUI\Modal\Modal;
 use Modules\Auth\Http\Requests\RegisterRequest;
 use Saucebase\Core\Facades\Home;
+use Saucebase\Core\RegistrationInvite;
 use Saucebase\Core\Toast;
 
 class RegisterController extends Controller
@@ -20,7 +21,11 @@ class RegisterController extends Controller
      */
     public function create(): Response|Modal
     {
-        return $this->pageOrModal('Auth::Register');
+        $invited = RegistrationInvite::email();
+
+        return $this->pageOrModal('Auth::Register', [
+            'by_invitation' => $invited === null ? null : ['email' => $invited],
+        ]);
     }
 
     /**
@@ -32,6 +37,12 @@ class RegisterController extends Controller
     {
         $data = $request->only(['name', 'email', 'password']);
         $user = User::create($data);
+
+        // The invitation reached this inbox: the address is proven, and the invite is used up.
+        if (RegistrationInvite::allows($user->email)) {
+            $user->forceFill(['email_verified_at' => now()])->save();
+            RegistrationInvite::forget();
+        }
 
         event(new Registered($user));
 
