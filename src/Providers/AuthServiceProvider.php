@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Inertia;
 use Laravel\Passkeys\Passkeys;
+use Modules\Auth\Models\MagicLinkToken;
 use Modules\Auth\Policies\UserPolicy;
 use Modules\Auth\Services\SocialiteService;
 use Modules\Auth\Settings\AuthSettings;
@@ -36,6 +37,14 @@ class AuthServiceProvider extends ModuleServiceProvider
         parent::boot();
 
         Gate::policy(User::class, UserPolicy::class);
+
+        // A magic link proves the inbox it was sent to. A new address voids the old links,
+        // or one would sign in (and verify) an address it never reached. Every writer counts.
+        User::updated(function (User $user): void {
+            if ($user->wasChanged('email')) {
+                MagicLinkToken::query()->where('user_id', $user->getKey())->delete();
+            }
+        });
 
         // `throttle:passkeys`: its own counter, so a sign-in (two requests) does not
         // share the per-address budget of password and magic-link sign-in. Keyed by
