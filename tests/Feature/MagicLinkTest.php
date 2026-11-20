@@ -134,6 +134,33 @@ class MagicLinkTest extends TestCase
     }
 
     /**
+     * The address changes while the link is being opened: the change commits after the
+     * account is read but before it is verified. The link reached the old inbox only, so the
+     * new address stays unverified and nobody is signed in.
+     */
+    public function test_an_address_changed_while_the_link_opens_is_not_verified_by_it(): void
+    {
+        $user = User::factory()->unverified()->create(['email' => 'old@example.com']);
+        $plainToken = Str::random(64);
+        MagicLinkToken::create(['user_id' => $user->id, 'token' => hash('sha256', $plainToken), 'expires_at' => now()->addMinutes(15)]);
+
+        $changed = false;
+        User::retrieved(function (User $retrieved) use (&$changed): void {
+            if (! $changed) {
+                $changed = true;
+                // Another request's change of address, committed: its links go with it.
+                User::whereKey($retrieved->id)->update(['email' => 'new@example.com']);
+                MagicLinkToken::where('user_id', $retrieved->id)->delete();
+            }
+        });
+
+        $this->get(route('magic-link.authenticate', $plainToken))->assertRedirect(route('login'));
+
+        $this->assertGuest();
+        $this->assertNull($user->fresh()->email_verified_at);
+    }
+
+    /**
      * A link proves the inbox it was sent to. Once the address changes, an older link would
      * vouch for the new one (and verify it), so changing the email voids outstanding links.
      */
