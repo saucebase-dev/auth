@@ -107,15 +107,31 @@ class MagicLinkController extends Controller implements HasMiddleware
         // before that proof still opens it: password, remember-me, a connected provider or a
         // passkey (`verified` lets an unverified user add both). Their other sessions end with sc-714.
         if ($user->email_verified_at === null) {
-            DB::transaction(function () use ($user): void {
-                $user->forceFill([
+            $proved = DB::transaction(function () use ($user, $record): bool {
+                // Read again under lock: an address changed since the link was opened is not
+                // the inbox it reached. A change of address voids its links as it commits.
+                $locked = User::lockForUpdate()->find($user->getKey());
+
+                if ($locked?->email !== $user->email || ! MagicLinkToken::whereKey($record->getKey())->exists()) {
+                    return false;
+                }
+
+                $locked->forceFill([
                     'email_verified_at' => now(),
                     'password' => null,
                     'remember_token' => Str::random(60),
                 ])->save();
-                $user->socialAccounts()->delete();
-                $user->passkeys()->delete();
+                $locked->socialAccounts()->delete();
+                $locked->passkeys()->delete();
+
+                return true;
             });
+
+            if (! $proved) {
+                return redirect()->route('login')->with('error', __('auth::auth.magic-link-expired'));
+            }
+
+            $user->refresh();
         }
 
         $this->signIn($request, $user);
