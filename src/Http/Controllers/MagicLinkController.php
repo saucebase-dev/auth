@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -103,13 +104,18 @@ class MagicLinkController extends Controller implements HasMiddleware
 
         // The link proves the inbox. An unverified account may have been registered by someone
         // else with this address (pre-hijack): it becomes the inbox owner's, and nothing set
-        // before that proof still opens it. Their other sessions end with sc-714.
+        // before that proof still opens it: password, remember-me, a connected provider or a
+        // passkey (`verified` lets an unverified user add both). Their other sessions end with sc-714.
         if ($user->email_verified_at === null) {
-            $user->forceFill([
-                'email_verified_at' => now(),
-                'password' => null,
-                'remember_token' => Str::random(60),
-            ])->save();
+            DB::transaction(function () use ($user): void {
+                $user->forceFill([
+                    'email_verified_at' => now(),
+                    'password' => null,
+                    'remember_token' => Str::random(60),
+                ])->save();
+                $user->socialAccounts()->delete();
+                $user->passkeys()->delete();
+            });
         }
 
         $this->signIn($request, $user);

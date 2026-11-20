@@ -116,6 +116,24 @@ class MagicLinkTest extends TestCase
     }
 
     /**
+     * Before the proof, whoever registered the address could also connect their own provider
+     * account or add a passkey (`verified` lets an unverified user through): neither outlives it.
+     */
+    public function test_a_magic_link_to_an_unverified_account_drops_its_providers_and_passkeys(): void
+    {
+        $user = User::factory()->unverified()->create();
+        $user->socialAccounts()->create(['provider' => 'github', 'provider_id' => 'attackers-github']);
+        $user->passkeys()->create(['name' => 'Attacker', 'credential_id' => 'abc', 'credential' => []]);
+        $plainToken = Str::random(64);
+        MagicLinkToken::create(['user_id' => $user->id, 'token' => hash('sha256', $plainToken), 'expires_at' => now()->addMinutes(15)]);
+
+        $this->get(route('magic-link.authenticate', $plainToken));
+
+        $this->assertSame(0, $user->socialAccounts()->count());
+        $this->assertSame(0, $user->passkeys()->count());
+    }
+
+    /**
      * A link proves the inbox it was sent to. Once the address changes, an older link would
      * vouch for the new one (and verify it), so changing the email voids outstanding links.
      */

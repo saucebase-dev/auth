@@ -152,7 +152,9 @@ Uses `stechstudio/filament-impersonate`. Session stores history at `impersonatio
 
 `MagicLinkController::authenticate()` hashes the incoming token and consumes it in one atomic `UPDATE` (unused and unexpired only), so a link works once even under concurrent clicks, then logs in the user and redirects to the intended URL or home.
 
-The link proves the inbox, so a magic sign-in to an **unverified** account marks it verified and clears its password and remember token. Anyone can register someone else's address with a password of their own (pre-hijack), and that password must not outlive the owner's proof. A verified account keeps its password. The attacker's open sessions end only once sc-714 adds `AuthenticateSession`. Changing a user's email (any writer: `User::updated` in `AuthServiceProvider`) deletes their outstanding magic links, since a link proves only the inbox it reached.
+The link proves the inbox, so a magic sign-in to an **unverified** account marks it verified and clears, in one transaction, its password, remember token, connected providers and passkeys. Anyone can register someone else's address with a password of their own (pre-hijack) and, since `verified` lets an unverified user through, connect a provider or add a passkey too: none of it may outlive the owner's proof. A genuine social sign-up is unverified too (sc-713), so it loses its provider link at that proof and reconnects from Settings. A verified account keeps all of them. The attacker's open sessions end only once sc-714 adds `AuthenticateSession`.
+
+Changing a user's email through an Eloquent save deletes their outstanding magic links (`User::updated` in `AuthServiceProvider`), since a link proves only the inbox it reached. Query-builder and mass updates fire no model events and leave the links valid: such a write must delete the user's `MagicLinkToken` rows itself. `ProfileController::updateInfo()` saves the address, voids the links and drops the verification in one transaction.
 
 `AuthSettings` is auto-discovered from `src/Settings`, with defaults installed
 from `database/settings`. Magic links are disabled by default, with a 15-minute
