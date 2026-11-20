@@ -499,7 +499,12 @@ export default function SettingsSecurity({
             {/* Password */}
             <div className="space-y-4">
                 <div className="space-y-1">
-                    <h3 className="font-medium">{t('Update Password')}</h3>
+                    {/* Signed up through a provider: there is no password yet to give. */}
+                    <h3 className="font-medium">
+                        {user.has_password
+                            ? t('Update Password')
+                            : t('Set a password')}
+                    </h3>
                     <p className="text-muted-foreground text-sm">
                         {t(
                             'Ensure your account is using a long, random password to stay secure.',
@@ -517,13 +522,17 @@ export default function SettingsSecurity({
                 >
                     {({ errors }) => (
                         <>
-                            <PasswordField
-                                name="current_password"
-                                label={t('Current Password')}
-                                placeholder={t('Enter your current password')}
-                                autoComplete="current-password"
-                                error={errors.current_password}
-                            />
+                            {user.has_password && (
+                                <PasswordField
+                                    name="current_password"
+                                    label={t('Current Password')}
+                                    placeholder={t(
+                                        'Enter your current password',
+                                    )}
+                                    autoComplete="current-password"
+                                    error={errors.current_password}
+                                />
+                            )}
 
                             <PasswordField
                                 name="password"
@@ -546,7 +555,9 @@ export default function SettingsSecurity({
                                     type="submit"
                                     data-testid="submit-change-password"
                                 >
-                                    {t('Update Password')}
+                                    {user.has_password
+                                        ? t('Update Password')
+                                        : t('Set a password')}
                                 </Button>
                             </div>
                         </>

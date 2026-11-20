@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Notification;
 use Modules\Auth\Notifications\LoginNotification;
 use Modules\Auth\Notifications\WelcomeNotification;
 use Modules\Auth\Settings\AuthSettings;
+use Saucebase\Core\RegistrationInvite;
 use Tests\TestCase;
 
 class RegisterTest extends TestCase
@@ -42,6 +43,71 @@ class RegisterTest extends TestCase
         ])->assertNotFound();
 
         $this->assertDatabaseMissing('users', ['email' => 'test@example.com']);
+    }
+
+    // ── Invited while sign-up is closed (RegistrationInvite, set by e.g. tenancy) ──
+
+    /** @return array<string, mixed> */
+    /** A malformed address is a validation error, not a 500 from the invitation check. */
+    public function test_an_email_that_is_not_a_string_is_a_validation_error(): void
+    {
+        $this->post(route('register'), [...$this->signUp(''), 'email' => ['ana@example.com']])
+            ->assertSessionHasErrors('email');
+
+        $this->assertGuest();
+    }
+
+    private function signUp(string $email): array
+    {
+        return ['name' => 'Ana', 'email' => $email, 'password' => 'password123', 'terms' => true];
+    }
+
+    public function test_an_invited_guest_reaches_the_closed_register_page_with_their_address(): void
+    {
+        $this->disableRegistration();
+
+        $this->withSession(['saucebase.registration_invite' => 'ana@example.com'])
+            ->get(route('register'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('by_invitation.email', 'ana@example.com'));
+    }
+
+    /** The invitation came to that inbox, so the account starts verified and the invite is used up. */
+    public function test_an_invited_guest_registers_their_address_verified(): void
+    {
+        $this->disableRegistration();
+        RegistrationInvite::allow('ana@example.com');
+
+        $this->post(route('register'), $this->signUp('Ana@example.com'))->assertRedirect();
+
+        $this->assertNotNull(User::where('email', 'ana@example.com')->sole()->email_verified_at);
+        $this->assertNull(RegistrationInvite::email());
+    }
+
+    /** An invitation for one address opens sign-up for that address only. */
+    public function test_an_invited_guest_cannot_register_another_address(): void
+    {
+        $this->disableRegistration();
+        RegistrationInvite::allow('ana@example.com');
+
+        $this->post(route('register'), $this->signUp('someone@else.com'))->assertInvalid('email');
+
+        $this->assertDatabaseMissing('users', ['email' => 'someone@else.com']);
+    }
+
+    /** With sign-up open, an invited address still starts verified; anyone else signs up as usual. */
+    public function test_with_sign_up_open_only_the_invited_address_starts_verified(): void
+    {
+        RegistrationInvite::allow('ana@example.com');
+
+        $this->post(route('register'), $this->signUp('bob@example.com'))->assertRedirect();
+
+        $this->assertNull(User::where('email', 'bob@example.com')->sole()->email_verified_at);
+    }
+
+    public function test_the_register_page_has_no_invitation_without_one(): void
+    {
+        $this->get(route('register'))->assertInertia(fn ($page) => $page->where('by_invitation', null));
     }
 
     private function disableRegistration(): void

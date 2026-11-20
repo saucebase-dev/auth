@@ -152,6 +152,10 @@ Uses `stechstudio/filament-impersonate`. Session stores history at `impersonatio
 
 `MagicLinkController::authenticate()` hashes the incoming token and consumes it in one atomic `UPDATE` (unused and unexpired only), so a link works once even under concurrent clicks, then logs in the user and redirects to the intended URL or home.
 
+The link proves the inbox, so a magic sign-in to an **unverified** account marks it verified and clears, in one transaction, its password, remember token, connected providers and passkeys. Anyone can register someone else's address with a password of their own (pre-hijack) and, since `verified` lets an unverified user through, connect a provider or add a passkey too: none of it may outlive the owner's proof. A genuine social sign-up is unverified too (sc-713), so it loses its provider link at that proof and reconnects from Settings. A verified account keeps all of them. The account is locked and read again for that: if its address changed, or the link was voided, since the link was opened, it verifies nothing and signs no one in. The attacker's open sessions end only once sc-714 adds `AuthenticateSession`.
+
+Changing a user's email through an Eloquent save deletes their outstanding magic links (`User::updated` in `AuthServiceProvider`), since a link proves only the inbox it reached. Query-builder and mass updates fire no model events and leave the links valid: such a write must delete the user's `MagicLinkToken` rows itself. `ProfileController::updateInfo()` saves the address, voids the links and drops the verification in one transaction.
+
 `AuthSettings` is auto-discovered from `src/Settings`, with defaults installed
 from `database/settings`. Magic links are disabled by default, with a 15-minute
 expiry once switched on. Administrators manage both values through the `AuthenticationSettings`
@@ -236,7 +240,7 @@ npx playwright test --project="@auth*"                 # E2E
 ## Gotchas
 
 - `LoginRequest::validateCredentials()` validates without logging in — the controller handles `Auth::login()` separately
-- Social sign-ups get **no** password (`users.password` is nullable), so `disconnectProvider()` refuses to remove their only provider until they add one; a made-up password let them lock themselves out (sc-1132). They are **not** marked verified: signing in with a provider is not proof of the address, and nobody has confirmed it (sc-713)
+- Social sign-ups get **no** password (`users.password` is nullable), so `disconnectProvider()` refuses to remove their only provider until they add one (the Security panel's password form asks for no current password while `has_password` is false, and `UpdatePasswordRequest` excludes it); a made-up password let them lock themselves out (sc-1132). They are **not** marked verified: signing in with a provider is not proof of the address, and nobody has confirmed it (sc-713)
 - `SocialAccount::provider_token` and `provider_refresh_token` are cast `encrypted` and `$hidden`: they let the app act on the provider as the user. `1000_00_00_000007` encrypts rows stored before the cast (sc-1132)
 - A guest's social sign-in never links to an existing **unverified** account with the same email (`SocialiteException::unverifiedAccount()`): anyone can register with someone else's address, and linking would hand that account, and whoever knows its password, to the provider's owner. They sign in as before and connect the provider from Settings (sc-1130)
 - Socialite redirect/callback routes are outside both guest and auth middleware groups
@@ -245,3 +249,4 @@ npx playwright test --project="@auth*"                 # E2E
 - Magic link authenticate route is outside both guest and auth middleware groups (link is clicked from email client)
 - `modal_enabled` is presentation only. Turning it off does not change what the routes do, only how they are reached — the canonical URLs work either way, which is why there is no separate modal route.
 - `registration_enabled` closes both signup paths: `EnsureRegistrationEnabled` 404s the register routes, and `SocialiteService::handleCallback()` throws `registrationDisabled()` rather than creating a new user (existing users still sign in). Login is deliberately not toggleable — disabling it would lock out admins.
+- **An invitation opens closed sign-up for one address.** Core's `RegistrationInvite` (session) is set by the inviting module (tenancy's invitation page). While it holds an address, `EnsureRegistrationEnabled` lets the register routes through, the page gets `by_invitation: {email}` and passes it to `RegisterForm` as `invitedEmail` (a modal's props are not `usePage()`'s; email fixed, providers hidden), `RegisterRequest` refuses any other address while sign-up is closed, and the account starts verified (the invitation reached that inbox). Registering forgets it. Social sign-up for invitees is not covered (`registrationDisabled()` still applies).

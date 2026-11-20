@@ -7,8 +7,10 @@ import AuthCardLayout from '../layouts/AuthCardLayout.vue';
 const settings = useSettings();
 
 /** Registration, as a page or a modal. See `Login.vue` for the reasoning. */
-defineProps<{
+const props = defineProps<{
     modal?: boolean;
+    /** Reached from an invitation: the address the account is for. */
+    by_invitation?: { email: string } | null;
 }>();
 </script>
 
@@ -28,7 +30,7 @@ defineProps<{
                 </p>
             </div>
 
-            <RegisterForm modal />
+            <RegisterForm modal :invited-email="props.by_invitation?.email" />
         </div>
     </Modal>
 
@@ -41,6 +43,6 @@ defineProps<{
             })
         "
     >
-        <RegisterForm />
+        <RegisterForm :invited-email="props.by_invitation?.email" />
     </AuthCardLayout>
 </template>

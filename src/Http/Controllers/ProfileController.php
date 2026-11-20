@@ -3,6 +3,7 @@
 namespace Modules\Auth\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Modules\Auth\Http\Requests\UpdateProfileAvatarRequest;
 use Modules\Auth\Http\Requests\UpdateProfileInfoRequest;
@@ -42,12 +43,16 @@ class ProfileController extends Controller
             ]);
         }
 
-        $user->update($request->validated());
+        // One change: the new address, its old links voided (`User::updated`) and its
+        // verification dropped. A failure in any part keeps the old address as it was.
+        DB::transaction(function () use ($user, $request): void {
+            $user->update($request->validated());
 
-        // A new address has not been confirmed, whatever the old one had earned.
-        if ($user->wasChanged('email')) {
-            $user->forceFill(['email_verified_at' => null])->save();
-        }
+            // A new address has not been confirmed, whatever the old one had earned.
+            if ($user->wasChanged('email')) {
+                $user->forceFill(['email_verified_at' => null])->save();
+            }
+        });
 
         Toast::success(__('Profile updated successfully!'));
 

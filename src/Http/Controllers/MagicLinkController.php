@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -99,6 +100,38 @@ class MagicLinkController extends Controller implements HasMiddleware
 
         if ($user === null) {
             return redirect()->route('login')->with('error', __('auth::auth.magic-link-expired'));
+        }
+
+        // The link proves the inbox. An unverified account may have been registered by someone
+        // else with this address (pre-hijack): it becomes the inbox owner's, and nothing set
+        // before that proof still opens it: password, remember-me, a connected provider or a
+        // passkey (`verified` lets an unverified user add both). Their other sessions end with sc-714.
+        if ($user->email_verified_at === null) {
+            $proved = DB::transaction(function () use ($user, $record): bool {
+                // Read again under lock: an address changed since the link was opened is not
+                // the inbox it reached. A change of address voids its links as it commits.
+                $locked = User::lockForUpdate()->find($user->getKey());
+
+                if ($locked?->email !== $user->email || ! MagicLinkToken::whereKey($record->getKey())->exists()) {
+                    return false;
+                }
+
+                $locked->forceFill([
+                    'email_verified_at' => now(),
+                    'password' => null,
+                    'remember_token' => Str::random(60),
+                ])->save();
+                $locked->socialAccounts()->delete();
+                $locked->passkeys()->delete();
+
+                return true;
+            });
+
+            if (! $proved) {
+                return redirect()->route('login')->with('error', __('auth::auth.magic-link-expired'));
+            }
+
+            $user->refresh();
         }
 
         $this->signIn($request, $user);

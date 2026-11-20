@@ -15,6 +15,8 @@ const props = defineProps<{
      * of this form — see `AuthLink`.
      */
     modal?: boolean;
+    /** Arrived from an invitation: the account is for this address, fixed. */
+    invitedEmail?: string;
 }>();
 
 const currentModal = useModal();
@@ -32,8 +34,10 @@ function handleSuccess(): void {
 const page = usePage();
 const termsError = computed(() => page.props.errors?.terms);
 
+const invitedEmail = computed(() => props.invitedEmail);
+
 const nameRef = ref('');
-const emailRef = ref('');
+const emailRef = ref(invitedEmail.value ?? '');
 const passwordRef = ref('');
 const termsRef = ref(false);
 
@@ -47,7 +51,16 @@ const canSubmit = computed(
 </script>
 
 <template>
-    <SocialiteProviders />
+    <!-- An invitation is for its address; a provider could sign up another one. -->
+    <SocialiteProviders v-if="!invitedEmail" />
+
+    <p
+        v-else
+        class="text-muted-foreground text-center text-sm"
+        data-testid="register-invited"
+    >
+        {{ $t('You were invited as :email.', { email: invitedEmail }) }}
+    </p>
 
     <Form
         :action="route('register')"
@@ -75,6 +88,7 @@ const canSubmit = computed(
             :label="$t('Email')"
             :placeholder="$t('Enter your email')"
             autocomplete="email"
+            :readonly="!!invitedEmail"
             v-model="emailRef"
         />
 

@@ -2,6 +2,7 @@
 
 namespace Modules\Auth\Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -91,6 +92,101 @@ class MagicLinkTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard'));
+    }
+
+    /**
+     * Pre-hijack: anyone can register someone else's address with a password of their own.
+     * The link proves the inbox, so the account is the inbox owner's: verified, and nothing
+     * set before that proof (the password, remember-me) still opens it.
+     */
+    public function test_a_magic_link_to_an_unverified_account_verifies_it_and_drops_its_password(): void
+    {
+        $user = User::factory()->unverified()->create(['password' => bcrypt('attackers-password')]);
+        $rememberToken = $user->remember_token;
+        $plainToken = Str::random(64);
+        MagicLinkToken::create(['user_id' => $user->id, 'token' => hash('sha256', $plainToken), 'expires_at' => now()->addMinutes(15)]);
+
+        $this->get(route('magic-link.authenticate', $plainToken));
+
+        $user->refresh();
+        $this->assertAuthenticatedAs($user);
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertNull($user->password);
+        $this->assertNotSame($rememberToken, $user->remember_token);
+    }
+
+    /**
+     * Before the proof, whoever registered the address could also connect their own provider
+     * account or add a passkey (`verified` lets an unverified user through): neither outlives it.
+     */
+    public function test_a_magic_link_to_an_unverified_account_drops_its_providers_and_passkeys(): void
+    {
+        $user = User::factory()->unverified()->create();
+        $user->socialAccounts()->create(['provider' => 'github', 'provider_id' => 'attackers-github']);
+        $user->passkeys()->create(['name' => 'Attacker', 'credential_id' => 'abc', 'credential' => []]);
+        $plainToken = Str::random(64);
+        MagicLinkToken::create(['user_id' => $user->id, 'token' => hash('sha256', $plainToken), 'expires_at' => now()->addMinutes(15)]);
+
+        $this->get(route('magic-link.authenticate', $plainToken));
+
+        $this->assertSame(0, $user->socialAccounts()->count());
+        $this->assertSame(0, $user->passkeys()->count());
+    }
+
+    /**
+     * The address changes while the link is being opened: the change commits after the
+     * account is read but before it is verified. The link reached the old inbox only, so the
+     * new address stays unverified and nobody is signed in.
+     */
+    public function test_an_address_changed_while_the_link_opens_is_not_verified_by_it(): void
+    {
+        $user = User::factory()->unverified()->create(['email' => 'old@example.com']);
+        $plainToken = Str::random(64);
+        MagicLinkToken::create(['user_id' => $user->id, 'token' => hash('sha256', $plainToken), 'expires_at' => now()->addMinutes(15)]);
+
+        $changed = false;
+        User::retrieved(function (User $retrieved) use (&$changed): void {
+            if (! $changed) {
+                $changed = true;
+                // Another request's change of address, committed: its links go with it.
+                User::whereKey($retrieved->id)->update(['email' => 'new@example.com']);
+                MagicLinkToken::where('user_id', $retrieved->id)->delete();
+            }
+        });
+
+        $this->get(route('magic-link.authenticate', $plainToken))->assertRedirect(route('login'));
+
+        $this->assertGuest();
+        $this->assertNull($user->fresh()->email_verified_at);
+    }
+
+    /**
+     * A link proves the inbox it was sent to. Once the address changes, an older link would
+     * vouch for the new one (and verify it), so changing the email voids outstanding links.
+     */
+    public function test_changing_the_email_voids_outstanding_magic_links(): void
+    {
+        $user = User::factory()->create();
+        $plainToken = Str::random(64);
+        MagicLinkToken::create(['user_id' => $user->id, 'token' => hash('sha256', $plainToken), 'expires_at' => now()->addMinutes(15)]);
+
+        $user->forceFill(['email' => 'victim@example.com', 'email_verified_at' => null])->save();
+        $this->get(route('magic-link.authenticate', $plainToken));
+
+        $this->assertGuest();
+        $this->assertNull($user->fresh()->email_verified_at);
+    }
+
+    /** A verified account's own password stays: it was set by the inbox owner. */
+    public function test_a_magic_link_keeps_a_verified_accounts_password(): void
+    {
+        $user = User::factory()->create(['password' => bcrypt('my-password')]);
+        $plainToken = Str::random(64);
+        MagicLinkToken::create(['user_id' => $user->id, 'token' => hash('sha256', $plainToken), 'expires_at' => now()->addMinutes(15)]);
+
+        $this->get(route('magic-link.authenticate', $plainToken));
+
+        $this->assertTrue(password_verify('my-password', $user->fresh()->password));
     }
 
     public function test_returning_user_receives_login_notification_after_magic_link_authentication(): void

@@ -24,7 +24,7 @@
       "aliases": {}
     },
     "branch-alias": {
-      "dev-dev": "3.9.x-dev"
+      "dev-dev": "3.x-dev"
     }
   },
   "autoload": {
@@ -40,7 +40,7 @@
     }
   },
   "require": {
-    "saucebase/core": "^3.0",
+    "saucebase/core": "^3.1",
     "laravel/socialite": "^5.31",
     "stechstudio/filament-impersonate": "^5.6.1",
     "laravel/passkeys": "^0.2.1"
