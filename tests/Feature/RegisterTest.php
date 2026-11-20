@@ -48,6 +48,15 @@ class RegisterTest extends TestCase
     // ── Invited while sign-up is closed (RegistrationInvite, set by e.g. tenancy) ──
 
     /** @return array<string, mixed> */
+    /** A malformed address is a validation error, not a 500 from the invitation check. */
+    public function test_an_email_that_is_not_a_string_is_a_validation_error(): void
+    {
+        $this->post(route('register'), [...$this->signUp(''), 'email' => ['ana@example.com']])
+            ->assertSessionHasErrors('email');
+
+        $this->assertGuest();
+    }
+
     private function signUp(string $email): array
     {
         return ['name' => 'Ana', 'email' => $email, 'password' => 'password123', 'terms' => true];

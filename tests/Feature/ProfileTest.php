@@ -90,6 +90,26 @@ class ProfileTest extends TestCase
         $this->assertNull($user->fresh()->email_verified_at);
     }
 
+    /** The new address and its unverified state are one change: a failure keeps neither. */
+    public function test_a_failed_email_change_keeps_the_old_address(): void
+    {
+        $user = $this->createUser();
+        $user->forceFill(['email_verified_at' => now()])->save();
+        $email = $user->email;
+        User::updated(fn () => throw new \RuntimeException('lock wait timeout'));
+
+        $this->withoutExceptionHandling();
+        try {
+            $this->actingAs($user)->patch(route('settings.profile.update-info'), [
+                'name' => $user->name,
+                'email' => 'moved@example.com',
+            ]);
+        } catch (\RuntimeException) {
+        }
+
+        $this->assertSame($email, User::find($user->id)->email);
+    }
+
     public function test_keeping_the_same_email_keeps_the_verified_timestamp(): void
     {
         $user = $this->createUser();
