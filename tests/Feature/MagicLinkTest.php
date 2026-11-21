@@ -4,6 +4,8 @@ namespace Modules\Auth\Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Modules\Auth\Models\MagicLinkToken;
@@ -111,8 +113,30 @@ class MagicLinkTest extends TestCase
         $user->refresh();
         $this->assertAuthenticatedAs($user);
         $this->assertNotNull($user->email_verified_at);
-        $this->assertNull($user->password);
+        $this->assertFalse(Hash::check('attackers-password', (string) $user->password));
         $this->assertNotSame($rememberToken, $user->remember_token);
+    }
+
+    /**
+     * The pre-registrant may still be signed in elsewhere. A null password would leave that
+     * session open (`AuthenticateSession` skips users without one), so an unusable random one
+     * replaces it; the owner sets their own through "Forgot password" (sc-714).
+     */
+    public function test_a_magic_link_signs_out_the_pre_registrants_open_sessions(): void
+    {
+        $user = User::factory()->unverified()->create(['password' => bcrypt('attackers-password')]);
+        $attacker = Auth::guard('web')->hashPasswordForCookie($user->getAuthPassword());
+        $plainToken = Str::random(64);
+        MagicLinkToken::create(['user_id' => $user->id, 'token' => hash('sha256', $plainToken), 'expires_at' => now()->addMinutes(15)]);
+
+        $this->get(route('magic-link.authenticate', $plainToken));
+
+        $this->flushSession();
+        $this->actingAs($user->fresh())
+            ->withSession(['password_hash_web' => $attacker])
+            ->get(route('dashboard'))
+            ->assertRedirect(route('login'));
+        $this->assertGuest();
     }
 
     /**

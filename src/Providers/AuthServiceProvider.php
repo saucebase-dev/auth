@@ -5,7 +5,9 @@ namespace Modules\Auth\Providers;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
+use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -37,6 +39,12 @@ class AuthServiceProvider extends ModuleServiceProvider
         parent::boot();
 
         Gate::policy(User::class, UserPolicy::class);
+
+        // A session ends when its user's password changes (a change, a reset, a magic-link
+        // takeover): the session keeps a fingerprint of the hash and this compares it on every
+        // request. Registered here, like tenancy's guards: one an app had to add by hand would
+        // fail open when forgotten (sc-714).
+        $this->app->make(Kernel::class)->appendMiddlewareToGroup('web', AuthenticateSession::class);
 
         // A magic link proves the inbox it was sent to. A new address voids the old links,
         // or one would sign in (and verify) an address it never reached. Every writer counts.

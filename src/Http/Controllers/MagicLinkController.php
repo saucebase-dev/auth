@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -118,7 +119,10 @@ class MagicLinkController extends Controller implements HasMiddleware
 
                 $locked->forceFill([
                     'email_verified_at' => now(),
-                    'password' => null,
+                    // Unusable, not null: `AuthenticateSession` skips users without a password,
+                    // so null would leave the pre-registrant's sessions open. The owner sets
+                    // their own through "Forgot password" (sc-714).
+                    'password' => Hash::make(Str::random(64)),
                     'remember_token' => Str::random(60),
                 ])->save();
                 $locked->socialAccounts()->delete();

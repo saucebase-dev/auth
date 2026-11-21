@@ -3,6 +3,7 @@
 namespace Modules\Auth\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -81,6 +82,26 @@ class PasswordResetTest extends TestCase
 
         $response->assertRedirect(route('login'));
         $this->assertTrue(Hash::check('newpassword123', $user->fresh()->getAuthPassword()));
+    }
+
+    /** A reset is the way back in after a stolen password: the thief's session ends with it (sc-714). */
+    public function test_a_password_reset_signs_out_sessions_on_other_devices(): void
+    {
+        $user = $this->createUser();
+        $otherDevice = Auth::guard('web')->hashPasswordForCookie($user->getAuthPassword());
+
+        $this->post(route('password.store'), [
+            'token' => Password::createToken($user),
+            'email' => $user->email,
+            'password' => 'newpassword123',
+            'password_confirmation' => 'newpassword123',
+        ])->assertRedirect(route('login'));
+
+        $this->actingAs($user->fresh())
+            ->withSession(['password_hash_web' => $otherDevice])
+            ->get(route('dashboard'))
+            ->assertRedirect(route('login'));
+        $this->assertGuest();
     }
 
     public function test_reset_password_fails_with_invalid_token(): void

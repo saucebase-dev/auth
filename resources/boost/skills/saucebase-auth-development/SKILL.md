@@ -59,8 +59,22 @@ changed. `email_verified_at` is deliberately **not** in the User model's `$filla
 request payload can grant itself a verified address; `SocialiteService` sets it with
 `forceFill()`.
 
-Changing a password does **not** yet end other sessions — that needs `AuthenticateSession`
-in the `web` group, which is an app-wide change awaiting a regression pass (sc-714).
+### A Password Change Ends Every Other Session
+`AuthServiceProvider::boot()` appends Laravel's `AuthenticateSession` to the `web` group: each
+session keeps a fingerprint of the password hash and is signed out when it stops matching. So
+a change (`PasswordController`), a reset and a magic-link takeover all end the other sessions
+and remember-me cookies (sc-714). Registered by the module, like tenancy's guards: one an app
+had to add by hand would fail open when forgotten.
+
+- `PasswordController::update()` saves the new hash, then calls `Auth::logoutOtherDevices()`
+  with the new password (it checks that password against the stored one, so the order matters):
+  this device's remember-me cookie is re-issued with the new hash, and the session regenerated.
+- `AuthenticateSession` skips users with **no** password (social sign-ups). That is why the
+  magic-link takeover stores an unusable random password rather than null.
+- Impersonation is unaffected: `stechstudio/filament-impersonate` clears the `password_hash_*`
+  keys on enter and leave.
+- Tests stand in for another device with a session holding the old fingerprint:
+  `withSession(['password_hash_web' => Auth::guard('web')->hashPasswordForCookie($oldHash)])`.
 
 Note that `User` does not implement `MustVerifyEmail` (the import is commented out), so the
 `verified` middleware is currently a pass-through and the verification routes are not
@@ -152,7 +166,7 @@ Uses `stechstudio/filament-impersonate`. Session stores history at `impersonatio
 
 `MagicLinkController::authenticate()` hashes the incoming token and consumes it in one atomic `UPDATE` (unused and unexpired only), so a link works once even under concurrent clicks, then logs in the user and redirects to the intended URL or home.
 
-The link proves the inbox, so a magic sign-in to an **unverified** account marks it verified and clears, in one transaction, its password, remember token, connected providers and passkeys. Anyone can register someone else's address with a password of their own (pre-hijack) and, since `verified` lets an unverified user through, connect a provider or add a passkey too: none of it may outlive the owner's proof. A genuine social sign-up is unverified too (sc-713), so it loses its provider link at that proof and reconnects from Settings. A verified account keeps all of them. The account is locked and read again for that: if its address changed, or the link was voided, since the link was opened, it verifies nothing and signs no one in. The attacker's open sessions end only once sc-714 adds `AuthenticateSession`.
+The link proves the inbox, so a magic sign-in to an **unverified** account marks it verified and, in one transaction, replaces its password with an unusable random one and clears its remember token, connected providers and passkeys. Anyone can register someone else's address with a password of their own (pre-hijack) and, since `verified` lets an unverified user through, connect a provider or add a passkey too: none of it may outlive the owner's proof. A genuine social sign-up is unverified too (sc-713), so it loses its provider link at that proof and reconnects from Settings. A verified account keeps all of them. The account is locked and read again for that: if its address changed, or the link was voided, since the link was opened, it verifies nothing and signs no one in. The new password ends the pre-registrant's open sessions (`AuthenticateSession`, above); the owner sets their own through "Forgot password".
 
 Changing a user's email through an Eloquent save deletes their outstanding magic links (`User::updated` in `AuthServiceProvider`), since a link proves only the inbox it reached. Query-builder and mass updates fire no model events and leave the links valid: such a write must delete the user's `MagicLinkToken` rows itself. `ProfileController::updateInfo()` saves the address, voids the links and drops the verification in one transaction.
 
