@@ -3,10 +3,12 @@
 namespace Modules\Auth\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class WelcomeNotification extends Notification
+/** Queued: sent in the request, a mail outage would stop registration's later listeners. */
+class WelcomeNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

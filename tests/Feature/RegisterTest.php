@@ -3,6 +3,7 @@
 namespace Modules\Auth\Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
@@ -164,6 +165,12 @@ class RegisterTest extends TestCase
 
         $user = User::where('email', 'test@example.com')->firstOrFail();
         Notification::assertSentTo($user, WelcomeNotification::class);
+    }
+
+    /** Sent in the request, a mail outage would stop the listeners after it: the role, the workspace. */
+    public function test_the_welcome_notification_is_queued(): void
+    {
+        $this->assertInstanceOf(ShouldQueue::class, new WelcomeNotification);
     }
 
     public function test_registration_does_not_send_login_notification(): void
