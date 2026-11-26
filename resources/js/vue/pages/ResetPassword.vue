@@ -22,6 +22,7 @@ defineProps<{
             data-testid="reset-password-form"
             disable-while-processing
             :reset-on-error="['password', 'password_confirmation']"
+            v-slot="{ errors }"
         >
             <input
                 type="hidden"
@@ -33,6 +34,7 @@ defineProps<{
             <!-- Email -->
             <InputField
                 name="email"
+                :error="errors.email"
                 type="email"
                 :label="$t('Email')"
                 :model-value="email"
@@ -43,6 +45,7 @@ defineProps<{
             <!-- Password -->
             <InputField
                 name="password"
+                :error="errors.password"
                 type="password"
                 :label="$t('Password')"
                 :placeholder="$t('Enter your password')"
@@ -53,6 +56,7 @@ defineProps<{
             <!-- Password Confirmation -->
             <InputField
                 name="password_confirmation"
+                :error="errors.password_confirmation"
                 type="password"
                 :label="$t('Confirm Password')"
                 :placeholder="$t('Confirm your new password')"
