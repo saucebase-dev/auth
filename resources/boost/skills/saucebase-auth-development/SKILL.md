@@ -18,7 +18,7 @@ Authentication, registration, magic link (passwordless), passkeys (WebAuthn, via
 | Service | `SocialiteService` — all OAuth logic (find/create user, link/disconnect accounts) |
 | Requests | `LoginRequest` (credential validation + rate limiting), `RegisterRequest` (password hashing in `passedValidation`), `UpdateProfileInfoRequest`, `UpdateProfileAvatarRequest`, `UpdatePasswordRequest` |
 | Exceptions | `AuthException` (credentials, throttle), `SocialiteException` (disconnect, account linking, provider validation, registration disabled) |
-| Listeners | `AssignUserRole` (Registered), `UpdateUserLastLogin` (Login), `Impersonation` (`EnterImpersonation` — session history), `SendLoginNotification` (`ReturningUserAuthenticated`), `SendWelcomeNotification` (Registered) |
+| Listeners | `AssignUserRole` (Registered), `UpdateUserLastLogin` (Login), `FingerprintPasswordlessSession` (Login), `Impersonation` (`EnterImpersonation` — session history), `SendLoginNotification` (`ReturningUserAuthenticated`), `SendWelcomeNotification` (Registered) |
 | Notifications | `WelcomeNotification` (Registered), `MagicLinkNotification` (passwordless login link with configured expiry), `LoginNotification` (new sign-in, only when `login_notification_enabled`), `PasskeyAddedNotification` (always, when a passkey is added) |
 | Events | `ReturningUserAuthenticated` — dispatched by password, magic-link and social sign-in, not by registration |
 | Middleware | `EnsureRegistrationEnabled`, `EnsureMagicLinkEnabled`, `EnsurePasskeysEnabled`, `EnsureSocialiteProviderEnabled` — each 404s its routes while the setting is off |
@@ -71,6 +71,10 @@ had to add by hand would fail open when forgotten.
   this device's remember-me cookie is re-issued with the new hash, and the session regenerated.
 - `AuthenticateSession` skips users with **no** password (social sign-ups). That is why the
   magic-link takeover stores an unusable random password rather than null.
+- Signing in stores no fingerprint for such a user either, so a first password would leave
+  their sessions open. `FingerprintPasswordlessSession` (on `Login`) stores the fingerprint of
+  no password instead, through the guard's own `hashPasswordForCookie(null)`: setting one then
+  ends those sessions like any change (sc-1259). Laravel's middleware is not replaced.
 - Impersonation is unaffected: `stechstudio/filament-impersonate` clears the `password_hash_*`
   keys on enter and leave.
 - Tests stand in for another device with a session holding the old fingerprint:

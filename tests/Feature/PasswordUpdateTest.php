@@ -83,6 +83,42 @@ class PasswordUpdateTest extends TestCase
         $this->assertTrue(Hash::check('newpassword123', $user->fresh()->getAuthPassword()));
     }
 
+    /** A session signed in while the account had no password ends when it gets one (sc-1259). */
+    public function test_a_first_password_signs_out_sessions_opened_without_one(): void
+    {
+        Notification::fake();
+        $user = $this->createUser();
+        $user->forceFill(['password' => null])->save();
+
+        Auth::guard('web')->login($user);
+        $otherDevice = session('password_hash_web');
+        $this->flushSession();
+
+        $this->actingAs($user)->put(route('settings.profile.password.update'), [
+            'password' => 'newpassword123',
+            'password_confirmation' => 'newpassword123',
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $this->flushSession();
+        $this->actingAs($user->fresh())
+            ->withSession(['password_hash_web' => $otherDevice])
+            ->get(route('dashboard'))
+            ->assertRedirect(route('login'));
+        $this->assertGuest();
+    }
+
+    /** Until then, nothing changes for an account without a password. */
+    public function test_an_account_without_a_password_stays_signed_in(): void
+    {
+        $user = $this->createUser();
+        $user->forceFill(['password' => null])->save();
+
+        Auth::guard('web')->login($user);
+        $this->withSession(['password_hash_web' => session('password_hash_web')])->get(route('dashboard'));
+
+        $this->assertAuthenticatedAs($user);
+    }
+
     /** Like adding a passkey: a password set while impersonating would outlive the impersonation. */
     public function test_a_first_password_cannot_be_set_while_impersonating(): void
     {
