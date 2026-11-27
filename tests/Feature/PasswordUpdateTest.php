@@ -3,6 +3,7 @@
 namespace Modules\Auth\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Modules\Auth\Notifications\PasswordChangedNotification;
@@ -29,6 +30,44 @@ class PasswordUpdateTest extends TestCase
         $this->assertTrue(Hash::check('newpassword123', $user->fresh()->getAuthPassword()));
     }
 
+    /** Whoever had the old password keeps no session after the change (sc-714). */
+    public function test_changing_the_password_signs_out_other_sessions(): void
+    {
+        Notification::fake();
+        $user = $this->createUser();
+        $otherDevice = Auth::guard('web')->hashPasswordForCookie($user->getAuthPassword());
+
+        $this->actingAs($user)->put(route('settings.profile.password.update'), [
+            'current_password' => 'password',
+            'password' => 'newpassword123',
+            'password_confirmation' => 'newpassword123',
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $this->flushSession();
+        $this->actingAs($user->fresh())
+            ->withSession(['password_hash_web' => $otherDevice])
+            ->get(route('dashboard'))
+            ->assertRedirect(route('login'));
+        $this->assertGuest();
+    }
+
+    /** The other half: the session that made the change stays signed in. */
+    public function test_the_session_that_changed_the_password_stays_signed_in(): void
+    {
+        Notification::fake();
+        $user = $this->createUser();
+
+        $this->actingAs($user)->get(route('dashboard'));
+        $this->put(route('settings.profile.password.update'), [
+            'current_password' => 'password',
+            'password' => 'newpassword123',
+            'password_confirmation' => 'newpassword123',
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $this->get(route('dashboard'));
+        $this->assertAuthenticatedAs($user);
+    }
+
     /** Signed up through a provider: there is no current password to give, so none is asked. */
     public function test_a_user_without_a_password_can_set_one(): void
     {
@@ -39,9 +78,45 @@ class PasswordUpdateTest extends TestCase
         $this->actingAs($user)->put(route('settings.profile.password.update'), [
             'password' => 'newpassword123',
             'password_confirmation' => 'newpassword123',
-        ])->assertSessionHasNoErrors();
+        ])->assertSessionHasNoErrors()->assertRedirect();
 
         $this->assertTrue(Hash::check('newpassword123', $user->fresh()->getAuthPassword()));
+    }
+
+    /** A session signed in while the account had no password ends when it gets one (sc-1259). */
+    public function test_a_first_password_signs_out_sessions_opened_without_one(): void
+    {
+        Notification::fake();
+        $user = $this->createUser();
+        $user->forceFill(['password' => null])->save();
+
+        Auth::guard('web')->login($user);
+        $otherDevice = session('password_hash_web');
+        $this->flushSession();
+
+        $this->actingAs($user)->put(route('settings.profile.password.update'), [
+            'password' => 'newpassword123',
+            'password_confirmation' => 'newpassword123',
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $this->flushSession();
+        $this->actingAs($user->fresh())
+            ->withSession(['password_hash_web' => $otherDevice])
+            ->get(route('dashboard'))
+            ->assertRedirect(route('login'));
+        $this->assertGuest();
+    }
+
+    /** Until then, nothing changes for an account without a password. */
+    public function test_an_account_without_a_password_stays_signed_in(): void
+    {
+        $user = $this->createUser();
+        $user->forceFill(['password' => null])->save();
+
+        Auth::guard('web')->login($user);
+        $this->withSession(['password_hash_web' => session('password_hash_web')])->get(route('dashboard'));
+
+        $this->assertAuthenticatedAs($user);
     }
 
     /** Like adding a passkey: a password set while impersonating would outlive the impersonation. */

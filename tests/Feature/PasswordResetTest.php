@@ -3,6 +3,7 @@
 namespace Modules\Auth\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -81,6 +82,40 @@ class PasswordResetTest extends TestCase
 
         $response->assertRedirect(route('login'));
         $this->assertTrue(Hash::check('newpassword123', $user->fresh()->getAuthPassword()));
+    }
+
+    /** A reset is the way back in after a stolen password: the thief's session ends with it (sc-714). */
+    public function test_a_password_reset_signs_out_sessions_on_other_devices(): void
+    {
+        $user = $this->createUser();
+        $otherDevice = Auth::guard('web')->hashPasswordForCookie($user->getAuthPassword());
+
+        $this->post(route('password.store'), [
+            'token' => Password::createToken($user),
+            'email' => $user->email,
+            'password' => 'newpassword123',
+            'password_confirmation' => 'newpassword123',
+        ])->assertRedirect(route('login'));
+
+        $this->actingAs($user->fresh())
+            ->withSession(['password_hash_web' => $otherDevice])
+            ->get(route('dashboard'))
+            ->assertRedirect(route('login'));
+        $this->assertGuest();
+    }
+
+    /** Signing in stores the fingerprint itself: a session that never made a second request still ends. */
+    public function test_a_session_that_only_signed_in_ends_when_the_password_changes(): void
+    {
+        $user = $this->createUser();
+
+        $this->post('/auth/login', ['email' => $user->email, 'password' => 'password']);
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertSame(
+            Auth::guard('web')->hashPasswordForCookie($user->getAuthPassword()),
+            session('password_hash_web'),
+        );
     }
 
     public function test_reset_password_fails_with_invalid_token(): void

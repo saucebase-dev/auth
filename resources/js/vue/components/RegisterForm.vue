@@ -70,10 +70,12 @@ const canSubmit = computed(
         data-testid="register-form"
         disable-while-processing
         :reset-on-error="['password']"
+        v-slot="{ errors }"
     >
         <!-- Name -->
         <InputField
             name="name"
+            :error="errors.name"
             type="text"
             :label="$t('Name')"
             :placeholder="$t('Enter your full name')"
@@ -84,6 +86,7 @@ const canSubmit = computed(
         <!-- Email -->
         <InputField
             name="email"
+            :error="errors.email"
             type="email"
             :label="$t('Email')"
             :placeholder="$t('Enter your email')"
@@ -95,6 +98,7 @@ const canSubmit = computed(
         <!-- Password -->
         <InputField
             name="password"
+            :error="errors.password"
             type="password"
             :label="$t('Password')"
             :placeholder="$t('Enter your password')"

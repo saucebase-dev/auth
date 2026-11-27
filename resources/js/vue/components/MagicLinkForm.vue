@@ -22,9 +22,11 @@ defineProps<{
         data-testid="magic-link-form"
         disable-while-processing
         :reset-on-success="['email']"
+        v-slot="{ errors }"
     >
         <InputField
             name="email"
+            :error="errors.email"
             type="email"
             :label="$t('Email')"
             :placeholder="$t('Enter your email')"

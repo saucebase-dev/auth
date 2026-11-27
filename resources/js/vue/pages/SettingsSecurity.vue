@@ -468,10 +468,12 @@ const initiateDisconnect = async (provider: string) => {
                 disable-while-processing
                 preserve-url
                 :reset-on-success="true"
+                v-slot="{ errors }"
             >
                 <InputField
                     v-if="props.user.has_password"
                     name="current_password"
+                    :error="errors.current_password"
                     type="password"
                     :label="$t('Current Password')"
                     :placeholder="$t('Enter your current password')"
@@ -481,6 +483,7 @@ const initiateDisconnect = async (provider: string) => {
 
                 <InputField
                     name="password"
+                    :error="errors.password"
                     type="password"
                     :label="$t('New Password')"
                     :placeholder="$t('Enter your new password')"
@@ -490,6 +493,7 @@ const initiateDisconnect = async (provider: string) => {
 
                 <InputField
                     name="password_confirmation"
+                    :error="errors.password_confirmation"
                     type="password"
                     :label="$t('Confirm Password')"
                     :placeholder="$t('Confirm your new password')"

@@ -231,9 +231,11 @@ const removeAvatar = async () => {
                 preserve-url
                 :on-before="beforeProfileSave"
                 :on-error="onProfileError"
+                v-slot="{ errors }"
             >
                 <InputField
                     name="name"
+                    :error="errors.name"
                     type="text"
                     :label="$t('Name')"
                     :placeholder="$t('Enter your full name')"
@@ -244,6 +246,7 @@ const removeAvatar = async () => {
 
                 <InputField
                     name="email"
+                    :error="errors.email"
                     type="email"
                     :label="$t('Email')"
                     :placeholder="$t('Enter your email address')"
