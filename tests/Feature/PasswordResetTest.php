@@ -104,6 +104,20 @@ class PasswordResetTest extends TestCase
         $this->assertGuest();
     }
 
+    /** Signing in stores the fingerprint itself: a session that never made a second request still ends. */
+    public function test_a_session_that_only_signed_in_ends_when_the_password_changes(): void
+    {
+        $user = $this->createUser();
+
+        $this->post('/auth/login', ['email' => $user->email, 'password' => 'password']);
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertSame(
+            Auth::guard('web')->hashPasswordForCookie($user->getAuthPassword()),
+            session('password_hash_web'),
+        );
+    }
+
     public function test_reset_password_fails_with_invalid_token(): void
     {
         $user = $this->createUser();
